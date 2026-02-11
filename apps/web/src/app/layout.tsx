@@ -1,0 +1,144 @@
+import type { Metadata } from 'next';
+import Script from 'next/script';
+import { Analytics } from '@vercel/analytics/next';
+import { ClerkProvider } from '@clerk/nextjs';
+import { Noto_Sans, Noto_Sans_Mono } from 'next/font/google';
+import { getLocale } from 'next-intl/server';
+import { ThemeProvider } from '@/components/providers/theme-provider';
+import './globals.css';
+
+const GA_TRACKING_ID = 'G-3JBPGGGMJZ';
+
+const notoSans = Noto_Sans({
+  variable: '--font-noto-sans',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+});
+
+const notoSansMono = Noto_Sans_Mono({
+  variable: '--font-noto-sans-mono',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+});
+
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://arena.modu.dev';
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'Modu Arena - Claude Code Agent Leaderboard',
+    template: '%s | Modu Arena',
+  },
+  description:
+    'Track and compare Claude Code usage rankings. See who leads the AI coding revolution with real-time leaderboards, efficiency metrics, and developer statistics.',
+  keywords: [
+    'Claude Code',
+    'AI coding',
+    'token usage',
+    'leaderboard',
+    'ranking',
+    'developer tools',
+    'AI agent',
+    'coding assistant',
+    'MoAI',
+    'Anthropic',
+  ],
+  authors: [{ name: 'Modu Arena Team', url: 'https://modu.dev' }],
+  creator: 'Modu Arena Team',
+  publisher: 'Modu Arena',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: siteUrl,
+    siteName: 'Modu Arena',
+    title: 'Modu Arena - Claude Code Agent Leaderboard',
+    description:
+      'Track and compare Claude Code usage rankings. See who leads the AI coding revolution with real-time leaderboards and developer statistics.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Modu Arena - Claude Code Agent Leaderboard',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Modu Arena - Claude Code Agent Leaderboard',
+    description:
+      'Track and compare Claude Code usage rankings. See who leads the AI coding revolution.',
+    images: ['/og-image.png'],
+    creator: '@modu_arena',
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.png', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: [{ url: '/favicon.png', sizes: '180x180', type: 'image/png' }],
+    shortcut: '/favicon.png',
+  },
+  manifest: '/manifest.json',
+  alternates: {
+    canonical: siteUrl,
+  },
+  category: 'technology',
+};
+
+export default async function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const locale = await getLocale();
+
+  const content = (
+    <html lang={locale}>
+      <head>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_TRACKING_ID}');
+          `}
+        </Script>
+      </head>
+      <body
+        className={`${notoSans.variable} ${notoSansMono.variable} min-h-screen bg-background font-sans antialiased`}
+      >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          forcedTheme="light"
+          disableTransitionOnChange
+        >
+          {children}
+          <Analytics />
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+
+  if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    return <ClerkProvider>{content}</ClerkProvider>;
+  }
+
+  return content;
+}

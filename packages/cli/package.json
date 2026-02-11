@@ -1,0 +1,52 @@
+{
+  "name": "@suncreation/modu-arena",
+  "version": "0.1.1",
+  "type": "module",
+  "description": "Track and rank your AI coding tool usage across Claude Code, OpenCode, Gemini CLI, Codex CLI, and Crush",
+  "bin": {
+    "modu-arena": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "biome lint ./src",
+    "lint:fix": "biome lint --write ./src",
+    "format": "biome format --write ./src",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@biomejs/biome": "2.3.10",
+    "@types/node": "^20",
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.3"
+  },
+  "keywords": [
+    "ai",
+    "coding",
+    "claude-code",
+    "opencode",
+    "gemini",
+    "codex",
+    "crush",
+    "token-usage",
+    "leaderboard",
+    "ranking"
+  ],
+  "author": "suncreation",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/modulabs/modu-arena.git"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

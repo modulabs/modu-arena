@@ -1,0 +1,119 @@
+erDiagram
+    users ||--o{ sessions : has
+    users ||--o{ token_usage : has
+    users ||--o{ project_evaluations : submits
+    users ||--|| user_stats : has
+    users ||--o{ daily_user_stats : has
+    users ||--o{ security_audit_log : logs
+
+    tool_types ||--o{ sessions : tracks
+    tool_types ||--o{ token_usage : tracks
+
+    sessions ||--o{ token_usage : contains
+
+    users {
+        uuid id PK
+        varchar clerk_id UK
+        varchar github_id UK
+        varchar github_username
+        text github_avatar_url
+        varchar api_key_hash UK
+        varchar api_key_prefix UK
+        varchar user_salt
+        boolean privacy_mode
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    tool_types {
+        varchar id PK
+        varchar name
+        varchar display_name
+        text icon_url
+        varchar color
+        boolean is_active
+        integer sort_order
+        timestamp created_at
+    }
+
+    sessions {
+        uuid id PK
+        uuid user_id FK
+        varchar tool_type_id FK
+        varchar session_hash UK
+        varchar anonymous_project_id
+        timestamp started_at
+        timestamp ended_at
+        integer duration_seconds
+        varchar model_name
+        integer turn_count
+        jsonb tool_usage
+        jsonb code_metrics
+        timestamp created_at
+    }
+
+    token_usage {
+        uuid id PK
+        uuid session_id FK
+        uuid user_id FK
+        varchar tool_type_id FK
+        bigint input_tokens
+        bigint output_tokens
+        bigint cache_creation_tokens
+        bigint cache_read_tokens
+        bigint total_tokens
+        timestamp recorded_at
+    }
+
+    project_evaluations {
+        uuid id PK
+        uuid user_id FK
+        varchar project_path_hash
+        varchar project_name
+        integer total_score
+        integer rubric_functionality
+        integer rubric_practicality
+        varchar llm_model
+        varchar llm_provider
+        boolean passed
+        text feedback
+        timestamp evaluated_at
+    }
+
+    user_stats {
+        uuid user_id PK
+        bigint total_input_tokens
+        bigint total_output_tokens
+        bigint total_cache_tokens
+        bigint total_all_tokens
+        jsonb tokens_by_tool
+        integer total_sessions
+        jsonb sessions_by_tool
+        integer successful_projects_count
+        integer total_evaluations
+        timestamp last_activity_at
+        timestamp updated_at
+    }
+
+    daily_user_stats {
+        uuid id PK
+        uuid user_id FK
+        date stat_date
+        bigint input_tokens
+        bigint output_tokens
+        bigint cache_tokens
+        bigint total_tokens
+        integer session_count
+        jsonb by_tool
+        timestamp created_at
+    }
+
+    security_audit_log {
+        uuid id PK
+        uuid user_id FK
+        varchar event_type
+        varchar ip_address
+        text user_agent
+        jsonb details
+        timestamp created_at
+    }
