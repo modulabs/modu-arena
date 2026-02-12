@@ -1,6 +1,6 @@
 /** Base URL for the Modu-Arena API server */
 export const API_BASE_URL =
-  process.env.MODU_ARENA_API_URL ?? 'http://localhost:8989';
+  process.env.MODU_ARENA_API_URL ?? 'http://backend.vibemakers.kr:23010';
 
 /** API key prefix used for all keys */
 export const API_KEY_PREFIX = 'modu_arena_';

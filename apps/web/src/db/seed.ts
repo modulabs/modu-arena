@@ -162,17 +162,21 @@ async function seed() {
   console.log('👤 Creating users...');
   const userApiKeys: Array<{ displayName: string; key: string }> = [];
 
-  const userValues = DUMMY_USERS.map((u) => {
+  const dummyPasswordHash = scryptSync('password123', 'modu-arena-salt', 64).toString('hex');
+
+  const userValues = DUMMY_USERS.map((u, i) => {
     const apiKey = generateApiKey();
     userApiKeys.push({ displayName: u.displayName, key: apiKey.key });
     return {
+      username: u.email.split('@')[0],
+      passwordHash: dummyPasswordHash,
       displayName: u.displayName,
       email: u.email,
       apiKeyHash: apiKey.hash,
       apiKeyPrefix: apiKey.prefix,
       userSalt: randomUUID(),
       privacyMode: false,
-      successfulProjectsCount: 0, // NEW: Track successful project evaluations
+      successfulProjectsCount: 0,
     };
   });
   const createdUsers = await db.insert(users).values(userValues).returning();

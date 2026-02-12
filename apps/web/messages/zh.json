@@ -82,7 +82,7 @@
     "tryAgainMessage": "请稍后再试或刷新页面。",
     "backToDashboard": "返回仪表盘",
     "apiKey": "API密钥",
-    "apiKeyDescription": "使用此密钥验证您的MoAI CLI",
+    "apiKeyDescription": "使用此密钥验证您的Modu Arena CLI",
     "regenerateApiKey": "重新生成API密钥",
     "regenerateConfirmTitle": "重新生成API密钥？",
     "regenerateConfirmMessage": "这将立即使您当前的API密钥失效。现有的集成将停止工作。",
@@ -186,6 +186,6 @@
     }
   },
   "footer": {
-    "builtWith": "使用 Next.js 16、Clerk 和 Neon 构建"
+    "builtWith": "使用 Next.js 16 和 Neon 构建"
   }
 }

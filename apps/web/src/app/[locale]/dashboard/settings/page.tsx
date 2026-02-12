@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
-import { currentUser, auth } from '@clerk/nextjs/server';
+import { safeAuth, safeCurrentUser } from '@/lib/safe-auth';
+
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
@@ -11,14 +12,14 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { ApiKeyCard, PrivacyToggle } from '@/components/dashboard';
 import { db, users } from '@/db';
 import { eq } from 'drizzle-orm';
-import { generateApiKey } from '@/lib/auth';
-import { randomBytes } from 'node:crypto';
+
+
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Settings - MoAI Rank',
-  description: 'Manage your MoAI Rank account settings',
+  title: 'Settings - Modu Arena',
+  description: 'Manage your Modu Arena account settings',
 };
 
 interface CurrentUserInfo {
@@ -37,66 +38,29 @@ interface CurrentUserInfo {
  */
 async function getUserInfo(): Promise<CurrentUserInfo | null> {
   try {
-    const { userId: clerkId } = await auth();
+    const { userId } = await safeAuth();
 
-    if (!clerkId) {
+    if (!userId) {
       return null;
     }
 
-    // Find user by Clerk ID
-    const userResult = await db.select().from(users).where(eq(users.clerkId, clerkId)).limit(1);
+    const userResult = await db.select().from(users).where(eq(users.id, userId)).limit(1);
 
-    let user = userResult[0];
+    const user = userResult[0];
 
-    // Auto-create user if not found
     if (!user) {
-      const clerkUser = await currentUser();
-
-      if (!clerkUser) {
-        return null;
-      }
-
-      // Get GitHub info from external accounts
-      const githubAccount = clerkUser.externalAccounts?.find(
-        (account) => account.provider === 'oauth_github'
-      );
-
-      const githubUsername = githubAccount?.username || clerkUser.username || `user_${randomBytes(4).toString('hex')}`;
-      const githubId = String(githubAccount?.externalId || clerkId);
-      const githubAvatarUrl = githubAccount?.imageUrl || clerkUser.imageUrl || null;
-
-      // Generate API key for new user
-      const { hash, prefix } = generateApiKey(clerkId);
-
-      // Create new user
-      const newUserResult = await db
-        .insert(users)
-        .values({
-          clerkId,
-          githubId,
-          githubUsername,
-          githubAvatarUrl,
-          apiKeyHash: hash,
-          apiKeyPrefix: prefix,
-          userSalt: randomBytes(32).toString('hex'),
-          privacyMode: false,
-        })
-        .returning();
-
-      user = newUserResult[0];
+      return null;
     }
 
-     const currentRank = null; // Rankings removed — monitoring mode
-
-     return {
-       id: user.id,
-       githubUsername: user.githubUsername,
-       githubAvatarUrl: user.githubAvatarUrl,
-       apiKeyPrefix: user.apiKeyPrefix,
-       privacyMode: user.privacyMode ?? false,
-       createdAt: user.createdAt?.toISOString() ?? new Date().toISOString(),
-       updatedAt: user.updatedAt?.toISOString() ?? new Date().toISOString(),
-     };
+    return {
+      id: user.id,
+      githubUsername: user.githubUsername,
+      githubAvatarUrl: user.githubAvatarUrl,
+      apiKeyPrefix: user.apiKeyPrefix,
+      privacyMode: user.privacyMode ?? false,
+      createdAt: user.createdAt?.toISOString() ?? new Date().toISOString(),
+      updatedAt: user.updatedAt?.toISOString() ?? new Date().toISOString(),
+    };
   } catch (error) {
     console.error('[Settings] Failed to get user info:', error);
     return null;
@@ -165,10 +129,19 @@ async function SettingsContent() {
 }
 
 export default async function SettingsPage() {
-  const user = await currentUser();
+  const user = await safeCurrentUser();
 
   if (!user) {
-    redirect('/sign-in');
+    return (
+      <div className="container mx-auto max-w-6xl px-4 py-8">
+        <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed p-12 text-center">
+          <h2 className="text-xl font-semibold">Sign in required</h2>
+          <p className="text-muted-foreground">
+            You need to sign in to access settings and manage your API key.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -128,16 +128,8 @@ async function getUsageData(
 }
 
 async function getCurrentUserDbId(): Promise<string | null> {
-  const { userId: clerkId } = await safeAuth();
-  if (!clerkId) return null;
-
-  const userResult = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.clerkId, clerkId))
-    .limit(1);
-
-  return userResult[0]?.id ?? null;
+  const { userId } = await safeAuth();
+  return userId ?? null;
 }
 
 interface PageProps {

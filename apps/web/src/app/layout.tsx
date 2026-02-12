@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
 import { Analytics } from '@vercel/analytics/next';
-import { ClerkProvider } from '@clerk/nextjs';
 import { Noto_Sans, Noto_Sans_Mono } from 'next/font/google';
 import { getLocale } from 'next-intl/server';
 import { ThemeProvider } from '@/components/providers/theme-provider';
@@ -40,7 +39,7 @@ export const metadata: Metadata = {
     'developer tools',
     'AI agent',
     'coding assistant',
-    'MoAI',
+    'Modu Arena',
     'Anthropic',
   ],
   authors: [{ name: 'Modu Arena Team', url: 'https://modu.dev' }],
@@ -104,7 +103,7 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
 
-  const content = (
+  return (
     <html lang={locale}>
       <head>
         <Script
@@ -135,10 +134,4 @@ export default async function RootLayout({
       </body>
     </html>
   );
-
-  if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
-    return <ClerkProvider>{content}</ClerkProvider>;
-  }
-
-  return content;
 }

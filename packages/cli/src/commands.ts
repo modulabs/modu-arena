@@ -2,13 +2,154 @@
  * CLI Commands — install, rank, status, uninstall
  */
 
+import { createInterface } from 'node:readline';
 import { existsSync, readFileSync, readdirSync, statSync, unlinkSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 import { getAllAdapters, type InstallResult } from './adapters.js';
-import { getRank, submitEvaluation } from './api.js';
+import { getRank, registerUser, loginUser, submitEvaluation } from './api.js';
 import { loadConfig, saveConfig, requireConfig } from './config.js';
 import { API_BASE_URL, TOOL_DISPLAY_NAMES, type ToolType } from './constants.js';
+
+function prompt(question: string): Promise<string> {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
+
+function promptPassword(question: string): Promise<string> {
+  return new Promise((resolve) => {
+    process.stdout.write(question);
+    const chars: string[] = [];
+    const stdin = process.stdin;
+    const wasRaw = stdin.isRaw;
+    stdin.setRawMode(true);
+    stdin.resume();
+    stdin.setEncoding('utf8');
+
+    const onData = (ch: string) => {
+      const c = ch.toString();
+      if (c === '\n' || c === '\r' || c === '\u0004') {
+        // Enter or Ctrl+D
+        stdin.setRawMode(wasRaw ?? false);
+        stdin.pause();
+        stdin.removeListener('data', onData);
+        process.stdout.write('\n');
+        resolve(chars.join('').trim());
+      } else if (c === '\u0003') {
+        // Ctrl+C
+        process.stdout.write('\n');
+        process.exit(0);
+      } else if (c === '\u007f' || c === '\b') {
+        // Backspace
+        if (chars.length > 0) {
+          chars.pop();
+          process.stdout.write('\b \b');
+        }
+      } else {
+        chars.push(c);
+        process.stdout.write('*');
+      }
+    };
+
+    stdin.on('data', onData);
+  });
+}
+
+// ─── register ──────────────────────────────────────────────────────────────
+
+export async function registerCommand(): Promise<void> {
+  console.log('\n📝 Modu-Arena — Register\n');
+
+  const username = await prompt('  Username (3-50 chars): ');
+  if (!username || username.length < 3 || username.length > 50) {
+    console.error('Error: Username must be between 3 and 50 characters.\n');
+    process.exit(1);
+  }
+
+  const password = await promptPassword('  Password (min 8 chars): ');
+  if (!password || password.length < 8) {
+    console.error('Error: Password must be at least 8 characters.\n');
+    process.exit(1);
+  }
+
+  const displayName = await prompt('  Display name (optional, press Enter to skip): ');
+
+  console.log('\n  Registering...');
+
+  const existing = loadConfig();
+  const result = await registerUser(
+    { username, password, displayName: displayName || undefined },
+    existing?.serverUrl,
+  );
+
+  if (result.error) {
+    console.error(`\n  Error: ${result.error}\n`);
+    process.exit(1);
+  }
+
+  if (!result.apiKey) {
+    console.error('\n  Error: No API key returned from server.\n');
+    process.exit(1);
+  }
+
+  saveConfig({ apiKey: result.apiKey, serverUrl: existing?.serverUrl });
+  console.log('\n  ✓ Registration successful!');
+  console.log(`  ✓ API key saved to ~/.modu-arena.json`);
+  console.log(`\n  Username: ${result.user?.username}`);
+  console.log(`  API Key:  ${result.apiKey.slice(0, 20)}...${result.apiKey.slice(-4)}`);
+  console.log('\n  ⚠ Save your API key — it will not be shown again.\n');
+
+  console.log('  Installing hooks for detected AI coding tools...\n');
+  await installCommand(result.apiKey);
+}
+
+// ─── login ─────────────────────────────────────────────────────────────────
+
+export async function loginCommand(): Promise<void> {
+  console.log('\n🔑 Modu-Arena — Login\n');
+
+  const username = await prompt('  Username: ');
+  if (!username) {
+    console.error('Error: Username is required.\n');
+    process.exit(1);
+  }
+
+  const password = await promptPassword('  Password: ');
+  if (!password) {
+    console.error('Error: Password is required.\n');
+    process.exit(1);
+  }
+
+  console.log('\n  Logging in...');
+
+  const existing = loadConfig();
+  const result = await loginUser({ username, password }, existing?.serverUrl);
+
+  if (result.error) {
+    console.error(`\n  Error: ${result.error}\n`);
+    process.exit(1);
+  }
+
+  if (!result.apiKey) {
+    console.error('\n  Error: No API key returned from server.\n');
+    process.exit(1);
+  }
+
+  saveConfig({ apiKey: result.apiKey, serverUrl: existing?.serverUrl });
+  console.log('\n  ✓ Login successful!');
+  console.log(`  ✓ API key saved to ~/.modu-arena.json`);
+  console.log(`\n  Username: ${result.user?.username}`);
+  console.log(`  API Key:  ${result.apiKey.slice(0, 20)}...${result.apiKey.slice(-4)}`);
+  console.log('\n  ⚠ A new API key was generated. Previous key is now invalid.\n');
+
+  console.log('  Reinstalling hooks with new API key...\n');
+  await installCommand(result.apiKey);
+}
 
 // ─── install ───────────────────────────────────────────────────────────────
 

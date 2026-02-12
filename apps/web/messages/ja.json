@@ -82,7 +82,7 @@
     "tryAgainMessage": "後でもう一度試すか、ページを更新してください。",
     "backToDashboard": "ダッシュボードに戻る",
     "apiKey": "APIキー",
-    "apiKeyDescription": "このキーを使用してMoAI CLIを認証します",
+    "apiKeyDescription": "このキーを使用してModu Arena CLIを認証します",
     "regenerateApiKey": "APIキーを再生成",
     "regenerateConfirmTitle": "APIキーを再生成しますか？",
     "regenerateConfirmMessage": "現在のAPIキーは即座に無効になります。既存の連携が機能しなくなる可能性があります。",
@@ -186,6 +186,6 @@
     }
   },
   "footer": {
-    "builtWith": "Next.js 16、Clerk、Neonで構築"
+    "builtWith": "Next.js 16、Neonで構築"
   }
 }

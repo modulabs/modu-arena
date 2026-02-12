@@ -1,14 +1,14 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { safeAuth } from '@/lib/safe-auth';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { Trophy, Calendar, Zap, Activity, User, Github, Settings } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { db, users, dailyUserStats, sessions, tokenUsage } from '@/db';
 import { eq, desc, sql, and, gte } from 'drizzle-orm';
-import { generateApiKey } from '@/lib/auth';
-import { randomBytes } from 'node:crypto';
+
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -112,6 +112,7 @@ interface VibeStyle {
 
 interface UserProfile {
   username: string;
+  githubUsername: string | null;
   avatarUrl: string | null;
   joinedAt: string;
   stats: {
@@ -135,6 +136,8 @@ interface UserProfile {
 
 interface CurrentUserInfo {
   id: string;
+  username: string | null;
+  displayName: string | null;
   githubUsername: string | null;
   githubAvatarUrl: string | null;
   apiKeyPrefix: string | null;
@@ -155,54 +158,18 @@ interface ApiResponse<T> {
  */
 async function getUserInfo(): Promise<ApiResponse<CurrentUserInfo>> {
   try {
-    const { userId: clerkId } = await auth();
+    const { userId } = await safeAuth();
 
-    if (!clerkId) {
+    if (!userId) {
       return { success: false };
     }
 
-    // Find user by Clerk ID
-    const userResult = await db.select().from(users).where(eq(users.clerkId, clerkId)).limit(1);
+    const userResult = await db.select().from(users).where(eq(users.id, userId)).limit(1);
 
-    let user = userResult[0];
+    const user = userResult[0];
 
-    // Auto-create user if not found
     if (!user) {
-      const clerkUser = await currentUser();
-
-      if (!clerkUser) {
-        return { success: false };
-      }
-
-      // Get GitHub info from external accounts
-      const githubAccount = clerkUser.externalAccounts?.find(
-        (account) => account.provider === 'oauth_github'
-      );
-
-      const githubUsername =
-        githubAccount?.username || clerkUser.username || `user_${randomBytes(4).toString('hex')}`;
-      const githubId = String(githubAccount?.externalId || clerkId);
-      const githubAvatarUrl = githubAccount?.imageUrl || clerkUser.imageUrl || null;
-
-      // Generate API key for new user
-      const { hash, prefix } = generateApiKey(clerkId);
-
-      // Create new user
-      const newUserResult = await db
-        .insert(users)
-        .values({
-          clerkId,
-          githubId,
-          githubUsername,
-          githubAvatarUrl,
-          apiKeyHash: hash,
-          apiKeyPrefix: prefix,
-          userSalt: randomBytes(32).toString('hex'),
-          privacyMode: false,
-        })
-        .returning();
-
-      user = newUserResult[0];
+      return { success: false };
     }
 
     const currentRank = null; // Rankings removed — monitoring mode
@@ -211,6 +178,8 @@ async function getUserInfo(): Promise<ApiResponse<CurrentUserInfo>> {
       success: true,
       data: {
         id: user.id,
+        username: user.username,
+        displayName: user.displayName,
         githubUsername: user.githubUsername,
         githubAvatarUrl: user.githubAvatarUrl,
         apiKeyPrefix: user.apiKeyPrefix,
@@ -230,13 +199,12 @@ async function getUserInfo(): Promise<ApiResponse<CurrentUserInfo>> {
  * Get user profile directly from database
  * This avoids server-side fetch to self which can cause issues in production
  */
-async function getUserProfile(username: string): Promise<ApiResponse<UserProfile>> {
+async function getUserProfile(displayUsername: string, userId: string): Promise<ApiResponse<UserProfile>> {
   try {
-    // Find user by GitHub username
     const userResult = await db
       .select()
       .from(users)
-      .where(eq(users.githubUsername, username))
+      .where(eq(users.id, userId))
       .limit(1);
 
     const user = userResult[0];
@@ -251,6 +219,7 @@ async function getUserProfile(username: string): Promise<ApiResponse<UserProfile
         success: true,
         data: {
           username: 'Private User',
+          githubUsername: null,
           avatarUrl: null,
           joinedAt: user.createdAt?.toISOString() ?? new Date().toISOString(),
           stats: {
@@ -670,7 +639,8 @@ async function getUserProfile(username: string): Promise<ApiResponse<UserProfile
     return {
       success: true,
       data: {
-        username: user.githubUsername ?? 'Unknown',
+        username: displayUsername,
+        githubUsername: user.githubUsername ?? null,
         avatarUrl: user.githubAvatarUrl,
         joinedAt: user.createdAt?.toISOString() ?? new Date().toISOString(),
         stats: {
@@ -785,7 +755,9 @@ async function DashboardContent() {
 
   const userInfo = userInfoResult.data;
 
-  if (!userInfo.githubUsername) {
+  // Use username (self-registered) or githubUsername (OAuth) — at least one must exist
+  const effectiveUsername = userInfo.username ?? userInfo.githubUsername;
+  if (!effectiveUsername) {
     return (
       <div className="rounded-lg border bg-card p-8 text-center">
         <h3 className="text-lg font-semibold">{t('accountSetupRequired')}</h3>
@@ -794,7 +766,7 @@ async function DashboardContent() {
     );
   }
 
-  const profileResult = await getUserProfile(userInfo.githubUsername);
+  const profileResult = await getUserProfile(effectiveUsername, userInfo.id);
 
   if (!profileResult.success || !profileResult.data) {
     return (
@@ -835,15 +807,17 @@ async function DashboardContent() {
               <Calendar className="h-4 w-4" />
               {t('joined', { date: formatRelativeDate(profile.joinedAt) })}
             </span>
-            <a
-              href={`https://github.com/${profile.username}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 hover:text-foreground"
-            >
-              <Github className="h-4 w-4" />
-              {tCommon('github')}
-            </a>
+            {profile.githubUsername && (
+              <a
+                href={`https://github.com/${profile.githubUsername}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 hover:text-foreground"
+              >
+                <Github className="h-4 w-4" />
+                {tCommon('github')}
+              </a>
+            )}
             <Link
               href="/dashboard/settings"
               className="flex items-center gap-1 hover:text-foreground"
@@ -935,12 +909,6 @@ async function DashboardContent() {
 }
 
 export default async function DashboardPage() {
-  const user = await currentUser();
-
-  if (!user) {
-    redirect('/sign-in');
-  }
-
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
       <Suspense fallback={<DashboardSkeleton />}>

@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { safeAuth } from '@/lib/safe-auth';
 import { db, users } from "@/db";
 import { eq } from "drizzle-orm";
 import { successResponse, Errors } from "@/lib/api-response";
@@ -22,21 +22,20 @@ interface RegenerateKeyResponse {
  * The old key is immediately invalidated.
  * The new key is only shown once in this response.
  *
- * Requires Clerk authentication.
+ * Requires JWT session authentication.
  */
 export async function POST(request: Request) {
   try {
-    const { userId: clerkId } = await auth();
+    const { userId } = await safeAuth();
 
-    if (!clerkId) {
+    if (!userId) {
       return Errors.unauthorized();
     }
 
-    // Find user by Clerk ID
     const userResult = await db
       .select()
       .from(users)
-      .where(eq(users.clerkId, clerkId))
+      .where(eq(users.id, userId))
       .limit(1);
 
     const user = userResult[0];

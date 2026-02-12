@@ -191,6 +191,6 @@
     }
   },
   "footer": {
-    "builtWith": "Built with Next.js 16, Clerk, and Neon"
+    "builtWith": "Built with Next.js 16 and Neon"
   }
 }

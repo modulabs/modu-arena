@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server';
+import { safeAuth } from '@/lib/safe-auth';
 import { z } from 'zod';
 import { db, users } from '@/db';
 import { eq } from 'drizzle-orm';
@@ -28,13 +28,13 @@ interface UserSettings {
  * Currently supports:
  * - privacyMode: boolean - Hide username and stats from leaderboard
  *
- * Requires Clerk authentication.
+ * Requires JWT session authentication.
  */
 export async function PATCH(request: Request) {
   try {
-    const { userId: clerkId } = await auth();
+    const { userId } = await safeAuth();
 
-    if (!clerkId) {
+    if (!userId) {
       return Errors.unauthorized();
     }
 
@@ -62,8 +62,7 @@ export async function PATCH(request: Request) {
       return Errors.validationError('No settings to update');
     }
 
-    // Find user by Clerk ID
-    const userResult = await db.select().from(users).where(eq(users.clerkId, clerkId)).limit(1);
+    const userResult = await db.select().from(users).where(eq(users.id, userId)).limit(1);
 
     const user = userResult[0];
 
@@ -128,17 +127,17 @@ export async function PATCH(request: Request) {
  *
  * Regenerates the user's API key.
  * Returns the new full key (shown once to the user) and the stored prefix.
- * Requires Clerk authentication.
+ * Requires JWT session authentication.
  */
 export async function POST(request: Request) {
   try {
-    const { userId: clerkId } = await auth();
+    const { userId } = await safeAuth();
 
-    if (!clerkId) {
+    if (!userId) {
       return Errors.unauthorized();
     }
 
-    const userResult = await db.select().from(users).where(eq(users.clerkId, clerkId)).limit(1);
+    const userResult = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     const user = userResult[0];
 
     if (!user) {
@@ -173,24 +172,23 @@ export async function POST(request: Request) {
  * GET /api/me/settings
  *
  * Returns current user settings.
- * Requires Clerk authentication.
+ * Requires JWT session authentication.
  */
 export async function GET() {
   try {
-    const { userId: clerkId } = await auth();
+    const { userId } = await safeAuth();
 
-    if (!clerkId) {
+    if (!userId) {
       return Errors.unauthorized();
     }
 
-    // Find user by Clerk ID
     const userResult = await db
       .select({
         privacyMode: users.privacyMode,
         updatedAt: users.updatedAt,
       })
       .from(users)
-      .where(eq(users.clerkId, clerkId))
+      .where(eq(users.id, userId))
       .limit(1);
 
     const user = userResult[0];

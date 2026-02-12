@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { auth } from '@clerk/nextjs/server';
+import { safeAuth } from '@/lib/safe-auth';
 import { db, users, projectEvaluations } from '@/db';
 import { eq, and, gte, sql } from 'drizzle-orm';
 import { successResponse, Errors, corsOptionsResponse } from '@/lib/api-response';
@@ -45,39 +45,27 @@ interface EvaluationResponse {
 }
 
 /**
- * Resolve userId from either Clerk session or API Key + HMAC auth.
+ * Resolve userId from JWT session cookie or API Key + HMAC auth.
  * Returns the internal user ID, auth method, and bodyText (if API key auth consumed it).
  */
 async function resolveUserId(
   request: NextRequest
 ): Promise<
-  | { userId: string; authMethod: 'clerk'; bodyText: null }
+  | { userId: string; authMethod: 'session'; bodyText: null }
   | { userId: string; authMethod: 'apikey'; bodyText: string }
   | { error: ReturnType<typeof Errors.unauthorized> }
 > {
-  // 1. Try Clerk auth first
-  try {
-    const { userId: clerkId } = await auth();
-    if (clerkId) {
-      const userResult = await db
-        .select()
-        .from(users)
-        .where(eq(users.clerkId, clerkId))
-        .limit(1);
-      const user = userResult[0];
-      if (user) {
-        return { userId: user.id, authMethod: 'clerk', bodyText: null };
-      }
-    }
-  } catch {
-    // Clerk auth failed silently, fall through to API key auth
+  // 1. Try JWT session cookie first
+  const { userId } = await safeAuth();
+  if (userId) {
+    return { userId, authMethod: 'session', bodyText: null };
   }
 
   // 2. Try API Key + HMAC auth
   const { apiKey, timestamp, signature } = extractHmacAuth(request.headers);
 
   if (!apiKey) {
-    return { error: Errors.unauthorized('Authentication required. Provide Clerk session or API Key.') };
+    return { error: Errors.unauthorized('Authentication required. Provide session cookie or API Key.') };
   }
 
   const user = await validateApiKey(apiKey);
@@ -103,7 +91,7 @@ async function resolveUserId(
  * POST /api/v1/evaluate
  *
  * Evaluates a project using LLM and stores results if passing.
- * Supports dual authentication: Clerk session OR API Key + HMAC.
+ * Supports dual authentication: JWT session OR API Key + HMAC.
  *
  * Headers (for API Key auth):
  * - X-API-Key: User's API key
@@ -123,7 +111,7 @@ async function resolveUserId(
  */
 export async function POST(request: NextRequest) {
   try {
-    // Dual auth: Clerk session OR API Key + HMAC
+    // Dual auth: JWT session OR API Key + HMAC
     const authResult = await resolveUserId(request);
 
     if ('error' in authResult) {
@@ -135,14 +123,12 @@ export async function POST(request: NextRequest) {
     // Parse request body
     let body: unknown;
     if (authMethod === 'apikey' && bodyText) {
-      // Body was already consumed for HMAC verification — parse from cached text
       try {
         body = JSON.parse(bodyText);
       } catch {
         return Errors.validationError('Invalid JSON body');
       }
     } else {
-      // Clerk auth — body stream not yet consumed
       body = await request.json();
     }
 

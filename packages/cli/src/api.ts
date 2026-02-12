@@ -135,6 +135,47 @@ export async function getRank(
   return data as RankResponse;
 }
 
+// ─── Auth ─────────────────────────────────────────────────────────────────
+
+export interface AuthResponse {
+  success: boolean;
+  apiKey?: string;
+  user?: { id: string; username: string; displayName?: string };
+  error?: string;
+}
+
+export async function registerUser(
+  payload: { username: string; password: string; displayName?: string },
+  serverUrl?: string,
+): Promise<AuthResponse> {
+  const body = JSON.stringify(payload);
+  const url = `${serverUrl || API_BASE_URL}/api/auth/register`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
+
+  return (await res.json()) as AuthResponse;
+}
+
+export async function loginUser(
+  payload: { username: string; password: string },
+  serverUrl?: string,
+): Promise<AuthResponse> {
+  const body = JSON.stringify({ ...payload, source: 'cli' });
+  const url = `${serverUrl || API_BASE_URL}/api/auth/login`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
+
+  return (await res.json()) as AuthResponse;
+}
+
 // ─── Evaluate ─────────────────────────────────────────────────────────────
 
 export interface EvaluatePayload {

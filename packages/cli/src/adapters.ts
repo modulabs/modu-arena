@@ -1,16 +1,20 @@
 /**
- * Tool Adapters — Hook installation for each supported AI coding tool.
+ * Tool Adapters — Cross-platform hook installation for AI coding tools.
  *
- * Each adapter knows how to:
- * 1. Detect if the tool is installed
- * 2. Install a session-end hook to capture token usage
- * 3. Parse session data from tool-specific formats
+ * Generates Node.js hook scripts (works on all platforms) with
+ * thin shell wrappers (.sh on Unix, .cmd on Windows).
  */
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, writeFileSync, mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { API_BASE_URL, type ToolType } from './constants.js';
+
+// ─── Platform ──────────────────────────────────────────────────────────────
+
+const IS_WIN = process.platform === 'win32';
+
+// ─── Types ─────────────────────────────────────────────────────────────────
 
 export interface ToolAdapter {
   slug: ToolType;
@@ -26,399 +30,164 @@ export interface InstallResult {
   hookPath?: string;
 }
 
-// ─── Claude Code Adapter ───────────────────────────────────────────────────
+interface EnvField {
+  key: string;
+  env: string;
+  parse: 'string' | 'int';
+  fallback: string;
+}
+
+// ─── Hook Script Generation ────────────────────────────────────────────────
+
+const HOOK_JS = '_modu-hook.js';
+
+function baseFields(prefix: string): EnvField[] {
+  return [
+    { key: 'sessionId', env: `${prefix}_SESSION_ID`, parse: 'string', fallback: '' },
+    { key: 'startedAt', env: `${prefix}_SESSION_STARTED_AT`, parse: 'string', fallback: '' },
+    { key: 'inputTokens', env: `${prefix}_INPUT_TOKENS`, parse: 'int', fallback: '0' },
+    { key: 'outputTokens', env: `${prefix}_OUTPUT_TOKENS`, parse: 'int', fallback: '0' },
+    { key: 'modelName', env: `${prefix}_MODEL`, parse: 'string', fallback: 'unknown' },
+  ];
+}
+
+function generateHookJs(apiKey: string, toolType: string, prefix: string, fields: EnvField[]): string {
+  const lines = fields.map((f) =>
+    f.parse === 'int'
+      ? `    ${f.key}: parseInt(process.env["${f.env}"] || "${f.fallback}", 10)`
+      : `    ${f.key}: process.env["${f.env}"] || "${f.fallback}"`
+  );
+
+  return `#!/usr/bin/env node
+"use strict";
+var crypto = require("crypto");
+
+var API_KEY = ${JSON.stringify(apiKey)};
+var SERVER  = ${JSON.stringify(API_BASE_URL)};
+
+if (!process.env["${prefix}_SESSION_ID"]) process.exit(0);
+
+var body = JSON.stringify({
+    toolType: ${JSON.stringify(toolType)},
+    endedAt: new Date().toISOString(),
+${lines.join(",\n")}
+});
+
+var ts  = Math.floor(Date.now() / 1000).toString();
+var sig = crypto.createHmac("sha256", API_KEY).update(ts + ":" + body).digest("hex");
+
+fetch(SERVER + "/api/v1/sessions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-API-Key": API_KEY, "X-Timestamp": ts, "X-Signature": sig },
+    body: body
+}).catch(function(){});
+`;
+}
+
+function shellWrapper(): string {
+  return `#!/bin/bash
+exec node "$(dirname "$0")/${HOOK_JS}"
+`;
+}
+
+function cmdWrapper(): string {
+  return `@node "%~dp0${HOOK_JS}" 2>nul\r\n`;
+}
+
+// ─── Shared Install Logic ──────────────────────────────────────────────────
+
+function installHook(
+  displayName: string,
+  hooksDir: string,
+  entryPath: string,
+  apiKey: string,
+  toolType: string,
+  prefix: string,
+  fields: EnvField[],
+): InstallResult {
+  try {
+    if (!existsSync(hooksDir)) mkdirSync(hooksDir, { recursive: true });
+
+    writeFileSync(join(hooksDir, HOOK_JS), generateHookJs(apiKey, toolType, prefix, fields), { mode: 0o755 });
+
+    if (IS_WIN) {
+      writeFileSync(entryPath, cmdWrapper());
+    } else {
+      writeFileSync(entryPath, shellWrapper(), { mode: 0o755 });
+    }
+
+    return { success: true, message: `${displayName} hook installed at ${entryPath}`, hookPath: entryPath };
+  } catch (err) {
+    return { success: false, message: `Failed to install ${displayName} hook: ${err}` };
+  }
+}
+
+function hookEntryName(): string {
+  return IS_WIN ? 'session-end.cmd' : 'session-end.sh';
+}
+
+// ─── Adapters ──────────────────────────────────────────────────────────────
 
 class ClaudeCodeAdapter implements ToolAdapter {
   slug = 'claude-code' as const;
   displayName = 'Claude Code';
 
-  private get configDir(): string {
-    return join(homedir(), '.claude');
-  }
+  private get configDir() { return join(homedir(), '.claude'); }
+  private get hooksDir() { return join(this.configDir, 'hooks'); }
 
-  private get hooksDir(): string {
-    return join(this.configDir, 'hooks');
-  }
+  getHookPath() { return join(this.hooksDir, hookEntryName()); }
+  detect() { return existsSync(this.configDir); }
 
-  getHookPath(): string {
-    return join(this.hooksDir, 'session-end.sh');
-  }
-
-  detect(): boolean {
-    // Check for ~/.claude directory or claude binary
-    return existsSync(this.configDir);
-  }
-
-  install(apiKey: string): InstallResult {
-    try {
-      if (!existsSync(this.hooksDir)) {
-        mkdirSync(this.hooksDir, { recursive: true });
-      }
-
-      const hookScript = this.generateHookScript(apiKey);
-      const hookPath = this.getHookPath();
-
-      writeFileSync(hookPath, hookScript, { mode: 0o755 });
-
-      return {
-        success: true,
-        message: `Claude Code hook installed at ${hookPath}`,
-        hookPath,
-      };
-    } catch (err) {
-      return {
-        success: false,
-        message: `Failed to install Claude Code hook: ${err}`,
-      };
-    }
-  }
-
-   private generateHookScript(apiKey: string): string {
-     return `#!/bin/bash
-# Modu-Arena: Claude Code session tracking hook
-# Auto-generated — do not edit manually
-
-MODU_API_KEY="${apiKey}"
-MODU_SERVER="${API_BASE_URL}"
-
-# Claude Code passes session data via environment variables
-# This hook fires at session end
-if [ -n "$CLAUDE_SESSION_ID" ]; then
-  SESSION_DATA=$(cat <<EOF
-{
-  "toolType": "claude-code",
-  "sessionId": "$CLAUDE_SESSION_ID",
-  "startedAt": "$CLAUDE_SESSION_STARTED_AT",
-  "endedAt": "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)",
-  "inputTokens": \${CLAUDE_INPUT_TOKENS:-0},
-  "outputTokens": \${CLAUDE_OUTPUT_TOKENS:-0},
-  "cacheCreationTokens": \${CLAUDE_CACHE_CREATION_TOKENS:-0},
-  "cacheReadTokens": \${CLAUDE_CACHE_READ_TOKENS:-0},
-  "modelName": "\${CLAUDE_MODEL:-unknown}"
-}
-EOF
-)
-
-  TIMESTAMP=$(date +%s)
-  MESSAGE="\${TIMESTAMP}:\${SESSION_DATA}"
-  SIGNATURE=$(echo -n "$MESSAGE" | openssl dgst -sha256 -hmac "$MODU_API_KEY" | sed 's/.*= //')
-
-  curl -s -X POST "\${MODU_SERVER}/api/v1/sessions" \\
-    -H "Content-Type: application/json" \\
-    -H "X-API-Key: \${MODU_API_KEY}" \\
-    -H "X-Timestamp: \${TIMESTAMP}" \\
-    -H "X-Signature: \${SIGNATURE}" \\
-    -d "\${SESSION_DATA}" > /dev/null 2>&1 &
-fi
-`;
+  install(apiKey: string) {
+    return installHook(this.displayName, this.hooksDir, this.getHookPath(), apiKey, 'claude-code', 'CLAUDE',
+      [
+        ...baseFields('CLAUDE'),
+        { key: 'cacheCreationTokens', env: 'CLAUDE_CACHE_CREATION_TOKENS', parse: 'int', fallback: '0' },
+        { key: 'cacheReadTokens', env: 'CLAUDE_CACHE_READ_TOKENS', parse: 'int', fallback: '0' },
+      ],
+    );
   }
 }
-
-// ─── OpenCode Adapter ──────────────────────────────────────────────────────
 
 class OpenCodeAdapter implements ToolAdapter {
   slug = 'opencode' as const;
   displayName = 'OpenCode';
 
-  private get configDir(): string {
-    return join(homedir(), '.opencode');
+  // OpenCode uses ~/.config/opencode on ALL platforms (including Windows)
+  // It uses xdg-basedir which respects XDG_CONFIG_HOME on all platforms
+  private get configDir() {
+    return join(process.env.XDG_CONFIG_HOME || join(homedir(), '.config'), 'opencode');
   }
+  private get hooksDir() { return join(this.configDir, 'hooks'); }
 
-  getHookPath(): string {
-    return join(this.configDir, 'hooks', 'session-end.sh');
-  }
+  getHookPath() { return join(this.hooksDir, hookEntryName()); }
+  detect() { return existsSync(this.configDir); }
 
-  detect(): boolean {
-    return existsSync(this.configDir);
-  }
-
-  install(apiKey: string): InstallResult {
-    try {
-      const hooksDir = join(this.configDir, 'hooks');
-      if (!existsSync(hooksDir)) mkdirSync(hooksDir, { recursive: true });
-
-      const hookScript = this.generateHookScript(apiKey);
-      const hookPath = this.getHookPath();
-      writeFileSync(hookPath, hookScript, { mode: 0o755 });
-
-      return {
-        success: true,
-        message: `OpenCode hook installed at ${hookPath}`,
-        hookPath,
-      };
-    } catch (err) {
-      return {
-        success: false,
-        message: `Failed to install OpenCode hook: ${err}`,
-      };
-    }
-  }
-
-   private generateHookScript(apiKey: string): string {
-     return `#!/bin/bash
-# Modu-Arena: OpenCode session tracking hook
-# Auto-generated — do not edit manually
-
-MODU_API_KEY="${apiKey}"
-MODU_SERVER="${API_BASE_URL}"
-
-if [ -n "$OPENCODE_SESSION_ID" ]; then
-  SESSION_DATA=$(cat <<EOF
-{
-  "toolType": "opencode",
-  "sessionId": "$OPENCODE_SESSION_ID",
-  "startedAt": "$OPENCODE_SESSION_STARTED_AT",
-  "endedAt": "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)",
-  "inputTokens": \${OPENCODE_INPUT_TOKENS:-0},
-  "outputTokens": \${OPENCODE_OUTPUT_TOKENS:-0},
-  "modelName": "\${OPENCODE_MODEL:-unknown}"
-}
-EOF
-)
-
-  TIMESTAMP=$(date +%s)
-  MESSAGE="\${TIMESTAMP}:\${SESSION_DATA}"
-  SIGNATURE=$(echo -n "$MESSAGE" | openssl dgst -sha256 -hmac "$MODU_API_KEY" | sed 's/.*= //')
-
-  curl -s -X POST "\${MODU_SERVER}/api/v1/sessions" \\
-    -H "Content-Type: application/json" \\
-    -H "X-API-Key: \${MODU_API_KEY}" \\
-    -H "X-Timestamp: \${TIMESTAMP}" \\
-    -H "X-Signature: \${SIGNATURE}" \\
-    -d "\${SESSION_DATA}" > /dev/null 2>&1 &
-fi
-`;
+  install(apiKey: string) {
+    return installHook(this.displayName, this.hooksDir, this.getHookPath(), apiKey, 'opencode', 'OPENCODE',
+      baseFields('OPENCODE'),
+    );
   }
 }
 
-// ─── Gemini CLI Adapter ────────────────────────────────────────────────────
+class SimpleAdapter implements ToolAdapter {
+  constructor(
+    public slug: ToolType,
+    public displayName: string,
+    private dirName: string,
+    private envPrefix: string,
+  ) {}
 
-class GeminiAdapter implements ToolAdapter {
-  slug = 'gemini' as const;
-  displayName = 'Gemini CLI';
+  private get configDir() { return join(homedir(), this.dirName); }
+  private get hooksDir() { return join(this.configDir, 'hooks'); }
 
-  private get configDir(): string {
-    return join(homedir(), '.gemini');
-  }
+  getHookPath() { return join(this.hooksDir, hookEntryName()); }
+  detect() { return existsSync(this.configDir); }
 
-  getHookPath(): string {
-    return join(this.configDir, 'hooks', 'session-end.sh');
-  }
-
-  detect(): boolean {
-    return existsSync(this.configDir);
-  }
-
-  install(apiKey: string): InstallResult {
-    try {
-      const hooksDir = join(this.configDir, 'hooks');
-      if (!existsSync(hooksDir)) mkdirSync(hooksDir, { recursive: true });
-
-      const hookScript = this.generateHookScript(apiKey);
-      const hookPath = this.getHookPath();
-      writeFileSync(hookPath, hookScript, { mode: 0o755 });
-
-      return {
-        success: true,
-        message: `Gemini CLI hook installed at ${hookPath}`,
-        hookPath,
-      };
-    } catch (err) {
-      return {
-        success: false,
-        message: `Failed to install Gemini CLI hook: ${err}`,
-      };
-    }
-  }
-
-   private generateHookScript(apiKey: string): string {
-     return `#!/bin/bash
-# Modu-Arena: Gemini CLI session tracking hook
-# Auto-generated — do not edit manually
-
-MODU_API_KEY="${apiKey}"
-MODU_SERVER="${API_BASE_URL}"
-
-if [ -n "$GEMINI_SESSION_ID" ]; then
-  SESSION_DATA=$(cat <<EOF
-{
-  "toolType": "gemini",
-  "sessionId": "$GEMINI_SESSION_ID",
-  "startedAt": "$GEMINI_SESSION_STARTED_AT",
-  "endedAt": "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)",
-  "inputTokens": \${GEMINI_INPUT_TOKENS:-0},
-  "outputTokens": \${GEMINI_OUTPUT_TOKENS:-0},
-  "modelName": "\${GEMINI_MODEL:-unknown}"
-}
-EOF
-)
-
-  TIMESTAMP=$(date +%s)
-  MESSAGE="\${TIMESTAMP}:\${SESSION_DATA}"
-  SIGNATURE=$(echo -n "$MESSAGE" | openssl dgst -sha256 -hmac "$MODU_API_KEY" | sed 's/.*= //')
-
-  curl -s -X POST "\${MODU_SERVER}/api/v1/sessions" \\
-    -H "Content-Type: application/json" \\
-    -H "X-API-Key: \${MODU_API_KEY}" \\
-    -H "X-Timestamp: \${TIMESTAMP}" \\
-    -H "X-Signature: \${SIGNATURE}" \\
-    -d "\${SESSION_DATA}" > /dev/null 2>&1 &
-fi
-`;
-  }
-}
-
-// ─── Codex CLI Adapter ─────────────────────────────────────────────────────
-
-class CodexAdapter implements ToolAdapter {
-  slug = 'codex' as const;
-  displayName = 'Codex CLI';
-
-  private get configDir(): string {
-    return join(homedir(), '.codex');
-  }
-
-  getHookPath(): string {
-    return join(this.configDir, 'hooks', 'session-end.sh');
-  }
-
-  detect(): boolean {
-    return existsSync(this.configDir);
-  }
-
-  install(apiKey: string): InstallResult {
-    try {
-      const hooksDir = join(this.configDir, 'hooks');
-      if (!existsSync(hooksDir)) mkdirSync(hooksDir, { recursive: true });
-
-      const hookScript = this.generateHookScript(apiKey);
-      const hookPath = this.getHookPath();
-      writeFileSync(hookPath, hookScript, { mode: 0o755 });
-
-      return {
-        success: true,
-        message: `Codex CLI hook installed at ${hookPath}`,
-        hookPath,
-      };
-    } catch (err) {
-      return {
-        success: false,
-        message: `Failed to install Codex CLI hook: ${err}`,
-      };
-    }
-  }
-
-   private generateHookScript(apiKey: string): string {
-     return `#!/bin/bash
-# Modu-Arena: Codex CLI session tracking hook
-# Auto-generated — do not edit manually
-
-MODU_API_KEY="${apiKey}"
-MODU_SERVER="${API_BASE_URL}"
-
-if [ -n "$CODEX_SESSION_ID" ]; then
-  SESSION_DATA=$(cat <<EOF
-{
-  "toolType": "codex",
-  "sessionId": "$CODEX_SESSION_ID",
-  "startedAt": "$CODEX_SESSION_STARTED_AT",
-  "endedAt": "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)",
-  "inputTokens": \${CODEX_INPUT_TOKENS:-0},
-  "outputTokens": \${CODEX_OUTPUT_TOKENS:-0},
-  "modelName": "\${CODEX_MODEL:-unknown}"
-}
-EOF
-)
-
-  TIMESTAMP=$(date +%s)
-  MESSAGE="\${TIMESTAMP}:\${SESSION_DATA}"
-  SIGNATURE=$(echo -n "$MESSAGE" | openssl dgst -sha256 -hmac "$MODU_API_KEY" | sed 's/.*= //')
-
-  curl -s -X POST "\${MODU_SERVER}/api/v1/sessions" \\
-    -H "Content-Type: application/json" \\
-    -H "X-API-Key: \${MODU_API_KEY}" \\
-    -H "X-Timestamp: \${TIMESTAMP}" \\
-    -H "X-Signature: \${SIGNATURE}" \\
-    -d "\${SESSION_DATA}" > /dev/null 2>&1 &
-fi
-`;
-  }
-}
-
-// ─── Crush Adapter ─────────────────────────────────────────────────────────
-
-class CrushAdapter implements ToolAdapter {
-  slug = 'crush' as const;
-  displayName = 'Crush';
-
-  private get configDir(): string {
-    return join(homedir(), '.crush');
-  }
-
-  getHookPath(): string {
-    return join(this.configDir, 'hooks', 'session-end.sh');
-  }
-
-  detect(): boolean {
-    return existsSync(this.configDir);
-  }
-
-  install(apiKey: string): InstallResult {
-    try {
-      const hooksDir = join(this.configDir, 'hooks');
-      if (!existsSync(hooksDir)) mkdirSync(hooksDir, { recursive: true });
-
-      const hookScript = this.generateHookScript(apiKey);
-      const hookPath = this.getHookPath();
-      writeFileSync(hookPath, hookScript, { mode: 0o755 });
-
-      return {
-        success: true,
-        message: `Crush hook installed at ${hookPath}`,
-        hookPath,
-      };
-    } catch (err) {
-      return {
-        success: false,
-        message: `Failed to install Crush hook: ${err}`,
-      };
-    }
-  }
-
-   private generateHookScript(apiKey: string): string {
-     return `#!/bin/bash
-# Modu-Arena: Crush session tracking hook
-# Auto-generated — do not edit manually
-
-MODU_API_KEY="${apiKey}"
-MODU_SERVER="${API_BASE_URL}"
-
-if [ -n "$CRUSH_SESSION_ID" ]; then
-  SESSION_DATA=$(cat <<EOF
-{
-  "toolType": "crush",
-  "sessionId": "$CRUSH_SESSION_ID",
-  "startedAt": "$CRUSH_SESSION_STARTED_AT",
-  "endedAt": "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)",
-  "inputTokens": \${CRUSH_INPUT_TOKENS:-0},
-  "outputTokens": \${CRUSH_OUTPUT_TOKENS:-0},
-  "modelName": "\${CRUSH_MODEL:-unknown}"
-}
-EOF
-)
-
-  TIMESTAMP=$(date +%s)
-  MESSAGE="\${TIMESTAMP}:\${SESSION_DATA}"
-  SIGNATURE=$(echo -n "$MESSAGE" | openssl dgst -sha256 -hmac "$MODU_API_KEY" | sed 's/.*= //')
-
-  curl -s -X POST "\${MODU_SERVER}/api/v1/sessions" \\
-    -H "Content-Type: application/json" \\
-    -H "X-API-Key: \${MODU_API_KEY}" \\
-    -H "X-Timestamp: \${TIMESTAMP}" \\
-    -H "X-Signature: \${SIGNATURE}" \\
-    -d "\${SESSION_DATA}" > /dev/null 2>&1 &
-fi
-`;
+  install(apiKey: string) {
+    return installHook(this.displayName, this.hooksDir, this.getHookPath(), apiKey, this.slug, this.envPrefix,
+      baseFields(this.envPrefix),
+    );
   }
 }
 
@@ -428,9 +197,9 @@ export function getAllAdapters(): ToolAdapter[] {
   return [
     new ClaudeCodeAdapter(),
     new OpenCodeAdapter(),
-    new GeminiAdapter(),
-    new CodexAdapter(),
-    new CrushAdapter(),
+    new SimpleAdapter('gemini', 'Gemini CLI', '.gemini', 'GEMINI'),
+    new SimpleAdapter('codex', 'Codex CLI', '.codex', 'CODEX'),
+    new SimpleAdapter('crush', 'Crush', '.crush', 'CRUSH'),
   ];
 }
 

@@ -1,15 +1,11 @@
 import { Link } from '@/i18n/routing';
-import { SignInButton, SignUpButton, UserButton } from '@clerk/nextjs';
 import { safeAuth } from '@/lib/safe-auth';
 import { Trophy, LayoutDashboard } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { Button } from '@/components/ui/button';
 import { LanguageSelector } from './language-selector';
 import { GitHubButton } from './github-button';
-
-const hasClerkKeys =
-  !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
-  !!process.env.CLERK_SECRET_KEY;
+import { LogoutButton } from './logout-button';
 
 export async function Header() {
   const { userId } = await safeAuth();
@@ -20,7 +16,7 @@ export async function Header() {
       <div className="container mx-auto flex h-14 max-w-6xl items-center px-4">
         <Link href="/" className="flex items-center gap-2 font-bold">
           <Trophy className="h-5 w-5 text-yellow-500" />
-          <span>MoAI Rank</span>
+          <span>Modu Arena</span>
         </Link>
 
         <nav className="ml-6 hidden items-center gap-4 md:flex">
@@ -36,7 +32,7 @@ export async function Header() {
           <LanguageSelector />
           <GitHubButton />
 
-          {hasClerkKeys && userId ? (
+          {userId ? (
             <>
               <Button variant="outline" size="sm" asChild className="hidden sm:inline-flex">
                 <Link href="/dashboard">
@@ -49,27 +45,18 @@ export async function Header() {
                   <LayoutDashboard className="h-5 w-5" />
                 </Link>
               </Button>
-              <UserButton
-                afterSignOutUrl="/"
-                appearance={{
-                  elements: {
-                    avatarBox: 'h-8 w-8',
-                  },
-                }}
-              />
+              <LogoutButton />
             </>
-          ) : hasClerkKeys ? (
+          ) : (
             <>
-              <SignInButton mode="modal">
-                <Button variant="ghost" size="sm">
-                  {t('signIn')}
-                </Button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <Button size="sm">{t('signUp')}</Button>
-              </SignUpButton>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/sign-in">{t('signIn')}</Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link href="/sign-up">{t('signUp')}</Link>
+              </Button>
             </>
-          ) : null}
+          )}
         </div>
       </div>
     </header>

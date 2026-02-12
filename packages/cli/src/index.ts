@@ -12,7 +12,9 @@
 
 import {
   installCommand,
+  loginCommand,
   rankCommand,
+  registerCommand,
   statusCommand,
   submitCommand,
   uninstallCommand,
@@ -29,6 +31,8 @@ Usage:
    npx @suncreation/modu-arena <command> [options]
 
 Commands:
+   register    Create a new account (interactive)
+   login       Log in to an existing account (interactive)
    install     Set up hooks for detected AI coding tools
    rank        View your current stats and ranking
    status      Check configuration and installed hooks
@@ -41,9 +45,10 @@ Options:
    --version, -v     Show version
 
 Examples:
+   npx @suncreation/modu-arena register
+   npx @suncreation/modu-arena login
    npx @suncreation/modu-arena install --api-key modu_arena_AbCdEfGh_xxx...
    npx @suncreation/modu-arena rank
-   npx @suncreation/modu-arena status
 `);
 }
 
@@ -59,6 +64,12 @@ async function main(): Promise<void> {
   }
 
   switch (command) {
+    case 'register':
+      await registerCommand();
+      break;
+    case 'login':
+      await loginCommand();
+      break;
     case 'install': {
       const keyIndex = args.indexOf('--api-key');
       const apiKey = keyIndex >= 0 ? args[keyIndex + 1] : undefined;

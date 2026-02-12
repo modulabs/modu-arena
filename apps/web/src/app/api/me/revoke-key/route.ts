@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server';
+import { safeAuth } from '@/lib/safe-auth';
 import { createHash, randomBytes } from 'node:crypto';
 import { db, users } from '@/db';
 import { eq } from 'drizzle-orm';
@@ -22,18 +22,17 @@ interface RevokeKeyResponse {
  * User must generate a new key via regenerate-key or re-register.
  * Use this when an API key may have been compromised.
  *
- * Requires Clerk authentication.
+ * Requires JWT session authentication.
  */
 export async function POST(request: Request) {
   try {
-    const { userId: clerkId } = await auth();
+    const { userId } = await safeAuth();
 
-    if (!clerkId) {
+    if (!userId) {
       return Errors.unauthorized();
     }
 
-    // Find user by Clerk ID
-    const userResult = await db.select().from(users).where(eq(users.clerkId, clerkId)).limit(1);
+    const userResult = await db.select().from(users).where(eq(users.id, userId)).limit(1);
 
     const user = userResult[0];
 

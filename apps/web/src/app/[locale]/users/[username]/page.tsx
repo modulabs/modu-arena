@@ -16,6 +16,7 @@ import { DayOfWeekChart } from '@/components/profile/day-of-week-chart';
 import { CodeProductivityChart } from '@/components/profile/code-productivity-chart';
 import { VibeStyleCard } from '@/components/profile/vibe-style-card';
 import { ToolUsageChart } from '@/components/profile/tool-usage-chart';
+import { AgentTokenBreakdownCard } from '@/components/profile/agent-token-breakdown';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -90,6 +91,13 @@ interface VibeStyle {
   avgTurnsPerSession: number;
 }
 
+interface AgentBreakdown {
+  toolType: string;
+  tokens: number;
+  sessions: number;
+  percentage: number;
+}
+
 interface PublicUserProfile {
   username: string;
   avatarUrl: string | null;
@@ -109,6 +117,7 @@ interface PublicUserProfile {
   codeMetrics: CodeMetrics | null;
   toolUsage: ToolUsagePattern[];
   vibeStyle: VibeStyle | null;
+  agentBreakdown: AgentBreakdown[];
   isPrivate: boolean;
 }
 
@@ -118,7 +127,7 @@ interface ApiResponse {
 }
 
 async function getUserProfile(username: string): Promise<ApiResponse> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${process.env.PORT || '3000'}`;
 
   try {
     const response = await fetch(`${baseUrl}/api/users/${username}`, {
@@ -148,7 +157,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { username } = await params;
   return {
     title: `${username}'s Profile`,
-    description: `View ${username}'s AI token usage statistics and ranking on MoAI Rank.`,
+    description: `View ${username}'s AI token usage statistics and ranking on Modu Arena.`,
   };
 }
 
@@ -333,6 +342,11 @@ export default async function UserProfilePage({ params }: PageProps) {
       {/* Charts Grid */}
       <div className="mb-8 grid gap-6 md:grid-cols-2">
         <TokenBreakdownCard tokenBreakdown={profile.tokenBreakdown} />
+        <AgentTokenBreakdownCard agentBreakdown={profile.agentBreakdown ?? []} />
+      </div>
+
+      {/* Model Usage */}
+      <div className="mb-8 grid gap-6 md:grid-cols-1">
         <ModelUsageChart modelUsage={profile.modelUsage} />
       </div>
 

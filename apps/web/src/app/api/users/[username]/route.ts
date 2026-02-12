@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
-import { db, users, dailyUserStats, sessions, tokenUsage, projectEvaluations } from '@/db';
-import { eq, desc, sql, and, gte } from 'drizzle-orm';
+import { db, users, dailyUserStats, sessions, tokenUsage, projectEvaluations, userStats } from '@/db';
+import { eq, or, desc, sql, and, gte } from 'drizzle-orm';
 import { successResponse, Errors, corsOptionsResponse } from '@/lib/api-response';
 import { checkPublicRateLimit, extractIpAddress } from '@/lib/rate-limiter';
 
@@ -87,6 +87,16 @@ interface ToolUsagePattern {
 }
 
 /**
+ * Agent (AI tool) token breakdown
+ */
+interface AgentBreakdown {
+  toolType: string;
+  tokens: number;
+  sessions: number;
+  percentage: number;
+}
+
+/**
  * Vibe coding style analysis
  */
 interface VibeStyle {
@@ -124,6 +134,7 @@ interface PublicUserProfile {
   codeMetrics: CodeMetrics | null;
   toolUsage: ToolUsagePattern[];
   vibeStyle: VibeStyle | null;
+  agentBreakdown: AgentBreakdown[];
   isPrivate: boolean;
 }
 
@@ -153,11 +164,11 @@ export async function GET(
       return Errors.validationError('Username is required');
     }
 
-    // Find user by GitHub username
+    // Find user by username (self-registered) or GitHub username (OAuth)
     const userResult = await db
       .select()
       .from(users)
-      .where(eq(users.githubUsername, username))
+      .where(or(eq(users.username, username), eq(users.githubUsername, username)))
       .limit(1);
 
     const user = userResult[0];
@@ -187,6 +198,7 @@ export async function GET(
         codeMetrics: null,
         toolUsage: [],
         vibeStyle: null,
+        agentBreakdown: [],
         isPrivate: true,
       };
 
@@ -560,6 +572,37 @@ export async function GET(
 
     // ===== END: Vibe Coding Analytics =====
 
+    // ===== Agent (AI Tool) Token Breakdown =====
+    let agentBreakdown: AgentBreakdown[] = [];
+
+    const userStatsResult = await db
+      .select({
+        tokensByTool: userStats.tokensByTool,
+        sessionsByTool: userStats.sessionsByTool,
+      })
+      .from(userStats)
+      .where(eq(userStats.userId, user.id))
+      .limit(1);
+
+    const userStatsRow = userStatsResult[0];
+    if (userStatsRow) {
+      const tokensByTool = (userStatsRow.tokensByTool ?? {}) as Record<string, number>;
+      const sessionsByTool = (userStatsRow.sessionsByTool ?? {}) as Record<string, number>;
+
+      const totalAgentTokens = Object.values(tokensByTool).reduce((sum, v) => sum + Number(v), 0);
+
+      agentBreakdown = Object.entries(tokensByTool)
+        .map(([toolType, tokens]) => ({
+          toolType,
+          tokens: Number(tokens),
+          sessions: Number(sessionsByTool[toolType] ?? 0),
+          percentage: totalAgentTokens > 0
+            ? Math.round((Number(tokens) / totalAgentTokens) * 1000) / 10
+            : 0,
+        }))
+        .sort((a, b) => b.tokens - a.tokens);
+    }
+
     const profile: PublicUserProfile = {
       username: user.githubUsername,
       avatarUrl: user.githubAvatarUrl,
@@ -579,6 +622,7 @@ export async function GET(
       codeMetrics,
       toolUsage: toolUsagePatterns,
       vibeStyle,
+      agentBreakdown,
       isPrivate: false,
     };
 

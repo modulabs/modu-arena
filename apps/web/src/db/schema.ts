@@ -37,13 +37,14 @@ export const toolTypes = pgTable(
 
 // ============================================================================
 // Users table
-// Simplified for Modu platform - supports Clerk/GitHub auth
+// Self-hosted auth with username/password + optional GitHub link
 // ============================================================================
 export const users = pgTable(
   'users',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    clerkId: varchar('clerk_id', { length: 255 }).unique(),
+    username: varchar('username', { length: 255 }).unique().notNull(),
+    passwordHash: varchar('password_hash', { length: 255 }).notNull(),
     githubId: varchar('github_id', { length: 255 }).unique(),
     githubUsername: varchar('github_username', { length: 255 }),
     githubAvatarUrl: text('github_avatar_url'),

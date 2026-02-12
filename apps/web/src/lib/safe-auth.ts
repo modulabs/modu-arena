@@ -1,19 +1,23 @@
-const hasClerkKeys =
-  !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
-  !!process.env.CLERK_SECRET_KEY;
+import { cookies } from 'next/headers';
+import { verifySessionToken } from '@/lib/auth';
+import { db, users } from '@/db';
+import { eq } from 'drizzle-orm';
 
 export async function safeAuth(): Promise<{ userId: string | null }> {
-  if (!hasClerkKeys) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('session')?.value;
+    if (!token) return { userId: null };
+    const payload = await verifySessionToken(token);
+    return { userId: payload?.userId ?? null };
+  } catch {
     return { userId: null };
   }
-  const { auth } = await import('@clerk/nextjs/server');
-  return auth();
 }
 
 export async function safeCurrentUser() {
-  if (!hasClerkKeys) {
-    return null;
-  }
-  const { currentUser } = await import('@clerk/nextjs/server');
-  return currentUser();
+  const { userId } = await safeAuth();
+  if (!userId) return null;
+  const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  return result[0] ?? null;
 }

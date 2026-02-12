@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
       const usageData = await db
         .select({
           userId: dailyUserStats.userId,
-          username: users.githubUsername,
+          username: sql<string>`COALESCE(${users.username}, ${users.githubUsername}, 'Anonymous')`,
           avatarUrl: users.githubAvatarUrl,
           totalTokens: sql<number>`COALESCE(SUM(${dailyUserStats.totalTokens}), 0)`,
           sessionCount: sql<number>`COALESCE(SUM(${dailyUserStats.sessionCount}), 0)`,
@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
         .from(dailyUserStats)
         .innerJoin(users, eq(dailyUserStats.userId, users.id))
         .where(gte(dailyUserStats.statDate, rangeStartStr))
-        .groupBy(dailyUserStats.userId, users.githubUsername, users.githubAvatarUrl, users.privacyMode)
+        .groupBy(dailyUserStats.userId, users.username, users.githubUsername, users.githubAvatarUrl, users.privacyMode)
         .orderBy(desc(sql`SUM(${dailyUserStats.totalTokens})`))
         .limit(limit)
         .offset(offset);

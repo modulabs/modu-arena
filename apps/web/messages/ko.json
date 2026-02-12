@@ -87,7 +87,7 @@
     "tryAgainMessage": "나중에 다시 시도하거나 페이지를 새로고침해 주세요.",
     "backToDashboard": "대시보드로 돌아가기",
     "apiKey": "API 키",
-    "apiKeyDescription": "MoAI CLI 인증에 이 키를 사용하세요",
+    "apiKeyDescription": "Modu Arena CLI 인증에 이 키를 사용하세요",
     "regenerateApiKey": "API 키 재생성",
     "regenerateConfirmTitle": "API 키를 재생성하시겠습니까?",
     "regenerateConfirmMessage": "현재 API 키가 즉시 무효화됩니다. 기존 연동이 작동을 멈출 수 있습니다.",
@@ -191,6 +191,6 @@
     }
   },
   "footer": {
-    "builtWith": "Next.js 16, Clerk, Neon으로 제작"
+    "builtWith": "Next.js 16, Neon으로 제작"
   }
 }

@@ -10,255 +10,74 @@ A competitive leaderboard platform for tracking Claude Code token usage. Track y
 
 [English](README.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [中文](README.zh.md)
 
-> **⚠️ Important Notice (2025-01-25)**
->
-> Due to a production environment migration, **all existing accounts have been reset**. If you were previously registered, please **sign up again** at [arena.modu.ai](https://arena.modu.ai). We apologize for any inconvenience.
-
 ---
 
-## 📚 Everyone's AI Agentic Coding Lecture
+## 🚀 Quick Start: Install Modu-Arena CLI
 
-This project was created as a **lecture example demonstrating practical Modu-Arena usage**.
+Track your AI coding tool token usage with a single command.
 
-### 🎯 Project Purpose
-
-**Experience a new dimension of agentic coding!**
-
-Modu-Arena was created for the following learning purposes:
-
-- **Real-world AI Agent Orchestration**: A complete system built through collaboration of 20 specialized agents
-- **SPEC-First TDD Realization**: Perfect quality process from specifications to tests
-- **Scalable Architecture**: Production-ready code with caching, data retention policies, and performance optimizations
-- **Open Source Contribution**: Releasing all code to contribute to community learning
-
-### ⚠️ Development Environment
-
-**48-Hour Hacking Project**
-
-This project was intensively built using Modu-Arena over 48 hours. A practical example demonstrating rapid development in real-world environments.
-
-**Development Characteristics**:
-
-- Core functionality implemented using Modu-Arena's `/moai` unified autonomous automation command
-- Cost-effective development using GLM 4.7 and Claude Opus in hybrid
-- Worktree parallel development for simultaneous development of independent functional modules
-
-**Testing Insufficiency Notice**:
-
-- Due to the 48-hour development, sufficient testing may not have been conducted
-- If you find any errors or improvements, please leave them at [GitHub Issues](https://github.com/modulabs/modu-arena/issues)
-- Community contributions make the project more robust
-
-### 🔗 Related Projects
-
-- **[Modu-Arena](https://github.com/modulabs/modu-arena)**: AI Development Framework
-
----
-
-## 🚀 Before You Start: Install Modu-Arena
-
-To use Modu-Arena, **Modu-Arena** must be installed first.
-
-### What is Modu-Arena?
-
-Modu-Arena is an **AI development framework that creates quality code**.
-
-- **SPEC-First TDD**: 90% rework reduction with clear specifications
-- **AI Orchestration**: 20 specialized agents + 48 skills
-- **Multi-language Support**: Automatic Korean/English/Japanese/Chinese support
-- **Worktree Parallel Development**: Unlimited parallel work in completely isolated environments
-- **Modu-Arena**: Motivation through vibe coding leaderboard
-
-### Quick Installation
+### Installation via npx (Recommended)
 
 ```bash
-# Method 1: Quick Installation (Recommended)
-curl -LsSf https://modulabs.github.io/modu-arena/install.sh | sh
-
-# Method 2: Manual Installation
-# Step 1: Install uv (macOS/Linux)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Step 2: Install Modu-Arena
-uv tool install modu-arena
+# Install and configure in one step
+npx @suncreation/modu-arena install --api-key <your-api-key>
 ```
+
+This will:
+1. Set up token usage tracking for your AI coding tools (Claude Code, OpenCode, Gemini CLI, Codex CLI, Crush)
+2. Store your API key securely
+3. Begin automatic session tracking
+
+### Alternative: Global Install
+
+```bash
+# Install globally
+npm install -g @suncreation/modu-arena
+
+# Then run commands directly
+modu-arena install --api-key <your-api-key>
+modu-arena submit   # Submit project for evaluation
+```
+
+### Requirements
+
+- **Node.js** 20.x or higher
 
 ---
 
 ## 🎮 Modu-Arena CLI Commands
 
-Once Modu-Arena is installed, you can use the Modu-Arena CLI.
-
 ### Command Overview
 
 ```bash
-moai arena [OPTIONS] COMMAND [ARGS]...
-
-Modu-Arena - Claude Code Token Usage Leaderboard
-
-Track your Claude Code sessions and compete on the leaderboard.
-Web dashboard: https://arena.modu.ai
-
-Options:
-  --help    Show help message
+npx @suncreation/modu-arena <command> [options]
 
 Commands:
-   login      Login to Modu-Arena via GitHub OAuth (alias: register)
-   status     Show current rank and statistics
-   exclude    Exclude project from session tracking
-   include    Re-include previously excluded project
-   logout     Remove stored Modu-Arena credentials
+  install    Install and configure token tracking
+  submit     Submit current project for AI evaluation
 ```
 
-### Detailed Command Explanations
-
-#### 1. login - GitHub OAuth Login
+### install - Set Up Token Tracking
 
 ```bash
-moai arena login
+npx @suncreation/modu-arena install --api-key <your-api-key>
 ```
 
-> **Note**: `moai arena register` is still supported as an alias for backward compatibility.
+Configures automatic token usage tracking for supported AI coding tools.
+
+### submit - Project Evaluation
+
+```bash
+npx @suncreation/modu-arena submit
+```
+
+Submits the current project for AI-powered evaluation. The evaluation results are sent to the Modu-Arena dashboard.
 
 **How It Works**:
-
-1. Opens browser for GitHub OAuth authentication
-2. Automatically generates and stores API key after successful authentication
-3. Installs global hook to start automatic session tracking
-4. Securely stores API key in `~/.moai/arena/credentials.json`
-
-**Execution Example**:
-
-```bash
-❯ moai arena login
-
-╭──────────────────────────────── Login ───────────────────────────────╮
-│ Modu-Arena Login                                                     │
-│                                                                      │
-│ This will open your browser to authorize with GitHub.                │
-│ After authorization, your API key will be stored securely.           │
-╰──────────────────────────────────────────────────────────────────────╯
-
-Opening browser for GitHub authorization...
-Waiting for authorization (timeout: 5 minutes)...
-
-╭─────────────────────────── Login Complete ───────────────────────────╮
-│ Successfully logged in as your-github-id                             │
-│                                                                      │
-│ API Key: modu_arena_a9011fac_c...                                    │
-│ Stored in: ~/.moai/arena/credentials.json                            │
-╰──────────────────────────────────────────────────────────────────────╯
-
-╭───────────────────────── Global Hook Installed ──────────────────────╮
-│ Session tracking hook installed globally.                            │
-│                                                                      │
-│ Your Claude Code sessions will be automatically tracked.             │
-│ Hook location: ~/.claude/hooks/moai/session_end__arena_submit.py     │
-│                                                                      │
-│ To exclude specific projects:                                        │
-│   moai arena exclude /path/to/project                                │
-╰──────────────────────────────────────────────────────────────────────╯
-```
-
-#### 2. sync - Sync Session Data
-
-```bash
-moai arena sync
-```
-
-Synchronizes local Claude Code session data to the Modu-Arena server.
-
-**Example Output:**
-
-```bash
-❯ moai arena sync
-
-Syncing 2577 session(s) to Modu-Arena
-Phase 1: Parsing transcripts (parallel: 20 workers)
-
-Parsing transcripts ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% (2577/2577)
-
-Phase 2: Submitting 1873 session(s) (batch mode)
-Batch size: 100 | Batches: 19
-
-Submitting batches ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% (19/19)
-
-Sync Complete
-✓ Submitted: 0
-○ Skipped:   704 (no usage or duplicate)
-✗ Failed:    500
-```
-
-#### 3. status - Check My Rank
-
-```bash
-moai arena status
-```
-
-**How It Works**:
-
-- Calls `/api/v1/rank` endpoint with stored API key
-- Retrieves user-specific ranking data from server
-- Displays daily/weekly/monthly/all-time ranks and statistics
-
-**Execution Example**:
-
-```bash
-❯ moai arena status
-
-╭────────────────────────────── Modu-Arena ────────────────────────────╮
-│ your-github-id                                                       │
-│                                                                      │
-│ 🏆 Global Rank: #42                                                  │
-╰──────────────────────────────────────────────────────────────────────╯
-╭───── Daily ──────╮  ╭───── Weekly ─────╮  ╭──── Monthly ─────╮  ╭──── All Time ────╮
-│ #12              │  │ #28              │  │ #42              │  │ #156             │
-╰──────────────────╯  ╰──────────────────╯  ╰──────────────────╯  ╰──────────────────╯
-╭─────────────────────────── Token Usage ──────────────────────────────╮
-│ 1,247,832 total tokens                                               │
-│                                                                      │
-│ Input  ██████████████░░░░░░ 847,291 (68%)                            │
-│ Output ██████░░░░░░░░░░░░░░ 400,541 (32%)                            │
-│                                                                      │
-│ Sessions: 47                                                         │
-╰──────────────────────────────────────────────────────────────────────╯
-
-● Hook: Installed  |  https://arena.modu.ai
-```
-
-#### 4. exclude/include - Project Management
-
-```bash
-# Exclude current project
-moai arena exclude
-
-# Exclude specific path
-moai arena exclude /path/to/private
-
-# Wildcard patterns
-moai arena exclude "*/confidential/*"
-
-# List excluded projects
-moai arena list-excluded
-
-# Re-include
-moai arena include /path/to/project
-```
-
-**Privacy Protection**:
-
-- Sensitive projects can be excluded from tracking
-- Data from excluded projects is not sent to the server
-
-#### 5. logout - Logout
-
-```bash
-moai arena logout
-```
-
-- Removes stored API key
-- Removes global hook
-- Stops all tracking
+1. Analyzes the current project structure and code
+2. Sends project metadata to the evaluation API
+3. AI agent evaluates code quality, architecture, and patterns
+4. Results appear on your Modu-Arena dashboard profile
 
 ---
 

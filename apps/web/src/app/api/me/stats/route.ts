@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server';
+import { safeAuth } from '@/lib/safe-auth';
 import { db, users, dailyUserStats } from '@/db';
 import { eq, desc, and, sql, gte } from 'drizzle-orm';
 import { successResponse, Errors } from '@/lib/api-response';
@@ -48,18 +48,17 @@ interface DailyStats {
  *
  * Returns detailed statistics for current authenticated user.
  * Includes token usage trends, multi-tool breakdown, and project count.
- * Requires Clerk authentication.
+ * Requires JWT session authentication.
  */
 export async function GET() {
   try {
-    const { userId: clerkId } = await auth();
+    const { userId } = await safeAuth();
 
-    if (!clerkId) {
+    if (!userId) {
       return Errors.unauthorized();
     }
 
-    // Find user by Clerk ID
-    const userResult = await db.select().from(users).where(eq(users.clerkId, clerkId)).limit(1);
+    const userResult = await db.select().from(users).where(eq(users.id, userId)).limit(1);
 
     const user = userResult[0];
 
