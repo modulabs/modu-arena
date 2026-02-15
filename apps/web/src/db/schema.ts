@@ -177,7 +177,6 @@ export const projectEvaluations = pgTable(
     evaluatedAt: timestamp('evaluated_at', { withTimezone: true }).defaultNow(),
   },
   (table) => [
-    unique('project_evaluations_user_project_hash_uniq').on(table.userId, table.projectPathHash),
     index('project_evaluations_user_id_idx').on(table.userId),
     index('project_evaluations_project_hash_idx').on(table.projectPathHash),
     index('project_evaluations_passed_idx').on(table.passed),
