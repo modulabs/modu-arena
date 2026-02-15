@@ -21,7 +21,7 @@ Integration Points:
 - Pre-commit hooks - Automated validation
 - CI/CD pipelines - Quality gate enforcement
 - quality-gate agent - TRUST 5 validation
-- /moai:2-run - Enforces ≥85% coverage
+- /modu:2-run - Enforces ≥85% coverage
 
 Quick Validation:
 ```python
@@ -229,8 +229,8 @@ Skills:
 - moai-domain-security - Security patterns
 
 Commands:
-- /moai:2-run - Enforces ≥85% coverage requirement
-- /moai:9-feedback - Quality improvement suggestions
+- /modu:2-run - Enforces ≥85% coverage requirement
+- /modu:9-feedback - Quality improvement suggestions
 
 ---
 

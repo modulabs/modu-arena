@@ -7,13 +7,13 @@ Implement SPEC requirements through Domain-Driven Development (DDD) methodology 
 ## Scope
 
 - Implements Step 3 of MoAI's 4-step workflow (Task Execution)
-- Receives SPEC documents created by /moai plan
-- Hands off to /moai sync for documentation and PR
+- Receives SPEC documents created by /modu plan
+- Hands off to /modu sync for documentation and PR
 
 ## Input
 
 - $ARGUMENTS: SPEC-ID to implement (e.g., SPEC-AUTH-001)
-- Resume: Re-running /moai run SPEC-XXX resumes from last successful phase checkpoint
+- Resume: Re-running /modu run SPEC-XXX resumes from last successful phase checkpoint
 
 ## Context Loading
 
@@ -23,7 +23,7 @@ Before execution, load these essential files:
 - .moai/config/sections/quality.yaml (coverage targets, TRUST 5 settings)
 - .moai/config/sections/git-strategy.yaml (auto_branch, branch creation policy)
 - .moai/config/sections/language.yaml (git_commit_messages setting)
-- .moai/specs/SPEC-{ID}/ directory (spec.md, plan.md, acceptance.md)
+- .modu-arena/specs/SPEC-{ID}/ directory (spec.md, plan.md, acceptance.md)
 
 Pre-execution commands: git status, git branch, git log, git diff.
 
@@ -121,7 +121,7 @@ The manager-ddd subagent must track deviations from the original SPEC plan durin
 - new_dependencies: Any new libraries, packages, or external dependencies introduced
 - new_directories: Any new directory structures created
 
-This divergence data is consumed by /moai sync for SPEC document updates and project document synchronization.
+This divergence data is consumed by /modu sync for SPEC document updates and project document synchronization.
 
 ### Phase 2.5: Quality Validation
 
@@ -190,8 +190,8 @@ Display implementation summary:
 
 Options:
 
-- Sync Documentation (recommended): Execute /moai sync to synchronize docs and create PR
-- Implement Another Feature: Return to /moai plan for additional SPEC
+- Sync Documentation (recommended): Execute /modu sync to synchronize docs and create PR
+- Implement Another Feature: Return to /modu plan for additional SPEC
 - Review Results: Examine implementation and test coverage locally
 - Finish: Session complete
 
@@ -204,7 +204,7 @@ Context flows forward through every phase:
 - Phase 1 to Phase 2: Execution plan with architecture decisions guides implementation
 - Phase 2 to Phase 2.5: Implementation code plus planning context enables context-aware validation
 - Phase 2.5 to Phase 3: Quality findings enable semantically meaningful commit messages
-- Phase 2 to /moai sync: Implementation divergence report enables accurate SPEC and project document updates
+- Phase 2 to /modu sync: Implementation divergence report enables accurate SPEC and project document updates
 
 Benefits: No re-analysis between phases. Architectural decisions propagate naturally. Commits explain both what changed and why. Divergence tracking ensures sync phase can accurately update SPEC and project documents.
 
@@ -226,4 +226,4 @@ All of the following must be verified:
 ---
 
 Version: 1.1.0
-Source: Extracted from .claude/commands/moai/2-run.md v5.0.0. Added implementation divergence tracking for sync phase consumption.
+Source: Aligned with `.claude/commands/modu/run.md`

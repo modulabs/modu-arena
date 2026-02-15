@@ -47,7 +47,7 @@ const CodeMetricsSchema = z.object({
 const BatchSessionSchema = z.object({
   sessionHash: z.string().length(64, 'Invalid session hash').optional(),
   anonymousProjectId: z.string().max(100).optional(),
-  toolType: z.enum(['claude-code', 'opencode', 'gemini', 'codex', 'crush']).optional().default('claude-code'),
+  toolType: z.enum(['claude-code', 'claude-desktop', 'opencode', 'gemini', 'codex', 'crush']).optional().default('claude-code'),
   endedAt: z.string().datetime(),
   modelName: z.string().max(50).optional(),
   inputTokens: z.number().int().min(0).max(MAX_INPUT_TOKENS),

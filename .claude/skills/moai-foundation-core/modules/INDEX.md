@@ -33,10 +33,10 @@ Use Cases:
 Specification-Driven Development - EARS format requirements with ANALYZE-PRESERVE-IMPROVE DDD cycles.
 
 Quick Access:
-- SPEC generation (/moai:1-plan)
+- SPEC generation (/modu:1-plan)
 - EARS format patterns
-- DDD implementation (/moai:2-run)
-- Documentation sync (/moai:3-sync)
+- DDD implementation (/modu:2-run)
+- Documentation sync (/modu:3-sync)
 
 Use Cases:
 - New feature development
@@ -135,12 +135,12 @@ Use Cases:
 Command Catalog - Complete reference for MoAI-ADK's 6 core commands in SPEC-First DDD workflow.
 
 Quick Access:
-- /moai:0-project (Project init)
-- /moai:1-plan (SPEC generation)
-- /moai:2-run (DDD implementation)
-- /moai:3-sync (Documentation)
-- /moai:9-feedback (Improvement)
-- /moai:99-release (Deployment)
+- /modu:0-project (Project init)
+- /modu:1-plan (SPEC generation)
+- /modu:2-run (DDD implementation)
+- /modu:3-sync (Documentation)
+- /modu:9-feedback (Improvement)
+- /modu:99-release (Deployment)
 
 Use Cases:
 - Command workflow execution
@@ -284,9 +284,9 @@ Agents:
 - quality-gate (validation)
 
 Commands:
-- /moai:1-plan (SPEC-First DDD)
-- /moai:2-run (DDD implementation)
-- /moai:3-sync (Documentation)
+- /modu:1-plan (SPEC-First DDD)
+- /modu:2-run (DDD implementation)
+- /modu:3-sync (Documentation)
 - /clear (Token optimization)
 
 ---

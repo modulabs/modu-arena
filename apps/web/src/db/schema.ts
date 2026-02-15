@@ -160,24 +160,24 @@ export const projectEvaluations = pgTable(
 
     // Evaluation scores
     // Note: Check constraints are enforced at application level, not DB level for Drizzle
-    // totalScore: 0-10 (sum of rubric scores)
-    totalScore: integer('total_score').notNull(),
-    // rubricFunctionality: 0-5 points
-    rubricFunctionality: integer('rubric_functionality').notNull(),
-    // rubricPracticality: 0-5 points
-    rubricPracticality: integer('rubric_practicality').notNull(),
+    localScore: integer('local_score').notNull(),
+    backendScore: integer('backend_score').notNull(),
+    penaltyScore: integer('penalty_score').notNull(),
+    finalScore: integer('final_score').notNull(),
+    cumulativeScoreAfter: integer('cumulative_score_after').notNull(),
 
     // Evaluation metadata
     llmModel: varchar('llm_model', { length: 100 }).notNull(),
     llmProvider: varchar('llm_provider', { length: 50 }).notNull(),
 
     // Results
-    passed: boolean('passed').notNull(), // true if score >= 5
+    passed: boolean('passed').notNull(),
     feedback: text('feedback'), // LLM-generated feedback
 
     evaluatedAt: timestamp('evaluated_at', { withTimezone: true }).defaultNow(),
   },
   (table) => [
+    unique('project_evaluations_user_project_hash_uniq').on(table.userId, table.projectPathHash),
     index('project_evaluations_user_id_idx').on(table.userId),
     index('project_evaluations_project_hash_idx').on(table.projectPathHash),
     index('project_evaluations_passed_idx').on(table.passed),

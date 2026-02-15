@@ -39,7 +39,7 @@ Modu-Arena は以下の学習目的で作られました：
 
 **開発特徴**:
 
-- Modu-Arena の `/moai` 統合自律自動化コマンドで核心機能を実装
+- Modu-Arena の `/modu` 統合自律自動化コマンドで核心機能を実装
 - GLM 4.7 と Claude Opus をハイブリッドで活用したコスト効率の良い開発
 - Worktree 並列開発で独立した機能モジュールを同時に開発
 
@@ -153,7 +153,7 @@ Waiting for authorization (timeout: 5 minutes)...
 │ Session tracking hook installed globally.                            │
 │                                                                      │
 │ Your Claude Code sessions will be automatically tracked.             │
-│ Hook location: ~/.claude/hooks/moai/session_end__rank_submit.py      │
+│ Hook location: ~/.claude/hooks/modu/session_end__rank_submit.py      │
 │                                                                      │
 │ To exclude specific projects:                                        │
 │   moai arena exclude /path/to/project                                 │

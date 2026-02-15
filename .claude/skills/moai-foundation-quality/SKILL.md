@@ -210,9 +210,9 @@ Skills:
 
 Commands:
 
-- /moai:2-run - DDD validation integration
-- /moai:3-sync - Documentation quality checks
-- /moai:9-feedback - Quality improvement feedback
+- /modu:2-run - DDD validation integration
+- /modu:3-sync - Documentation quality checks
+- /modu:9-feedback - Quality improvement feedback
 
 ## Quick Reference Summary
 

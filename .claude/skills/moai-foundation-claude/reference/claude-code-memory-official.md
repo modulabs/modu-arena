@@ -181,17 +181,17 @@ Command References (`memory/commands.md`):
 
 ## Core MoAI Commands
 
-- /moai:0-project: Initialize project structure
-- /moai:1-plan: Generate SPEC document
-- /moai:2-run: Execute DDD implementation
-- /moai:3-sync: Generate documentation
-- /moai:9-feedback: Collect improvement feedback
+- /modu:0-project: Initialize project structure
+- /modu:1-plan: Generate SPEC document
+- /modu:2-run: Execute DDD implementation
+- /modu:3-sync: Generate documentation
+- /modu:9-feedback: Collect improvement feedback
 
 ## Command Execution Rules
 
-- After /moai:1-plan: Execute /clear (mandatory)
+- After /modu:1-plan: Execute /clear (mandatory)
 - Token threshold: Execute /clear at >150K tokens
-- Error handling: Use /moai:9-feedback for all issues
+- Error handling: Use /modu:9-feedback for all issues
 ```
 
 ## Memory Management Strategies
@@ -202,7 +202,7 @@ Project Bootstrap:
 
 ```bash
 # Initialize project memory structure
-/moai:0-project
+/modu:0-project
 
 # Creates:
 # - .moai/config/config.yaml

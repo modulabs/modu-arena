@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { safeAuth } from '@/lib/safe-auth';
-import { db, users, dailyUserStats } from '@/db';
+import { db, users, dailyUserStats, projectEvaluations, userStats } from '@/db';
 import { eq, desc, sql, gte } from 'drizzle-orm';
 import { Activity } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
@@ -14,7 +14,10 @@ interface UsageEntry {
   username: string;
   avatarUrl: string | null;
   totalTokens: number;
+  weeklyTokens: number;
   sessionCount: number;
+  score: number;
+  lastActivityAt: string | null;
   isPrivate: boolean;
 }
 
@@ -68,24 +71,52 @@ async function getUsageData(
   try {
     const startDate = getDateRangeStart(period);
     const startDateStr = startDate.toISOString().split('T')[0];
+    const weeklyStart = getDateRangeStart('weekly');
+    const weeklyStartStr = weeklyStart.toISOString().split('T')[0];
+    const minStartStr = weeklyStartStr < startDateStr ? weeklyStartStr : startDateStr;
 
     // Query aggregated usage from dailyUserStats (NEW schema)
     const usageData = await db
       .select({
         userId: dailyUserStats.userId,
-        username: users.githubUsername,
+        username: sql<string>`COALESCE(${users.username}, ${users.githubUsername}, 'Anonymous')`,
         avatarUrl: users.githubAvatarUrl,
-        totalTokens: sql<number>`SUM(${dailyUserStats.totalTokens})`,
-        sessionCount: sql<number>`SUM(${dailyUserStats.sessionCount})`,
+        totalTokens: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${startDateStr} THEN ${dailyUserStats.totalTokens} ELSE 0 END), 0)`,
+        weeklyTokens: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${weeklyStartStr} THEN ${dailyUserStats.totalTokens} ELSE 0 END), 0)`,
+        sessionCount: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${startDateStr} THEN ${dailyUserStats.sessionCount} ELSE 0 END), 0)`,
+        lastActivityAt: userStats.lastActivityAt,
         privacyMode: users.privacyMode,
       })
       .from(dailyUserStats)
       .innerJoin(users, eq(dailyUserStats.userId, users.id))
-      .where(gte(dailyUserStats.statDate, startDateStr))
-      .groupBy(dailyUserStats.userId, users.githubUsername, users.githubAvatarUrl, users.privacyMode)
-      .orderBy(desc(sql`SUM(${dailyUserStats.totalTokens})`))
+      .leftJoin(userStats, eq(userStats.userId, users.id))
+      .where(gte(dailyUserStats.statDate, minStartStr))
+      .groupBy(
+        dailyUserStats.userId,
+        users.username,
+        users.githubUsername,
+        users.githubAvatarUrl,
+        users.privacyMode,
+        userStats.lastActivityAt
+      )
+      .having(sql`SUM(CASE WHEN ${dailyUserStats.statDate} >= ${startDateStr} THEN ${dailyUserStats.totalTokens} ELSE 0 END) > 0`)
+      .orderBy(desc(sql`SUM(CASE WHEN ${dailyUserStats.statDate} >= ${startDateStr} THEN ${dailyUserStats.totalTokens} ELSE 0 END)`))
       .limit(limit)
       .offset(offset);
+
+    const userIds = usageData.map(r => r.userId).filter(Boolean);
+    const projectScores = userIds.length > 0
+      ? await db
+          .select({
+            userId: projectEvaluations.userId,
+            finalScoreSum: sql<number>`COALESCE(SUM(${projectEvaluations.finalScore}), 0)`,
+          })
+          .from(projectEvaluations)
+          .where(sql`${projectEvaluations.userId} IN ${userIds}`)
+          .groupBy(projectEvaluations.userId)
+      : [];
+
+    const scoreMap = new Map(projectScores.map(s => [s.userId, Number(s.finalScoreSum)]));
 
     // Get total count for pagination
     const countResult = await db
@@ -101,7 +132,10 @@ async function getUsageData(
       username: r.privacyMode ? `User #${offset + idx + 1}` : (r.username ?? 'Unknown'),
       avatarUrl: r.privacyMode ? null : (r.avatarUrl ?? null),
       totalTokens: Number(r.totalTokens ?? 0),
+      weeklyTokens: r.privacyMode ? 0 : Number(r.weeklyTokens ?? 0),
       sessionCount: Number(r.sessionCount ?? 0),
+      score: r.privacyMode ? 0 : (scoreMap.get(r.userId) ?? 0),
+      lastActivityAt: r.privacyMode ? null : (r.lastActivityAt ? new Date(r.lastActivityAt).toISOString() : null),
       isPrivate: r.privacyMode ?? false,
     }));
 
@@ -171,7 +205,7 @@ async function UsageContent({ period, page }: { period: string; page: number }) 
 
 export default async function HomePage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const period = params.period || 'daily';
+  const period = params.period || 'weekly';
   const page = Number(params.page) || 1;
   const t = await getTranslations('home');
 

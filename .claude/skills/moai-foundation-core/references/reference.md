@@ -395,7 +395,7 @@ diagnose.verify_module_structure()
 ### Log Locations
 
 - TRUST 5 logs: `.moai/logs/trust5/`
-- SPEC artifacts: `.moai/specs/`
+- SPEC artifacts: `.modu-arena/specs/`
 - Agent execution logs: `.moai/logs/agents/`
 - Token usage history: `.moai/logs/tokens/`
 

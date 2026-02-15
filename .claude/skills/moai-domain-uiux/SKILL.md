@@ -221,8 +221,8 @@ Agents:
 
 Commands:
 
-- /moai:2-run - DDD implementation cycle
-- /moai:3-sync - Documentation generation
+- /modu:2-run - DDD implementation cycle
+- /modu:3-sync - Documentation generation
 
 ---
 

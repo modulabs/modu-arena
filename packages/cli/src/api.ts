@@ -40,7 +40,7 @@ export interface RankResponse {
 }
 
 export interface ApiError {
-  error: string;
+  error?: string | { code?: string; message?: string };
 }
 
 interface RequestOptions {
@@ -86,7 +86,9 @@ export async function submitSession(
 
   const data = await res.json();
   if (!res.ok) {
-    return { success: false, error: (data as ApiError).error || `HTTP ${res.status}` };
+    const err = (data as ApiError).error;
+    const errMsg = typeof err === 'string' ? err : (err?.message || `HTTP ${res.status}`);
+    return { success: false, error: errMsg };
   }
   return data as { success: boolean; session: unknown };
 }
@@ -111,7 +113,9 @@ export async function submitBatch(
 
   const data = await res.json();
   if (!res.ok) {
-    return { success: false, error: (data as ApiError).error || `HTTP ${res.status}` };
+    const err = (data as ApiError).error;
+    const errMsg = typeof err === 'string' ? err : (err?.message || `HTTP ${res.status}`);
+    return { success: false, error: errMsg };
   }
   return data as { success: boolean; processed: number; duplicatesSkipped: number };
 }
@@ -130,7 +134,9 @@ export async function getRank(
 
   const data = await res.json();
   if (!res.ok) {
-    return { success: false, error: (data as ApiError).error || `HTTP ${res.status}` };
+    const err = (data as ApiError).error;
+    const errMsg = typeof err === 'string' ? err : (err?.message || `HTTP ${res.status}`);
+    return { success: false, error: errMsg };
   }
   return data as RankResponse;
 }
@@ -182,14 +188,22 @@ export interface EvaluatePayload {
   projectName: string;
   description: string;
   fileStructure?: Record<string, string[]>;
+  projectPathHash?: string;
+  localScore?: number;
+  localEvaluationSummary?: string;
 }
 
 export interface EvaluationResult {
   passed: boolean;
-  totalScore: number;
-  rubricFunctionality: number;
-  rubricPracticality: number;
+  projectName: string;
+  projectPathHash: string;
+  localScore: number;
+  backendScore: number;
+  penaltyScore: number;
+  finalScore: number;
+  cumulativeScoreAfter: number;
   feedback: string;
+  evaluatedAt: string;
 }
 
 export interface EvaluateResponse {
@@ -212,7 +226,9 @@ export async function submitEvaluation(
 
   const data = await res.json();
   if (!res.ok) {
-    return { success: false, error: (data as ApiError).error || `HTTP ${res.status}` };
+    const err = (data as ApiError).error;
+    const errMsg = typeof err === 'string' ? err : (err?.message || `HTTP ${res.status}`);
+    return { success: false, error: errMsg };
   }
   return data as EvaluateResponse;
 }

@@ -18,14 +18,17 @@ const EvaluateProjectSchema = z.object({
   projectName: z.string().min(1).max(255),
   description: z.string().min(10).max(5000),
   fileStructure: z.record(z.string(), z.array(z.string())).optional(),
+  projectPathHash: z.string().length(64).optional(),
+  localScore: z.number().int().min(0).max(5).optional().default(0),
+  localEvaluationSummary: z.string().min(1).max(500).optional(),
 });
 
 /**
  * LLM evaluation result schema (for parsing Anthropic API response)
  */
 const LlmEvaluationResultSchema = z.object({
-  rubricFunctionality: z.number().int().min(0).max(5),
-  rubricPracticality: z.number().int().min(0).max(5),
+  backendScore: z.number().int().min(0).max(5),
+  penaltyScore: z.number().int().min(-5).max(0),
   feedback: z.string().min(1),
 });
 
@@ -36,10 +39,15 @@ interface EvaluationResponse {
   success: boolean;
   evaluation?: {
     passed: boolean;
-    totalScore: number;
-    rubricFunctionality: number;
-    rubricPracticality: number;
+    projectName: string;
+    projectPathHash: string;
+    localScore: number;
+    backendScore: number;
+    penaltyScore: number;
+    finalScore: number;
+    cumulativeScoreAfter: number;
     feedback: string;
+    evaluatedAt: string;
   };
   error?: string;
 }
@@ -140,12 +148,48 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const { projectName, description, fileStructure } = parseResult.data;
+    const {
+      projectName,
+      description,
+      fileStructure,
+      localScore,
+      localEvaluationSummary,
+    } = parseResult.data;
 
-    // Generate project path hash for privacy
-    const projectPathHash = createHash('sha256')
-      .update(`${userId}:${projectName}:${Date.now()}`)
-      .digest('hex');
+    const projectPathHash =
+      parseResult.data.projectPathHash ||
+      createHash('sha256').update(`${userId}:${projectName}`).digest('hex');
+
+    const existing = await db
+      .select()
+      .from(projectEvaluations)
+      .where(
+        and(
+          eq(projectEvaluations.userId, userId),
+          eq(projectEvaluations.projectPathHash, projectPathHash)
+        )
+      )
+      .limit(1);
+
+    const existingEval = existing[0];
+    if (existingEval) {
+      const response: EvaluationResponse = {
+        success: true,
+        evaluation: {
+          passed: existingEval.passed,
+          projectName: existingEval.projectName,
+          projectPathHash: existingEval.projectPathHash,
+          localScore: existingEval.localScore,
+          backendScore: existingEval.backendScore,
+          penaltyScore: existingEval.penaltyScore,
+          finalScore: existingEval.finalScore,
+          cumulativeScoreAfter: existingEval.cumulativeScoreAfter,
+          feedback: existingEval.feedback || '',
+          evaluatedAt: (existingEval.evaluatedAt || new Date()).toISOString(),
+        },
+      };
+      return successResponse(response);
+    }
 
     // Check rate limiting (max 10 evaluations per day per user)
     // FIX: Filter by today's date so users can re-evaluate on subsequent days
@@ -172,28 +216,46 @@ export async function POST(request: NextRequest) {
     }
 
     // LLM Evaluation using Anthropic Claude API
-    const evaluation = await evaluateProjectWithLLM({
+    const llm = await evaluateProjectWithLLM({
       projectName,
       description,
       fileStructure,
+      localEvaluationSummary,
     });
 
-    // Only store if passing (score >= 5)
-    if (evaluation.passed) {
-      await db.insert(projectEvaluations).values({
+    const backendScore = llm.backendScore;
+    const penaltyScore = llm.penaltyScore;
+    const finalScore = localScore + backendScore + penaltyScore;
+    const passed = finalScore >= 5;
+
+    const last = await db
+      .select({ cumulative: projectEvaluations.cumulativeScoreAfter })
+      .from(projectEvaluations)
+      .where(eq(projectEvaluations.userId, userId))
+      .orderBy(sql`${projectEvaluations.evaluatedAt} DESC`)
+      .limit(1);
+    const cumulativeBefore = Number(last[0]?.cumulative ?? 0);
+    const cumulativeScoreAfter = cumulativeBefore + finalScore;
+
+    const inserted = await db
+      .insert(projectEvaluations)
+      .values({
         userId,
         projectPathHash,
         projectName,
-        totalScore: evaluation.totalScore,
-        rubricFunctionality: evaluation.rubricFunctionality,
-        rubricPracticality: evaluation.rubricPracticality,
-        llmModel: ANTHROPIC_MODEL,
-        llmProvider: 'anthropic',
-        passed: true,
-        feedback: evaluation.feedback,
-      });
+        localScore,
+        backendScore,
+        penaltyScore,
+        finalScore,
+        cumulativeScoreAfter,
+        llmModel: 'glm-5',
+        llmProvider: 'opencode',
+        passed,
+        feedback: llm.feedback,
+      })
+      .returning({ evaluatedAt: projectEvaluations.evaluatedAt });
 
-      // Increment user's successful project count
+    if (passed) {
       const userResult = await db.select().from(users).where(eq(users.id, userId)).limit(1);
       const user = userResult[0];
 
@@ -208,9 +270,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const evaluatedAt = inserted[0]?.evaluatedAt
+      ? new Date(inserted[0].evaluatedAt).toISOString()
+      : new Date().toISOString();
+
     const response: EvaluationResponse = {
       success: true,
-      evaluation,
+      evaluation: {
+        passed,
+        projectName,
+        projectPathHash,
+        localScore,
+        backendScore,
+        penaltyScore,
+        finalScore,
+        cumulativeScoreAfter,
+        feedback: llm.feedback,
+        evaluatedAt,
+      },
     };
 
     return successResponse(response);
@@ -229,40 +306,8 @@ export function OPTIONS() {
 }
 
 // ============================================================================
-// LLM Evaluation Implementation — Anthropic Claude API
+// LLM Evaluation Implementation — OpenCode CLI
 // ============================================================================
-
-/**
- * Anthropic Messages API response types
- */
-interface AnthropicContentBlock {
-  type: 'text';
-  text: string;
-}
-
-interface AnthropicResponse {
-  id: string;
-  type: 'message';
-  role: 'assistant';
-  content: AnthropicContentBlock[];
-  model: string;
-  stop_reason: string;
-  usage: {
-    input_tokens: number;
-    output_tokens: number;
-  };
-}
-
-interface AnthropicErrorResponse {
-  type: 'error';
-  error: {
-    type: string;
-    message: string;
-  };
-}
-
-const ANTHROPIC_MODEL = 'claude-sonnet-4-20250514';
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
 /**
  * Build the evaluation prompt for the LLM
@@ -271,8 +316,9 @@ function buildEvaluationPrompt(params: {
   projectName: string;
   description: string;
   fileStructure?: Record<string, string[]>;
+  localEvaluationSummary?: string;
 }): string {
-  const { projectName, description, fileStructure } = params;
+  const { projectName, description, fileStructure, localEvaluationSummary } = params;
 
   let fileStructureText = 'Not provided.';
   if (fileStructure && Object.keys(fileStructure).length > 0) {
@@ -281,36 +327,35 @@ function buildEvaluationPrompt(params: {
       .join('\n');
   }
 
-  return `You are a strict but fair project evaluator. Evaluate the following project based on two rubrics.
+   const localSummaryText = (localEvaluationSummary && localEvaluationSummary.trim().length > 0)
+     ? localEvaluationSummary.trim()
+     : 'Not provided.';
+
+   return `You are a strict but fair project evaluator. Evaluate the following project.
 
 PROJECT NAME: ${projectName}
 
 PROJECT DESCRIPTION / README:
 ${description}
 
+LOCAL EVALUATION SUMMARY:
+${localSummaryText}
+
 FILE STRUCTURE:
 ${fileStructureText}
 
-EVALUATION RUBRICS (score each 0-5):
+ EVALUATION OUTPUT:
 
-1. **Functionality (rubricFunctionality)** — Does it work as described?
-   - 0: No evidence it works at all
-   - 1: Barely functional, major features missing
-   - 2: Some features work but significant issues
-   - 3: Core features work but with notable gaps
-   - 4: Most features work as described
-   - 5: All described features appear fully functional
+ 1. backendScore (0-5) — novelty/quality re-evaluation of backend and overall engineering
+    - 0: very low quality, no meaningful backend work
+    - 5: excellent, novel, high-quality backend engineering
 
-2. **Practicality (rubricPracticality)** — Is it practical for real use?
-   - 0: No practical value
-   - 1: Toy project with no real-world application
-   - 2: Limited practical use, needs major work
-   - 3: Could be useful with some improvements
-   - 4: Practically useful for its intended purpose
-   - 5: Highly practical, addresses a real need well
+ 2. penaltyScore (-5..0) — penalties for low quality
+    - 0: no penalty
+    - -5: severe issues (misleading README, obvious low-effort, unsafe patterns)
 
-IMPORTANT: Respond with ONLY a JSON object, no markdown, no code fences, no extra text. Use this exact format:
-{"rubricFunctionality": <0-5>, "rubricPracticality": <0-5>, "feedback": "<2-3 sentences explaining the scores>"}`;
+ IMPORTANT: Respond with ONLY a JSON object, no markdown, no code fences, no extra text. Use this exact format:
+ {"backendScore": <0-5>, "penaltyScore": <-5..0>, "feedback": "<2-3 sentences>"}`;
 }
 
 /**
@@ -323,93 +368,66 @@ async function evaluateProjectWithLLM(params: {
   projectName: string;
   description: string;
   fileStructure?: Record<string, string[]>;
+  localEvaluationSummary?: string;
 }): Promise<{
-  passed: boolean;
-  totalScore: number;
-  rubricFunctionality: number;
-  rubricPracticality: number;
+  backendScore: number;
+  penaltyScore: number;
   feedback: string;
 }> {
-  const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
-
-  if (!anthropicApiKey) {
-    console.error('[Evaluate] ANTHROPIC_API_KEY environment variable is not set');
-    throw new Error('LLM evaluation service is not configured');
+  if (process.env.MODU_ARENA_E2E_STUB_LLM === '1') {
+    return { backendScore: 3, penaltyScore: 0, feedback: 'stubbed evaluation' };
   }
 
   const prompt = buildEvaluationPrompt(params);
 
-  // Call Anthropic Messages API
-  const response = await fetch(ANTHROPIC_API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': anthropicApiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: ANTHROPIC_MODEL,
-      max_tokens: 512,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    const errorBody = (await response.json()) as AnthropicErrorResponse;
-    console.error('[Evaluate] Anthropic API error:', {
-      status: response.status,
-      error: errorBody.error,
-    });
-    throw new Error(`Anthropic API error: ${errorBody.error?.message ?? response.statusText}`);
-  }
-
-  const apiResponse = (await response.json()) as AnthropicResponse;
-
-  // Extract text from response content blocks
-  const textBlock = apiResponse.content.find(
-    (block): block is AnthropicContentBlock => block.type === 'text'
+  const { execSync } = await import('child_process');
+  
+  const opencodePath = process.env.OPENCODE_PATH || '/home/developer/.nvm/versions/node/v24.13.1/bin/opencode';
+  
+  const result = execSync(
+    `${opencodePath} run -m zai-coding-plan/glm-5 --format json ${JSON.stringify(prompt)}`,
+    {
+      encoding: 'utf-8',
+      timeout: 90000,
+      maxBuffer: 1024 * 1024,
+      cwd: '/tmp',
+    }
   );
 
-  if (!textBlock) {
-    console.error('[Evaluate] No text content in Anthropic response');
+  let rawText = result.trim();
+  
+  let extractedText = '';
+  for (const line of rawText.split('\n')) {
+    try {
+      const event = JSON.parse(line);
+      if (event.type === 'text' && event.part?.text) {
+        extractedText = event.part.text;
+      }
+    } catch {}
+  }
+  
+  if (!extractedText) {
+    console.error('[Evaluate] No text content in OpenCode response:', rawText);
     throw new Error('LLM returned empty response');
   }
-
-  // Parse JSON from LLM response — strip potential markdown fences
-  let rawText = textBlock.text.trim();
-  if (rawText.startsWith('```')) {
-    rawText = rawText.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
-  }
-
+  
   let parsed: unknown;
   try {
-    parsed = JSON.parse(rawText);
+    parsed = JSON.parse(extractedText);
   } catch {
-    console.error('[Evaluate] Failed to parse LLM JSON response:', rawText);
+    console.error('[Evaluate] Failed to parse GLM JSON response:', extractedText);
     throw new Error('LLM returned invalid JSON response');
   }
 
-  // Validate with zod schema
   const validationResult = LlmEvaluationResultSchema.safeParse(parsed);
   if (!validationResult.success) {
-    console.error('[Evaluate] LLM response validation failed:', validationResult.error.flatten());
+    console.error('[Evaluate] GLM response validation failed:', validationResult.error.flatten());
     throw new Error('LLM response did not match expected schema');
   }
 
-  const { rubricFunctionality, rubricPracticality, feedback } = validationResult.data;
-  const totalScore = rubricFunctionality + rubricPracticality;
-  const passed = totalScore >= 5;
-
   return {
-    passed,
-    totalScore,
-    rubricFunctionality,
-    rubricPracticality,
-    feedback,
+    backendScore: validationResult.data.backendScore,
+    penaltyScore: validationResult.data.penaltyScore,
+    feedback: validationResult.data.feedback,
   };
 }

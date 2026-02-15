@@ -105,7 +105,7 @@ Set Loop State (for CI/CD):
 # Start loop with iteration count
 export MOAI_LOOP_ACTIVE=1
 export MOAI_LOOP_ITERATION=0
-claude -p "/moai:loop --max-iterations 5"
+claude -p "/modu:loop --max-iterations 5"
 ```
 
 ---
@@ -674,7 +674,7 @@ Initial State:
   ...
 }
 
-After /moai:loop:
+After /modu:loop:
 {
   "active": true,
   "iteration": 1,
@@ -861,7 +861,7 @@ constraints:
 
 **Symptoms:**
 
-- `/moai:loop` command does nothing
+- `/modu:loop` command does nothing
 - No loop state file created
 
 **Solutions:**
@@ -1229,7 +1229,7 @@ jobs:
         run: |
           export MOAI_LOOP_ACTIVE=1
           export MOAI_LOOP_ITERATION=0
-          claude -p "/moai:loop --max-iterations 5" \
+          claude -p "/modu:loop --max-iterations 5" \
             --allowedTools "Read,Write,Edit,Bash,Grep,Glob"
 
       - name: Commit fixes
@@ -1282,7 +1282,7 @@ Configuration for projects with multiple languages:
 Extend the loop controller for project-specific checks:
 
 ```python
-# .claude/hooks/moai/custom_completion_check.py
+# .claude/hooks/modu/custom_completion_check.py
 def check_custom_conditions() -> bool:
     """Add project-specific completion checks."""
     # Example 1: Check for TODO comments
@@ -1309,7 +1309,7 @@ ralph:
   loop:
     completion:
       custom_checks:
-        - .claude/hooks/moai/custom_completion_check.py
+        - .claude/hooks/modu/custom_completion_check.py
 ```
 
 ---

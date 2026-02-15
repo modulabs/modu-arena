@@ -20,7 +20,7 @@ Each iteration executes the following steps in order:
 
 Step 1 - Completion Check:
 - Check for completion marker in previous iteration response
-- Marker types: `<moai>DONE</moai>`, `<moai>COMPLETE</moai>`, `<moai:done />`
+- Marker types: `<moai>DONE</modu>`, `<moai>COMPLETE</modu>`, `<moai:done />`
 - If marker found: Exit loop with success
 
 Step 2 - Memory Pressure Check (if --memory-check enabled):
@@ -29,7 +29,7 @@ Step 2 - Memory Pressure Check (if --memory-check enabled):
 - If session duration exceeds 25 minutes OR iteration time doubling:
   - Save proactive checkpoint to .moai/cache/ralph-snapshots/memory-pressure.json
   - Warn user about memory pressure
-  - Suggest resuming with /moai:loop --resume memory-pressure
+  - Suggest resuming with /modu:loop --resume memory-pressure
 - If memory-safe limit reached (50 iterations): Exit with checkpoint
 
 Step 3 - Parallel Diagnostics:
@@ -99,9 +99,9 @@ Files:
 Loop state file: .moai/cache/.moai_loop_state.json
 
 Resume commands:
-- /moai:loop --resume latest
-- /moai:loop --resume iteration-002
-- /moai:loop --resume memory-pressure
+- /modu:loop --resume latest
+- /modu:loop --resume iteration-002
+- /modu:loop --resume memory-pressure
 
 ## Language-Specific Commands
 

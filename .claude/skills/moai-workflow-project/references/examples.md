@@ -49,7 +49,7 @@ result = project.initialize_complete_project(
       "docs/ko/",
       "docs/en/",
       ".moai/docs/",
-      ".moai/specs/"
+      ".modu-arena/specs/"
     ],
     "generated_files": [
       "README.md",
@@ -512,7 +512,7 @@ python -m moai_menu_project.cli init \
 
 # SPEC에서 문서 생성
 python -m moai_menu_project.cli generate-docs \
-    --spec-file .moai/specs/SPEC-001.json
+    --spec-file .modu-arena/specs/SPEC-001.json
 
 # 템플릿 최적화
 python -m moai_menu_project.cli optimize-templates \

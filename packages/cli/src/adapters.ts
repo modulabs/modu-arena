@@ -5,7 +5,7 @@
  * thin shell wrappers (.sh on Unix, .cmd on Windows).
  */
 
-import { existsSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { API_BASE_URL, type ToolType } from './constants.js';
@@ -80,7 +80,9 @@ fetch(SERVER + "/api/v1/sessions", {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-API-Key": API_KEY, "X-Timestamp": ts, "X-Signature": sig },
     body: body
-}).catch(function(){});
+}).then(function(r) {
+    if (!r.ok) r.text().then(function(t) { process.stderr.write("[modu-arena] " + r.status + " " + t + "\\n"); });
+}).catch(function(e) { process.stderr.write("[modu-arena] hook error: " + e.message + "\\n"); });
 `;
 }
 
@@ -153,20 +155,43 @@ class OpenCodeAdapter implements ToolAdapter {
   slug = 'opencode' as const;
   displayName = 'OpenCode';
 
+  private static readonly PLUGIN_NAME = 'opencode-modu-arena';
+
   // OpenCode uses ~/.config/opencode on ALL platforms (including Windows)
   // It uses xdg-basedir which respects XDG_CONFIG_HOME on all platforms
   private get configDir() {
     return join(process.env.XDG_CONFIG_HOME || join(homedir(), '.config'), 'opencode');
   }
-  private get hooksDir() { return join(this.configDir, 'hooks'); }
+  private get configFile() { return join(this.configDir, 'opencode.json'); }
 
-  getHookPath() { return join(this.hooksDir, hookEntryName()); }
+  getHookPath() { return this.configFile; }
   detect() { return existsSync(this.configDir); }
 
-  install(apiKey: string) {
-    return installHook(this.displayName, this.hooksDir, this.getHookPath(), apiKey, 'opencode', 'OPENCODE',
-      baseFields('OPENCODE'),
-    );
+  // OpenCode uses a JS plugin system, not shell hooks — registers plugin in opencode.json
+  install(_apiKey: string) {
+    try {
+      let config: Record<string, unknown> = {};
+      if (existsSync(this.configFile)) {
+        const raw = readFileSync(this.configFile, 'utf-8');
+        config = JSON.parse(raw) as Record<string, unknown>;
+      }
+
+      const plugins = (Array.isArray(config.plugin) ? config.plugin : []) as string[];
+
+      if (plugins.some((p) => p === OpenCodeAdapter.PLUGIN_NAME || p.startsWith(`${OpenCodeAdapter.PLUGIN_NAME}@`))) {
+        return { success: true, message: `${this.displayName} plugin already registered`, hookPath: this.configFile };
+      }
+
+      plugins.push(OpenCodeAdapter.PLUGIN_NAME);
+      config.plugin = plugins;
+
+      if (!existsSync(this.configDir)) mkdirSync(this.configDir, { recursive: true });
+      writeFileSync(this.configFile, JSON.stringify(config, null, 4) + '\n');
+
+      return { success: true, message: `${this.displayName} plugin registered in ${this.configFile}`, hookPath: this.configFile };
+    } catch (err) {
+      return { success: false, message: `Failed to register ${this.displayName} plugin: ${err}` };
+    }
   }
 }
 

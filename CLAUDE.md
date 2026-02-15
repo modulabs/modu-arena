@@ -39,9 +39,9 @@ Core Skills (load when needed):
 
 Route request based on command type:
 
-- **Workflow Subcommands**: /moai project, /moai plan, /moai run, /moai sync
-- **Utility Subcommands**: /moai (default), /moai fix, /moai loop
-- **Feedback Subcommand**: /moai feedback
+- **Workflow Subcommands**: /modu project, /modu plan, /modu run, /modu sync
+- **Utility Subcommands**: /modu (default), /modu fix, /modu loop
+- **Feedback Subcommand**: /modu feedback
 - **Direct Agent Requests**: Immediate delegation when user explicitly requests an agent
 
 ### Phase 3: Execute
@@ -63,7 +63,7 @@ Integrate and report results:
 
 ## 3. Command Reference
 
-### Unified Skill: /moai
+### Unified Skill: /modu
 
 Definition: Single entry point for all MoAI development workflows.
 
@@ -120,11 +120,11 @@ MoAI uses DDD (Domain-Driven Development) as its development methodology.
 
 ### MoAI Command Flow
 
-- /moai plan "description" → manager-spec subagent
-- /moai run SPEC-XXX → manager-ddd subagent (ANALYZE-PRESERVE-IMPROVE)
-- /moai sync SPEC-XXX → manager-docs subagent
+- /modu plan "description" → manager-spec subagent
+- /modu run SPEC-XXX → manager-ddd subagent (ANALYZE-PRESERVE-IMPROVE)
+- /modu sync SPEC-XXX → manager-docs subagent
 
-For detailed workflow specifications, see @.claude/rules/moai/workflow/spec-workflow.md
+For detailed workflow specifications, see @.claude/rules/modu/workflow/spec-workflow.md
 
 ### Agent Chain for SPEC Execution
 
@@ -139,7 +139,7 @@ For detailed workflow specifications, see @.claude/rules/moai/workflow/spec-work
 
 ## 6. Quality Gates
 
-For TRUST 5 framework details, see @.claude/rules/moai/core/moai-constitution.md
+For TRUST 5 framework details, see @.claude/rules/modu/core/modu-constitution.md
 
 ### LSP Quality Gates
 
@@ -185,7 +185,7 @@ User and language configuration:
 
 ### Project Rules
 
-MoAI-ADK uses Claude Code's official rules system at `.claude/rules/moai/`:
+MoAI-ADK uses Claude Code's official rules system at `.claude/rules/modu/`:
 
 - **Core rules**: TRUST 5 framework, documentation standards
 - **Workflow rules**: Progressive disclosure, token budget, workflow modes
@@ -203,7 +203,7 @@ MoAI-ADK uses Claude Code's official rules system at `.claude/rules/moai/`:
 
 ## 9. Web Search Protocol
 
-For anti-hallucination policy, see @.claude/rules/moai/core/moai-constitution.md
+For anti-hallucination policy, see @.claude/rules/modu/core/modu-constitution.md
 
 ### Execution Steps
 
@@ -227,7 +227,7 @@ For anti-hallucination policy, see @.claude/rules/moai/core/moai-constitution.md
 - Token limit errors: Execute /clear, then guide user to resume
 - Permission errors: Review settings.json manually
 - Integration errors: Use expert-devops subagent
-- MoAI-ADK errors: Suggest /moai feedback
+- MoAI-ADK errors: Suggest /modu feedback
 
 ### Resumable Agents
 
@@ -302,7 +302,7 @@ Always prefer Edit tool over sed/awk for cross-platform compatibility.
 
 ---
 
-Version: 11.0.0 (Alfred to MoAI rename, unified /moai command structure)
+Version: 11.0.0 (Alfred to MoAI rename, unified /modu command structure)
 Last Updated: 2026-01-28
 Language: English
 Core Rule: MoAI is an orchestrator; direct implementation is prohibited

@@ -36,7 +36,7 @@ npm install -g @suncreation/modu-arena
 
 # Then run commands directly
 modu-arena install --api-key <your-api-key>
-modu-arena submit   # Submit project for evaluation
+modu-arena submit   # Optional: project evaluation
 ```
 
 ### Requirements
@@ -71,13 +71,22 @@ Configures automatic token usage tracking for supported AI coding tools.
 npx @suncreation/modu-arena submit
 ```
 
+This CLI command is optional. In Claude Code, prefer `/modu:submit`.
+
 Submits the current project for AI-powered evaluation. The evaluation results are sent to the Modu-Arena dashboard.
 
+**Recommended (Claude Code)**:
+
+- In Claude Code chat, run: `/modu:submit`
+- It will first show the exact local test command it plans to run
+- Re-run with: `/modu:submit --run` to execute local validation and submit a README-only payload for remote scoring
+
 **How It Works**:
-1. Analyzes the current project structure and code
-2. Sends project metadata to the evaluation API
-3. AI agent evaluates code quality, architecture, and patterns
-4. Results appear on your Modu-Arena dashboard profile
+1. Uses `README.md` as the source of truth (sent as the evaluation description)
+2. If `README.md` contains `## Local Validation` with a `bash title="test"` block, runs it locally to compute `localScore`
+3. Sends a README-only payload to the evaluation API (no code content)
+4. Remote evaluation scores based on README and returns backendScore/penaltyScore + feedback
+5. Results appear on your Modu-Arena dashboard profile
 
 ---
 

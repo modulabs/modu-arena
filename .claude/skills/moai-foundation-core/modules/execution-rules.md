@@ -204,7 +204,7 @@ Configuration (default):
 ```
 
 Alfred's Behavior (prompt_always=true):
-1. When running `/moai:1-plan`, user prompted: "Create branch?"
+1. When running `/modu:1-plan`, user prompted: "Create branch?"
  - Auto create → Creates feature/SPEC-001
  - Use current branch → Continues on current branch
 2. All DDD commits saved locally only (automatic)
@@ -247,11 +247,11 @@ Configuration (default - prompt each time):
 ```
 
 Alfred's Behavior (prompt_always=true):
-1. When running `/moai:1-plan`, user prompted: "Create branch?"
+1. When running `/modu:1-plan`, user prompted: "Create branch?"
  - Auto create → Creates feature/SPEC-002 + auto push
  - Use current branch → Commits directly on current branch
-2. Running `/moai:2-run`: DDD commits + auto push
-3. Running `/moai:3-sync`: Doc commits + suggest PR creation (user choice)
+2. Running `/modu:2-run`: DDD commits + auto push
+3. Running `/modu:3-sync`: Doc commits + suggest PR creation (user choice)
 
 Configuration (auto after approval):
 ```json
@@ -267,7 +267,7 @@ Configuration (auto after approval):
 ```
 
 Alfred's Behavior (prompt_always=false, auto_enabled=false):
-1. When running `/moai:1-plan`, user prompted once: "Enable automatic branch creation?"
+1. When running `/modu:1-plan`, user prompted once: "Enable automatic branch creation?"
  - Yes → Auto updates config.json with `auto_enabled=true` → Creates feature/SPEC
  - No → Works on current branch, no config change
 2. From next SPEC: If `auto_enabled=true`, feature branches created automatically without prompts
@@ -310,11 +310,11 @@ Configuration (default - prompt each time):
 ```
 
 Alfred's Behavior (prompt_always=true):
-1. When running `/moai:1-plan`, user prompted: "Create branch?"
+1. When running `/modu:1-plan`, user prompted: "Create branch?"
  - Auto create → Creates feature/SPEC-003 + auto create Draft PR
  - Use current branch → Proceeds on current branch (not recommended)
-2. Running `/moai:2-run`: DDD commits + auto push (to feature branch)
-3. Running `/moai:3-sync`: Doc commits + prepare PR
+2. Running `/modu:2-run`: DDD commits + auto push (to feature branch)
+3. Running `/modu:3-sync`: Doc commits + prepare PR
 4. Team code review required (minimum 1 reviewer)
 5. After approval: Merge (Squash or Merge)
 
@@ -332,7 +332,7 @@ Configuration (auto after approval):
 ```
 
 Alfred's Behavior (prompt_always=false, auto_enabled=false):
-1. When running `/moai:1-plan`, user prompted once: "Enable automatic branch creation and Draft PR creation?"
+1. When running `/modu:1-plan`, user prompted once: "Enable automatic branch creation and Draft PR creation?"
  - Yes → Auto updates config.json with `auto_enabled=true` → Creates feature/SPEC + Draft PR
  - No → Works on current branch, no config change
 2. From next SPEC: If `auto_enabled=true`, feature branches + Draft PRs created automatically without prompts
@@ -363,7 +363,7 @@ Use Case: Team projects, code review required, quality management needed
 ### `/clear` Execution Rule
 
 Mandatory `/clear` After SPEC Generation:
-Execute `/clear` after `/moai:1-plan` completion in ALL modes.
+Execute `/clear` after `/modu:1-plan` completion in ALL modes.
 
 Why?:
 - Saves 45-50K tokens (SPEC generation context)
@@ -371,7 +371,7 @@ Why?:
 - Prevents token overflow
 
 When to Execute `/clear`:
-1. Immediately after `/moai:1-plan` (mandatory)
+1. Immediately after `/modu:1-plan` (mandatory)
 2. When context > 150K tokens
 3. After 50+ conversation messages
 

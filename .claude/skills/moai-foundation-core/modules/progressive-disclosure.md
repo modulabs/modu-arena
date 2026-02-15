@@ -92,7 +92,7 @@ Integration Points:
 - Pre-commit hooks → Automated validation
 - CI/CD pipelines → Quality gate enforcement
 - quality-gate agent → TRUST 5 validation
-- /moai:2-run → Enforces ≥85% coverage
+- /modu:2-run → Enforces ≥85% coverage
 
 Quick Validation:
 ```python
@@ -186,10 +186,10 @@ Purpose: Define clear, testable requirements in EARS format before coding.
 Workflow:
 ```bash
 # 1. Generate SPEC
-/moai:1-plan "Implement user authentication with JWT tokens"
+/modu:1-plan "Implement user authentication with JWT tokens"
 
 # 2. spec-builder creates:
-.moai/specs/SPEC-001/
+.modu-arena/specs/SPEC-001/
  spec.md # EARS format requirements
  acceptance.md # Acceptance criteria
  complexity.yaml # Complexity analysis
@@ -639,8 +639,8 @@ Agents:
 - docs-manager - Generate documentation with layered structure
 
 Commands:
-- /moai:1-plan - Generate SPEC with progressive detail
-- /moai:3-sync - Create docs with layered structure
+- /modu:1-plan - Generate SPEC with progressive detail
+- /modu:3-sync - Create docs with layered structure
 
 ---
 

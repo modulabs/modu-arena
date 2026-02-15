@@ -87,7 +87,7 @@ The system retrieves documentation from multiple sources in priority order:
 Local Project Documentation (Highest Priority):
 
 - Check .moai/docs/ for project-specific documentation
-- Check .moai/specs/ for requirements and specifications
+- Check .modu-arena/specs/ for requirements and specifications
 - Check README.md for project overview
 - Check docs/ directory for comprehensive documentation
 
@@ -252,5 +252,5 @@ Skills:
 
 Commands:
 
-- /moai:3-sync: Documentation synchronization
-- /moai:9-feedback: Documentation improvements
+- /modu:3-sync: Documentation synchronization
+- /modu:9-feedback: Documentation improvements

@@ -52,7 +52,7 @@ Core Capabilities:
 When to Use:
 
 - Scaffolding new projects or features
-- Creating GitHub issues with /moai:9-feedback
+- Creating GitHub issues with /modu:9-feedback
 - Optimizing template structures after MoAI-ADK updates
 - Restoring from project backups
 - Managing template versions and customizations
@@ -121,7 +121,7 @@ Concept: Structured templates for consistent GitHub issue creation.
 
 Six Template Types: Bug Report, Feature Request, Improvement, Refactor, Documentation, and Question/Discussion.
 
-Integration: Auto-triggered by the /moai:9-feedback command.
+Integration: Auto-triggered by the /modu:9-feedback command.
 
 For all template types and usage, see the Feedback Templates module documentation.
 
@@ -169,7 +169,7 @@ For complete implementation, see the Template Optimizer module section on Versio
 
 Code Templates include FastAPI REST API template, React component template, Docker and CI/CD templates, and template variables with scaffolding patterns.
 
-Feedback Templates include Bug Report template, Feature Request template, Improvement template, Refactor template, Documentation template, Question template, and integration with /moai:9-feedback command.
+Feedback Templates include Bug Report template, Feature Request template, Improvement template, Refactor template, Documentation template, Question template, and integration with /modu:9-feedback command.
 
 Template Optimizer includes 6-phase optimization workflow, smart merge algorithm, backup discovery and restoration, and version tracking with history.
 
@@ -242,14 +242,14 @@ Skills:
 
 Commands:
 
-- /moai:0-project: Project initialization with templates
-- /moai:9-feedback: Feedback template selection and issue creation
+- /modu:0-project: Project initialization with templates
+- /modu:9-feedback: Feedback template selection and issue creation
 
 ## Workflow Integration
 
 Project Initialization Workflow: Select code template using Pattern 1, scaffold project structure, apply customizations, and initialize version tracking using Pattern 5.
 
-Feedback Submission Workflow: Execute /moai:9-feedback command, select issue type using Pattern 2, fill template fields, and auto-generate GitHub issue.
+Feedback Submission Workflow: Execute /modu:9-feedback command, select issue type using Pattern 2, fill template fields, and auto-generate GitHub issue.
 
 Template Update Workflow: Detect template version change, create backup using Pattern 4, run smart merge using Pattern 3, and update version history using Pattern 5.
 

@@ -7,7 +7,7 @@ Synchronize documentation with code changes, verify project quality, and finaliz
 ## Scope
 
 - Implements Step 4 of MoAI's 4-step workflow (Report and Commit)
-- Receives implementation artifacts from /moai run
+- Receives implementation artifacts from /modu run
 - Produces synchronized documentation, commits, and PR readiness
 
 ## Input
@@ -35,11 +35,11 @@ Before execution, load these essential files:
 - .moai/config/config.yaml (git strategy, language settings)
 - .moai/config/sections/git-strategy.yaml (auto_branch, branch creation policy)
 - .moai/config/sections/language.yaml (git_commit_messages setting)
-- .moai/specs/ directory listing (SPEC documents for sync)
+- .modu-arena/specs/ directory listing (SPEC documents for sync)
 - .moai/project/ directory listing (project documents for conditional update)
 - README.md (current project documentation)
 
-Pre-execution commands: git status, git diff, git branch, git log, find .moai/specs.
+Pre-execution commands: git status, git diff, git branch, git log, find .modu-arena/specs.
 
 ---
 
@@ -181,7 +181,7 @@ Before any modifications:
 
 - Generate timestamp identifier
 - Create backup directory: .moai-backups/sync-{timestamp}/
-- Copy critical files: README.md, docs/, .moai/specs/
+- Copy critical files: README.md, docs/, .modu-arena/specs/
 - Verify backup integrity (non-empty directory check)
 
 #### Step 2.2: Document Synchronization
@@ -325,7 +325,7 @@ Tool: AskUserQuestion with options:
 
 Tool: AskUserQuestion with options:
 
-- Create Next SPEC (/moai plan)
+- Create Next SPEC (/modu plan)
 - Start New Session (/clear)
 - Review PR (Team mode, gh pr view)
 - Continue Development (Personal mode)
@@ -338,7 +338,7 @@ When user aborts at any decision point:
 
 - No changes made to documents, Git history, or branch state
 - Project remains in current state
-- Display retry command: /moai sync [mode]
+- Display retry command: /modu sync [mode]
 - Exit with code 0
 
 ---
@@ -356,4 +356,4 @@ All of the following must be verified:
 ---
 
 Version: 1.1.0
-Source: Extracted from .claude/commands/moai/3-sync.md v3.4.0. Added SPEC divergence analysis, project document updates, and SPEC lifecycle awareness.
+Source: Aligned with `.claude/commands/modu/sync.md`

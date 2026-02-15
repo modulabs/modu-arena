@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { db, users, dailyUserStats } from '@/db';
-import { eq, sql, gte, desc } from 'drizzle-orm';
+import { db, users, dailyUserStats, projectEvaluations, userStats } from '@/db';
+import { eq, sql, gte, desc, sum } from 'drizzle-orm';
 import {
   Errors,
   createPaginationMeta,
@@ -30,7 +30,10 @@ interface UsageEntry {
   username: string;
   avatarUrl: string | null;
   totalTokens: number;
+  weeklyTokens: number;
   sessionCount: number;
+  score: number;
+  lastActivityAt: string | null;
   isPrivate: boolean;
 }
 
@@ -87,9 +90,9 @@ export async function GET(request: NextRequest) {
 
     // Parse and validate query parameters
     const parseResult = UsageQuerySchema.safeParse({
-      period: searchParams.get('period'),
-      limit: searchParams.get('limit'),
-      offset: searchParams.get('offset'),
+      period: searchParams.get('period') ?? undefined,
+      limit: searchParams.get('limit') ?? undefined,
+      offset: searchParams.get('offset') ?? undefined,
     });
 
     if (!parseResult.success) {
@@ -103,6 +106,11 @@ export async function GET(request: NextRequest) {
     const rangeStart = getDateRangeStart(period);
     const rangeStartStr = rangeStart.toISOString().split('T')[0];
 
+    const weeklyStart = getDateRangeStart('weekly');
+    const weeklyStartStr = weeklyStart.toISOString().split('T')[0];
+
+    const minStartStr = weeklyStartStr < rangeStartStr ? weeklyStartStr : rangeStartStr;
+
     // Cache configuration
     const cacheKey = leaderboardKey(period, limit, offset);
     const defaultTtl = CACHE_TTL.LEADERBOARD[period === 'daily' ? 'daily' : period === 'weekly' ? 'weekly' : 'monthly'];
@@ -110,23 +118,47 @@ export async function GET(request: NextRequest) {
 
     // Fetch data with caching
     const result = await withCache(cacheKey, defaultTtl, async () => {
-      // Aggregate usage from dailyUserStats grouped by user
       const usageData = await db
         .select({
           userId: dailyUserStats.userId,
           username: sql<string>`COALESCE(${users.username}, ${users.githubUsername}, 'Anonymous')`,
           avatarUrl: users.githubAvatarUrl,
-          totalTokens: sql<number>`COALESCE(SUM(${dailyUserStats.totalTokens}), 0)`,
-          sessionCount: sql<number>`COALESCE(SUM(${dailyUserStats.sessionCount}), 0)`,
+          totalTokens: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${rangeStartStr} THEN ${dailyUserStats.totalTokens} ELSE 0 END), 0)`,
+          weeklyTokens: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${weeklyStartStr} THEN ${dailyUserStats.totalTokens} ELSE 0 END), 0)`,
+          sessionCount: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${rangeStartStr} THEN ${dailyUserStats.sessionCount} ELSE 0 END), 0)`,
+          lastActivityAt: userStats.lastActivityAt,
           privacyMode: users.privacyMode,
         })
         .from(dailyUserStats)
         .innerJoin(users, eq(dailyUserStats.userId, users.id))
-        .where(gte(dailyUserStats.statDate, rangeStartStr))
-        .groupBy(dailyUserStats.userId, users.username, users.githubUsername, users.githubAvatarUrl, users.privacyMode)
-        .orderBy(desc(sql`SUM(${dailyUserStats.totalTokens})`))
+        .leftJoin(userStats, eq(userStats.userId, users.id))
+        .where(gte(dailyUserStats.statDate, minStartStr))
+        .groupBy(
+          dailyUserStats.userId,
+          users.username,
+          users.githubUsername,
+          users.githubAvatarUrl,
+          users.privacyMode,
+          userStats.lastActivityAt
+        )
+        .having(sql`SUM(CASE WHEN ${dailyUserStats.statDate} >= ${rangeStartStr} THEN ${dailyUserStats.totalTokens} ELSE 0 END) > 0`)
+        .orderBy(desc(sql`SUM(CASE WHEN ${dailyUserStats.statDate} >= ${rangeStartStr} THEN ${dailyUserStats.totalTokens} ELSE 0 END)`))
         .limit(limit)
         .offset(offset);
+
+      const userIds = usageData.map(r => r.userId).filter(Boolean);
+      const projectScores = userIds.length > 0
+        ? await db
+            .select({
+              userId: projectEvaluations.userId,
+              finalScoreSum: sql<number>`COALESCE(SUM(${projectEvaluations.finalScore}), 0)`,
+            })
+            .from(projectEvaluations)
+            .where(sql`${projectEvaluations.userId} IN ${userIds}`)
+            .groupBy(projectEvaluations.userId)
+        : [];
+
+      const scoreMap = new Map(projectScores.map(s => [s.userId, Number(s.finalScoreSum)]));
 
       // Get total distinct users for pagination
       const countResult = await db
@@ -142,7 +174,10 @@ export async function GET(request: NextRequest) {
         username: r.privacyMode ? `User #${offset + idx + 1}` : (r.username ?? 'Unknown'),
         avatarUrl: r.privacyMode ? null : (r.avatarUrl ?? null),
         totalTokens: Number(r.totalTokens),
+        weeklyTokens: r.privacyMode ? 0 : Number(r.weeklyTokens),
         sessionCount: Number(r.sessionCount),
+        score: r.privacyMode ? 0 : (scoreMap.get(r.userId) ?? 0),
+        lastActivityAt: r.privacyMode ? null : (r.lastActivityAt ? new Date(r.lastActivityAt).toISOString() : null),
         isPrivate: r.privacyMode ?? false,
       }));
 

@@ -4,7 +4,7 @@ description: >
   SPEC workflow orchestration with EARS format requirements, acceptance criteria,
   and Plan-Run-Sync integration for MoAI-ADK development methodology.
   Use when creating SPEC documents, writing EARS requirements, defining acceptance
-  criteria, planning features, or orchestrating the /moai plan phase.
+  criteria, planning features, or orchestrating the /modu plan phase.
   Do NOT use for implementation (use moai-workflow-ddd instead)
   or documentation generation (use moai-workflow-project instead).
 license: Apache-2.0
@@ -77,10 +77,10 @@ When to Use:
 
 Quick Commands:
 
-- Create new SPEC: /moai:1-plan "user authentication system"
-- Create parallel SPECs with Worktrees: /moai:1-plan "login feature" "signup feature" --worktree
-- Create SPEC with new branch: /moai:1-plan "payment processing" --branch
-- Update existing SPEC: /moai:1-plan SPEC-001 "add OAuth support"
+- Create new SPEC: /modu:1-plan "user authentication system"
+- Create parallel SPECs with Worktrees: /modu:1-plan "login feature" "signup feature" --worktree
+- Create SPEC with new branch: /modu:1-plan "payment processing" --branch
+- Update existing SPEC: /modu:1-plan SPEC-001 "add OAuth support"
 
 ---
 
@@ -222,16 +222,16 @@ Step 4 - Test Scenario Creation:
 
 ### Plan-Run-Sync Workflow Integration
 
-PLAN Phase (/moai:1-plan):
+PLAN Phase (/modu:1-plan):
 
 - manager-spec agent analyzes user input
 - EARS format requirements generation
 - Requirement clarification with user interaction
-- SPEC document creation in .moai/specs/ directory
+- SPEC document creation in .modu-arena/specs/ directory
 - Git branch creation (optional --branch flag)
 - Git Worktree setup (optional --worktree flag)
 
-RUN Phase (/moai:2-run):
+RUN Phase (/modu:2-run):
 
 - manager-ddd agent loads SPEC document
 - ANALYZE-PRESERVE-IMPROVE DDD cycle execution
@@ -239,7 +239,7 @@ RUN Phase (/moai:2-run):
 - Domain Expert agent delegation (expert-backend, expert-frontend, etc.)
 - Quality validation through manager-quality agent
 
-SYNC Phase (/moai:3-sync):
+SYNC Phase (/modu:3-sync):
 
 - manager-docs agent synchronizes documentation
 - API documentation generation from SPEC
@@ -258,7 +258,7 @@ Worktree Concept:
 
 Worktree Creation:
 
-- Command /moai:1-plan "login feature" "signup feature" --worktree creates multiple SPECs
+- Command /modu:1-plan "login feature" "signup feature" --worktree creates multiple SPECs
 - Result creates project-worktrees directory with SPEC-specific subdirectories
 
 Worktree Benefits:
@@ -284,7 +284,7 @@ For advanced patterns including SPEC templates, validation automation, and workf
 
 Directory Structure (Standard 3-File Format):
 
-- .moai/specs/SPEC-{ID}/: SPEC document directory containing 3 required files
+- .modu-arena/specs/SPEC-{ID}/: SPEC document directory containing 3 required files
   - spec.md: EARS format specification (Environment, Assumptions, Requirements, Specifications)
   - plan.md: Implementation plan, milestones, technical approach
   - acceptance.md: Detailed acceptance criteria, test scenarios (Given-When-Then format)
@@ -373,16 +373,16 @@ Validation Checklist:
 
 Sequential Workflow:
 
-- Step 1 PLAN: /moai:1-plan "user authentication system"
-- Step 2 RUN: /moai:2-run SPEC-001
-- Step 3 SYNC: /moai:3-sync SPEC-001
+- Step 1 PLAN: /modu:1-plan "user authentication system"
+- Step 2 RUN: /modu:2-run SPEC-001
+- Step 3 SYNC: /modu:3-sync SPEC-001
 
 Parallel Workflow:
 
-- Create multiple SPECs: /moai:1-plan "backend API" "frontend UI" "database schema" --worktree
-- Session 1: /moai:2-run SPEC-001 (backend API)
-- Session 2: /moai:2-run SPEC-002 (frontend UI)
-- Session 3: /moai:2-run SPEC-003 (database schema)
+- Create multiple SPECs: /modu:1-plan "backend API" "frontend UI" "database schema" --worktree
+- Session 1: /modu:2-run SPEC-001 (backend API)
+- Session 2: /modu:2-run SPEC-002 (frontend UI)
+- Session 3: /modu:2-run SPEC-003 (database schema)
 
 ### Token Management
 
@@ -394,7 +394,7 @@ Session Strategy:
 
 Context Optimization:
 
-- SPEC document persists in .moai/specs/ directory
+- SPEC document persists in .modu-arena/specs/ directory
 - Session memory in .moai/memory/ for cross-session context
 - Minimal context transfer through SPEC ID reference
 - Agent delegation reduces token overhead
@@ -403,9 +403,9 @@ Context Optimization:
 
 ## SPEC Scope and Classification (NEW)
 
-### What Belongs in .moai/specs/
+### What Belongs in .modu-arena/specs/
 
-The `.moai/specs/` directory is EXCLUSIVELY for SPEC documents that define features to be implemented.
+The `.modu-arena/specs/` directory is EXCLUSIVELY for SPEC documents that define features to be implemented.
 
 Valid SPEC Content:
 
@@ -422,7 +422,7 @@ SPEC Characteristics:
 - Testable: Includes acceptance criteria
 - Structured: Uses EARS format patterns
 
-### What Does NOT Belong in .moai/specs/
+### What Does NOT Belong in .modu-arena/specs/
 
 | Document Type         | Why Not SPEC                  | Correct Location                          |
 | --------------------- | ----------------------------- | ----------------------------------------- |
@@ -439,12 +439,12 @@ SPEC Characteristics:
 [HARD] Report vs SPEC Distinction:
 
 Reports analyze what EXISTS → `.moai/reports/`
-SPECs define what will be BUILT → `.moai/specs/`
+SPECs define what will be BUILT → `.modu-arena/specs/`
 
 [HARD] Documentation vs SPEC Distinction:
 
 Documentation explains HOW TO USE → `.moai/docs/`
-SPECs define WHAT TO BUILD → `.moai/specs/`
+SPECs define WHAT TO BUILD → `.modu-arena/specs/`
 
 ---
 
@@ -452,12 +452,12 @@ SPECs define WHAT TO BUILD → `.moai/specs/`
 
 ### Scenario 1: Flat SPEC File → Directory Conversion
 
-Problem: `.moai/specs/SPEC-AUTH-001.md` exists as single file
+Problem: `.modu-arena/specs/SPEC-AUTH-001.md` exists as single file
 
 Solution Steps:
 
-1. Create directory: `mkdir -p .moai/specs/SPEC-AUTH-001/`
-2. Move content: `mv .moai/specs/SPEC-AUTH-001.md .moai/specs/SPEC-AUTH-001/spec.md`
+1. Create directory: `mkdir -p .modu-arena/specs/SPEC-AUTH-001/`
+2. Move content: `mv .modu-arena/specs/SPEC-AUTH-001.md .modu-arena/specs/SPEC-AUTH-001/spec.md`
 3. Create missing files:
    - Extract implementation plan → `plan.md`
    - Extract acceptance criteria → `acceptance.md`
@@ -468,7 +468,7 @@ Validation Command:
 
 ```bash
 # Check for flat SPEC files (should return empty)
-find .moai/specs -maxdepth 1 -name "SPEC-*.md" -type f
+find .modu-arena/specs -maxdepth 1 -name "SPEC-*.md" -type f
 ```
 
 ### Scenario 2: Unnumbered SPEC ID → Number Assignment
@@ -479,19 +479,19 @@ Solution Steps:
 
 1. Find next available number:
    ```bash
-   ls -d .moai/specs/SPEC-*-[0-9][0-9][0-9] 2>/dev/null | sort -t- -k3 -n | tail -1
+   ls -d .modu-arena/specs/SPEC-*-[0-9][0-9][0-9] 2>/dev/null | sort -t- -k3 -n | tail -1
    ```
 2. Assign number: `SPEC-REDESIGN` → `SPEC-REDESIGN-001`
 3. Rename directory:
    ```bash
-   mv .moai/specs/SPEC-REDESIGN .moai/specs/SPEC-REDESIGN-001
+   mv .modu-arena/specs/SPEC-REDESIGN .modu-arena/specs/SPEC-REDESIGN-001
    ```
 4. Update internal references in spec.md frontmatter
 5. Commit: `git commit -m "refactor(spec): Assign number to SPEC-REDESIGN → SPEC-REDESIGN-001"`
 
 ### Scenario 3: Report in SPEC Directory → Separation
 
-Problem: Analysis/audit document in `.moai/specs/`
+Problem: Analysis/audit document in `.modu-arena/specs/`
 
 Solution Steps:
 
@@ -502,8 +502,8 @@ Solution Steps:
    ```
 3. Move content:
    ```bash
-   mv .moai/specs/SPEC-SECURITY-AUDIT/* .moai/reports/security-audit-2025-01/
-   rmdir .moai/specs/SPEC-SECURITY-AUDIT
+   mv .modu-arena/specs/SPEC-SECURITY-AUDIT/* .moai/reports/security-audit-2025-01/
+   rmdir .modu-arena/specs/SPEC-SECURITY-AUDIT
    ```
 4. Rename main file to report.md if needed
 5. Commit: `git commit -m "refactor: Move security audit from specs to reports"`
@@ -516,12 +516,12 @@ Solution Steps:
 
 1. Compare creation dates:
    ```bash
-   ls -la .moai/specs/ | grep SPEC-AUTH-001
+   ls -la .modu-arena/specs/ | grep SPEC-AUTH-001
    ```
 2. Determine which is canonical (usually older one)
 3. Renumber newer one to next available:
    ```bash
-   mv .moai/specs/SPEC-AUTH-001-duplicate .moai/specs/SPEC-AUTH-002
+   mv .modu-arena/specs/SPEC-AUTH-001-duplicate .modu-arena/specs/SPEC-AUTH-002
    ```
 4. Update internal references
 5. Commit: `git commit -m "fix(spec): Resolve duplicate SPEC-AUTH-001 → SPEC-AUTH-002"`
@@ -538,11 +538,11 @@ echo "=== SPEC Organization Check ==="
 
 # Check 1: Flat files in specs root
 echo -e "\n[Check 1] Flat SPEC files (should be empty):"
-find .moai/specs -maxdepth 1 -name "SPEC-*.md" -type f
+find .modu-arena/specs -maxdepth 1 -name "SPEC-*.md" -type f
 
 # Check 2: Directories without required files
 echo -e "\n[Check 2] SPEC directories missing required files:"
-for dir in .moai/specs/SPEC-*/; do
+for dir in .modu-arena/specs/SPEC-*/; do
   if [ -d "$dir" ]; then
     missing=""
     [ ! -f "${dir}spec.md" ] && missing="${missing}spec.md "
@@ -554,11 +554,11 @@ done
 
 # Check 3: SPECs without numbers
 echo -e "\n[Check 3] SPECs without proper numbering:"
-ls -d .moai/specs/SPEC-*/ 2>/dev/null | grep -v -E 'SPEC-[A-Z]+-[0-9]{3}'
+ls -d .modu-arena/specs/SPEC-*/ 2>/dev/null | grep -v -E 'SPEC-[A-Z]+-[0-9]{3}'
 
 # Check 4: Potential reports in specs
 echo -e "\n[Check 4] Potential reports in specs (check manually):"
-grep -l -r "findings\|recommendations\|audit\|analysis" .moai/specs/*/spec.md 2>/dev/null
+grep -l -r "findings\|recommendations\|audit\|analysis" .modu-arena/specs/*/spec.md 2>/dev/null
 
 echo -e "\n=== Check Complete ==="
 ```

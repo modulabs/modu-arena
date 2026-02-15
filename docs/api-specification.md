@@ -342,7 +342,7 @@ Get detailed stats for current user.
 
 Submit a project for LLM-based evaluation.
 
-**Auth**: Clerk session
+**Auth**: JWT session cookie OR API Key + HMAC headers
 
 **Rate Limit**: Max 10 evaluations per user per day.
 
@@ -351,16 +351,38 @@ Submit a project for LLM-based evaluation.
 ```json
 {
   "projectName": "my-awesome-project",
-  "description": "A CLI tool for managing Docker containers with AI assistance",
-  "fileStructure": "src/\n  index.ts\n  commands/\n    deploy.ts\n    rollback.ts\n  utils/\n    docker.ts"
+  "description": "# My Awesome Project\n\n## Local Validation\n\n```bash title=\"test\"\n...\n```\n",
+  "fileStructure": {
+    ".": ["README.md"],
+    "src": ["index.ts"],
+    "src/commands": ["deploy.ts", "rollback.ts"]
+  },
+  "projectPathHash": "<64-char sha256>",
+  "localScore": 5,
+  "localEvaluationSummary": "Ran README Local Validation test: PASS (localScore=5)."
 }
 ```
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `projectName` | string | ✅ | Project name (1–100 chars) |
-| `description` | string | ✅ | Project description (1–2000 chars) |
-| `fileStructure` | string | ❌ | Directory tree representation |
+| `projectName` | string | ✅ | Project name (1–255 chars) |
+| `description` | string | ✅ | Project description (README content) (10–5000 chars) |
+| `fileStructure` | object | ❌ | File structure summary as `{ "dir": ["file", ...] }` |
+| `projectPathHash` | string | ❌ | 64-char SHA-256 of absolute project path (idempotency key) |
+| `localScore` | integer | ❌ | 0..5 local score computed by local agent (default 0) |
+| `localEvaluationSummary` | string | ❌ | Short explanation of how localScore was computed |
+
+**Scoring Model:**
+
+- `README.md` at the project root is the source of truth
+- localScore: 0..5 (does it work as described in README)
+- backendScore: 0..5 (novelty/quality re-evaluation)
+- penaltyScore: -5..0 (low-quality penalty)
+- finalScore = localScore + backendScore + penaltyScore
+- finalScore range: -5 .. 10
+- cumulativeScoreAfter accumulates per user over time:
+  - cumulativeScoreAfter = cumulativeScoreBefore + finalScore
+  - can be negative
 
 **Success Response (200):**
 
@@ -368,25 +390,20 @@ Submit a project for LLM-based evaluation.
 {
   "success": true,
   "evaluation": {
-    "id": "uuid-here",
     "projectName": "my-awesome-project",
-    "score": 7,
-    "maxScore": 10,
+    "localScore": 4,
+    "backendScore": 3,
+    "penaltyScore": -1,
+    "finalScore": 6,
+    "cumulativeScoreAfter": 12,
     "passed": true,
     "feedback": "Well-structured project with clear separation of concerns...",
-    "categories": {
-      "codeQuality": 8,
-      "architecture": 7,
-      "documentation": 6,
-      "testing": 5,
-      "innovation": 8
-    },
     "evaluatedAt": "2026-02-11T10:30:00.000Z"
   }
 }
 ```
 
-**Pass Threshold**: `score >= 5` out of 10.
+**Pass Threshold**: `finalScore >= 5`.
 
 When passed, `users.successful_projects_count` is incremented.
 

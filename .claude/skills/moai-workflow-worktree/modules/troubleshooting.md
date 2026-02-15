@@ -278,8 +278,8 @@ Resolution Steps:
 ### MoAI Command Coordination Failures
 
 Symptoms:
-- /moai:1-plan does not create expected worktree
-- /moai:2-run cannot find worktree for SPEC
+- /modu:1-plan does not create expected worktree
+- /modu:2-run cannot find worktree for SPEC
 - Workflow commands operate on wrong worktree
 
 Root Causes:

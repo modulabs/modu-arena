@@ -3,13 +3,18 @@
  */
 
 import { createInterface } from 'node:readline';
-import { existsSync, readFileSync, readdirSync, statSync, unlinkSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync, unlinkSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { basename, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
+import { execSync } from 'node:child_process';
 import { getAllAdapters, type InstallResult } from './adapters.js';
 import { getRank, registerUser, loginUser, submitEvaluation } from './api.js';
 import { loadConfig, saveConfig, requireConfig } from './config.js';
 import { API_BASE_URL, TOOL_DISPLAY_NAMES, type ToolType } from './constants.js';
+import { installDaemon, uninstallDaemon, getDaemonStatus } from './daemon.js';
+import { syncClaudeDesktop, hasClaudeDesktopData } from './claude-desktop.js';
 
 function prompt(question: string): Promise<string> {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
@@ -222,6 +227,8 @@ export async function installCommand(apiKey?: string): Promise<void> {
         '  • Crush (https://charm.sh/crush)\n',
     );
   }
+
+  installSlashCommands();
 }
 
 // ─── rank ──────────────────────────────────────────────────────────────────
@@ -346,58 +353,6 @@ export function uninstallCommand(): void {
 
 // ─── submit ─────────────────────────────────────────────────────────────────
 
-const IGNORE_DIRS = new Set([
-  'node_modules', '.git', '.next', '.nuxt', 'dist', 'build', 'out',
-  '.cache', '.turbo', '.vercel', '__pycache__', '.svelte-kit',
-  'coverage', '.output', '.parcel-cache',
-]);
-
-function collectFileStructure(
-  dir: string,
-  maxDepth: number,
-  currentDepth = 0,
-): Record<string, string[]> {
-  const result: Record<string, string[]> = {};
-  if (currentDepth >= maxDepth) return result;
-
-  let entries: string[];
-  try {
-    entries = readdirSync(dir);
-  } catch {
-    return result;
-  }
-
-  const files: string[] = [];
-  for (const entry of entries) {
-    if (entry.startsWith('.') && IGNORE_DIRS.has(entry)) continue;
-    if (IGNORE_DIRS.has(entry)) continue;
-
-    const fullPath = join(dir, entry);
-    let stat;
-    try {
-      stat = statSync(fullPath);
-    } catch {
-      continue;
-    }
-
-    if (stat.isDirectory()) {
-      const sub = collectFileStructure(fullPath, maxDepth, currentDepth + 1);
-      for (const [key, val] of Object.entries(sub)) {
-        result[key] = val;
-      }
-    } else {
-      files.push(entry);
-    }
-  }
-
-  if (files.length > 0) {
-    const relDir = currentDepth === 0 ? '.' : dir.split('/').slice(-(currentDepth)).join('/');
-    result[relDir] = files;
-  }
-
-  return result;
-}
-
 export async function submitCommand(): Promise<void> {
   const config = requireConfig();
   console.log('\n🚀 Modu-Arena — Project Submit\n');
@@ -412,25 +367,49 @@ export async function submitCommand(): Promise<void> {
     process.exit(1);
   }
 
-  const description = readFileSync(readmePath, 'utf-8');
-  if (description.trim().length === 0) {
+  const descriptionRaw = readFileSync(readmePath, 'utf-8');
+  if (descriptionRaw.trim().length === 0) {
     console.error('Error: README.md is empty.\n');
     process.exit(1);
+  }
+  const description = descriptionRaw.length > 5000 
+    ? descriptionRaw.slice(0, 5000) + '\n... (truncated)'
+    : descriptionRaw;
+
+  const projectPathHash = sha256Hex(cwd);
+  const localValidationTest = extractLocalValidationTestCommand(descriptionRaw);
+  let localScore = 0;
+  let localEvaluationSummary: string | undefined;
+  if (localValidationTest) {
+    console.log('  Running local validation (README: ## Local Validation)...');
+    try {
+      const start = Date.now();
+      execSync(localValidationTest, {
+        cwd,
+        stdio: 'ignore',
+        timeout: 120000,
+        windowsHide: true,
+      });
+      localScore = 5;
+      localEvaluationSummary = `Ran README Local Validation test: PASS (localScore=5) in ${Date.now() - start}ms.`;
+      console.log('  ✓ Local validation passed');
+    } catch {
+      localScore = 0;
+      localEvaluationSummary = 'Ran README Local Validation test: FAIL (localScore=0).';
+      console.log('  ✗ Local validation failed');
+    }
+    console.log('');
+  } else {
+    localEvaluationSummary = 'No README Local Validation test block found (localScore=0).';
   }
 
   console.log(`  Project:  ${projectName}`);
   console.log(`  README:   ${readmePath}`);
   console.log('');
-  console.log('  Collecting file structure...');
-
-  const fileStructure = collectFileStructure(cwd, 3);
-  const fileCount = Object.values(fileStructure).reduce((sum, files) => sum + files.length, 0);
-  console.log(`  Found ${fileCount} file(s) in ${Object.keys(fileStructure).length} director${Object.keys(fileStructure).length === 1 ? 'y' : 'ies'}`);
-  console.log('');
   console.log('  Submitting for evaluation...\n');
 
   const result = await submitEvaluation(
-    { projectName, description, fileStructure },
+    { projectName, description, projectPathHash, localScore, localEvaluationSummary },
     { apiKey: config.apiKey, serverUrl: config.serverUrl },
   );
 
@@ -444,11 +423,13 @@ export async function submitCommand(): Promise<void> {
   const statusText = evaluation.passed ? 'PASSED' : 'FAILED';
 
   console.log(`  Result: ${statusIcon} ${statusText}`);
-  console.log(`  Total Score: ${evaluation.totalScore}/100`);
+  console.log(`  Final Score: ${evaluation.finalScore}/10`);
+  console.log(`  Cumulative:  ${evaluation.cumulativeScoreAfter}`);
   console.log('');
-  console.log('  Rubric Scores:');
-  console.log(`    Functionality: ${evaluation.rubricFunctionality}/50`);
-  console.log(`    Practicality:  ${evaluation.rubricPracticality}/50`);
+  console.log('  Score Breakdown:');
+  console.log(`    localScore:   ${evaluation.localScore}/5`);
+  console.log(`    backendScore: ${evaluation.backendScore}/5`);
+  console.log(`    penaltyScore: ${evaluation.penaltyScore}`);
   console.log('');
 
   if (evaluation.feedback) {
@@ -461,10 +442,151 @@ export async function submitCommand(): Promise<void> {
   }
 }
 
+// ─── slash commands ────────────────────────────────────────────────────────
+
+function installSlashCommands(): void {
+  const cwd = process.cwd();
+  const thisDir = dirname(fileURLToPath(import.meta.url));
+  const srcDir = join(thisDir, '..', 'commands');
+
+  if (!existsSync(srcDir)) {
+    const altDir = join(thisDir, 'commands');
+    if (!existsSync(altDir)) return;
+    return copyCommandsFrom(altDir, cwd);
+  }
+  copyCommandsFrom(srcDir, cwd);
+}
+
+function copyCommandsFrom(srcDir: string, cwd: string): void {
+  const targetBase = join(cwd, '.claude', 'commands');
+
+  const routerSrc = join(srcDir, 'modu.md');
+  if (existsSync(routerSrc)) {
+    mkdirSync(targetBase, { recursive: true });
+    writeFileSync(join(targetBase, 'modu.md'), readFileSync(routerSrc));
+  }
+
+  const subDir = join(srcDir, 'modu');
+  if (!existsSync(subDir)) return;
+
+  const targetSub = join(targetBase, 'modu');
+  mkdirSync(targetSub, { recursive: true });
+
+  let count = 0;
+  for (const file of readdirSync(subDir)) {
+    if (!file.endsWith('.md')) continue;
+    writeFileSync(join(targetSub, file), readFileSync(join(subDir, file)));
+    count++;
+  }
+
+  console.log(`\n✓ Slash commands installed to ${targetBase} (${count} commands)`);
+}
+
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toString();
+}
+
+function sha256Hex(input: string): string {
+  return createHash('sha256').update(input).digest('hex');
+}
+
+function extractLocalValidationTestCommand(readme: string): string | null {
+  const idx = readme.toLowerCase().indexOf('## local validation');
+  if (idx < 0) return null;
+  const section = readme.slice(idx);
+  const m = section.match(/```bash[^\n]*title\s*=\s*['"]test['"][^\n]*\n([\s\S]*?)\n```/i);
+  if (!m) return null;
+  const cmd = (m[1] || '').trim();
+  return cmd.length > 0 ? cmd : null;
+}
+
+// ─── daemon install ────────────────────────────────────────────────────────
+
+export function daemonInstallCommand(): void {
+  console.log('\n🔄 Modu-Arena — Claude Desktop Daemon\n');
+  
+  if (!hasClaudeDesktopData()) {
+    console.log('  ✗ Claude Desktop data not found.');
+    console.log('    Make sure Claude Desktop is installed and has been used.\n');
+    process.exit(1);
+  }
+  
+  const result = installDaemon();
+  
+  if (result.success) {
+    console.log(`  ✓ ${result.message}`);
+    console.log('  ✓ Daemon will sync Claude Desktop usage automatically.\n');
+  } else {
+    console.error(`  ✗ ${result.message}\n`);
+    process.exit(1);
+  }
+}
+
+// ─── daemon uninstall ──────────────────────────────────────────────────────
+
+export function daemonUninstallCommand(): void {
+  console.log('\n🔄 Modu-Arena — Claude Desktop Daemon\n');
+  
+  const result = uninstallDaemon();
+  
+  if (result.success) {
+    console.log(`  ✓ ${result.message}\n`);
+  } else {
+    console.error(`  ✗ ${result.message}\n`);
+    process.exit(1);
+  }
+}
+
+// ─── daemon status ─────────────────────────────────────────────────────────
+
+export function daemonStatusCommand(): void {
+  console.log('\n🔄 Modu-Arena — Claude Desktop Daemon\n');
+  
+  const status = getDaemonStatus();
+  
+  console.log(`  Platform: ${status.platform}`);
+  console.log(`  Installed: ${status.installed ? 'Yes' : 'No'}`);
+  if (status.installed) {
+    console.log(`  Sync Interval: ${Math.floor(status.interval / 60)} minutes`);
+  }
+  
+  if (hasClaudeDesktopData()) {
+    console.log('  Claude Desktop Data: Found');
+  } else {
+    console.log('  Claude Desktop Data: Not found');
+  }
+  console.log('');
+}
+
+// ─── daemon sync ───────────────────────────────────────────────────────────
+
+export async function daemonSyncCommand(): Promise<void> {
+  const config = requireConfig();
+  
+  if (!hasClaudeDesktopData()) {
+    console.log('Claude Desktop data not found. Nothing to sync.\n');
+    return;
+  }
+  
+  console.log('Syncing Claude Desktop usage...');
+  
+  const result = await syncClaudeDesktop(config.apiKey);
+  
+  console.log(`  Synced: ${result.synced} sessions`);
+  console.log(`  Skipped: ${result.skipped} sessions (already synced)`);
+  
+  if (result.errors.length > 0) {
+    console.log(`  Errors: ${result.errors.length}`);
+    for (const err of result.errors.slice(0, 3)) {
+      console.log(`    - ${err}`);
+    }
+    if (result.errors.length > 3) {
+      console.log(`    ... and ${result.errors.length - 3} more`);
+    }
+  }
+  console.log('');
 }

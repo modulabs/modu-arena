@@ -16,6 +16,8 @@ import {
   logRateLimitExceeded,
 } from '@/lib/audit';
 import { checkRateLimit } from '@/lib/rate-limiter';
+import { del, delMany, delPattern } from '@/lib/cache';
+import { userKeys, leaderboardPattern } from '@/cache/keys';
 
 /**
  * Security Constants
@@ -48,7 +50,7 @@ const SESSION_TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000;
 /**
  * Supported tool types
  */
-const VALID_TOOL_TYPES = ['claude-code', 'opencode', 'gemini', 'codex', 'crush'];
+const VALID_TOOL_TYPES = ['claude-code', 'claude-desktop', 'opencode', 'gemini', 'codex', 'crush'];
 
 /**
  * Code metrics schema for code analytics
@@ -66,25 +68,12 @@ const CodeMetricsSchema = z.object({
  */
 const CreateSessionSchema = z.object({
   // NEW: Tool type to identify which AI coding tool was used
-  toolType: z.enum(['claude-code', 'opencode', 'gemini', 'codex', 'crush']).default('claude-code'),
+  toolType: z.enum(['claude-code', 'claude-desktop', 'opencode', 'gemini', 'codex', 'crush']).default('claude-code'),
 
   sessionHash: z.string().length(64, 'Invalid session hash').optional(),
   anonymousProjectId: z.string().max(100).optional(),
-  // Timestamp bounds checking to prevent replay attacks
-  endedAt: z
-    .string()
-    .datetime()
-    .refine(
-      (val) => {
-        const sessionDate = new Date(val);
-        const now = Date.now();
-        const timeDiff = Math.abs(sessionDate.getTime() - now);
-        return timeDiff <= SESSION_TIMESTAMP_TOLERANCE_MS;
-      },
-      {
-        message: 'Session endedAt must be within 5 minutes of current time',
-      }
-    ),
+  // Timestamp bounds checking (validated post-parse for toolType-aware logic)
+  endedAt: z.string().datetime(),
   modelName: z.string().max(100).optional(),
   // Token validation with maximum limits
   inputTokens: z
@@ -225,6 +214,14 @@ export async function POST(request: NextRequest) {
     }
 
     const sessionData = parseResult.data;
+
+    // endedAt timestamp bounds check (skipped for claude-desktop which reports after-the-fact)
+    if (sessionData.toolType !== 'claude-desktop') {
+      const endedAtTime = new Date(sessionData.endedAt).getTime();
+      if (Math.abs(endedAtTime - Date.now()) > SESSION_TIMESTAMP_TOLERANCE_MS) {
+        return Errors.validationError('Session endedAt is too far from current time');
+      }
+    }
 
     // Session frequency validation - minimum time between sessions
     const submittedEndedAt = new Date(sessionData.endedAt);
@@ -442,6 +439,18 @@ export async function POST(request: NextRequest) {
       inputTokens: sessionData.inputTokens,
       outputTokens: sessionData.outputTokens,
     });
+
+    // Invalidate caches so leaderboard/rank reflect new data immediately
+    try {
+      await Promise.all([
+        delMany(userKeys(user.id)),
+        delPattern(leaderboardPattern('daily')),
+        delPattern(leaderboardPattern('weekly')),
+        delPattern(leaderboardPattern('monthly')),
+      ]);
+    } catch {
+      // Cache invalidation failure is non-fatal; data is still in DB
+    }
 
     const response: CreateSessionResponse = {
       success: true,

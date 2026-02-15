@@ -203,8 +203,8 @@ Constraints for AskUserQuestion:
 
 AI must add a marker when work is complete:
 
-- `<moai>DONE</moai>` signals task completion
-- `<moai>COMPLETE</moai>` signals full workflow completion
+- `<moai>DONE</modu>` signals task completion
+- `<moai>COMPLETE</modu>` signals full workflow completion
 
 These markers enable automation detection of workflow state.
 
@@ -223,7 +223,7 @@ These markers enable automation detection of workflow state.
 - Token limit errors: Execute /clear, then guide user to resume the workflow
 - Permission errors: Review settings.json configuration manually
 - Integration errors: Use expert-devops subagent
-- MoAI-ADK errors: Suggest /moai feedback to create a GitHub issue
+- MoAI-ADK errors: Suggest /modu feedback to create a GitHub issue
 
 ---
 
@@ -300,8 +300,8 @@ For detailed workflow orchestration steps, read the corresponding workflow file:
 - workflows/project.md: Project documentation workflow
 - workflows/feedback.md: Feedback and issue creation workflow
 
-For SPEC workflow overview: See .claude/rules/moai/workflow/spec-workflow.md
-For quality standards: See .claude/rules/moai/core/moai-constitution.md
+For SPEC workflow overview: See .claude/rules/modu/workflow/spec-workflow.md
+For quality standards: See .claude/rules/modu/core/moai-constitution.md
 
 ---
 
@@ -334,7 +334,7 @@ Step 8 - Present Results:
 Display results to the user in their conversation_language using Markdown format. Include summary statistics, artifacts created, and next step options.
 
 Step 9 - Add Completion Marker:
-When all workflow phases complete successfully, add the appropriate completion marker (`<moai>DONE</moai>` or `<moai>COMPLETE</moai>`).
+When all workflow phases complete successfully, add the appropriate completion marker (`<moai>DONE</modu>` or `<moai>COMPLETE</modu>`).
 
 Step 10 - Guide Next Steps:
 Use AskUserQuestion to present the user with logical next actions based on the completed workflow.

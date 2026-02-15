@@ -162,7 +162,7 @@ Display completion message in user's conversation_language:
 
 Next Steps (AskUserQuestion):
 
-- Write SPEC: Execute /moai plan to define feature specifications
+- Write SPEC: Execute /modu plan to define feature specifications
 - Review Documentation: Open generated files for review
 - Start New Session: Clear context and start fresh
 

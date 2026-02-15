@@ -174,7 +174,7 @@ optimizer.apply_templates(merged)
 ### Pattern 3: Feedback Command Integration
 
 ```python
-# Integration with /moai:9-feedback command
+# Integration with /modu:9-feedback command
 from moai_workflow_templates import FeedbackTemplateGenerator
 
 def handle_feedback_command(feedback_type: str, data: dict):

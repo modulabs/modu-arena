@@ -7,7 +7,7 @@ Create comprehensive SPEC documents using EARS format as the first step of the P
 ## Scope
 
 - Implements Steps 1-2 of MoAI's 4-step workflow (Intent Understanding, Plan Creation)
-- Steps 3-4 are handled by /moai run and /moai sync respectively
+- Steps 3-4 are handled by /modu run and /modu sync respectively
 
 ## Input
 
@@ -35,9 +35,9 @@ Before execution, load these essential files:
 - .moai/project/product.md (product context)
 - .moai/project/structure.md (architecture context)
 - .moai/project/tech.md (technology context)
-- .moai/specs/ directory listing (existing SPECs for deduplication)
+- .modu-arena/specs/ directory listing (existing SPECs for deduplication)
 
-Pre-execution commands: git status, git branch, git log, git diff, find .moai/specs.
+Pre-execution commands: git status, git branch, git log, git diff, find .modu-arena/specs.
 
 ---
 
@@ -61,7 +61,7 @@ When to skip:
 Tasks for the Explore subagent:
 
 - Find relevant files by keywords from user request
-- Locate existing SPEC documents in .moai/specs/
+- Locate existing SPEC documents in .modu-arena/specs/
 - Identify implementation patterns and dependencies
 - Discover project configuration files
 - Report comprehensive results for Phase 1B context
@@ -76,7 +76,7 @@ Tasks for manager-spec:
 
 - Analyze project documents (product.md, structure.md, tech.md)
 - Propose 1-3 SPEC candidates with proper naming
-- Check for duplicate SPECs in .moai/specs/
+- Check for duplicate SPECs in .modu-arena/specs/
 - Design EARS structure for each candidate
 - Create implementation plan with technical constraints
 - Identify library versions (production stable only, no beta/alpha)
@@ -113,7 +113,7 @@ Step 2 - SPEC ID Validation (all checks must pass):
 
 - ID Format: Must match SPEC-{DOMAIN}-{NUMBER} pattern (e.g., SPEC-AUTH-001)
 - Domain Name: Must be from the approved domain list (AUTH, API, UI, DB, REFACTOR, FIX, UPDATE, PERF, TEST, DOCS, INFRA, DEVOPS, SECURITY, and others)
-- ID Uniqueness: Search .moai/specs/ to confirm no duplicates exist
+- ID Uniqueness: Search .modu-arena/specs/ to confirm no duplicates exist
 - Directory Structure: Must create directory, never flat files
 
 Composite domain rules: Maximum 2 domains recommended (e.g., UPDATE-REFACTOR-001), maximum 3 allowed.
@@ -126,18 +126,18 @@ Input: Approved plan from Phase 1B, validated SPEC ID from Phase 1.5.
 
 File generation (all three files created simultaneously):
 
-- .moai/specs/SPEC-{ID}/spec.md
+- .modu-arena/specs/SPEC-{ID}/spec.md
   - YAML frontmatter with 7 required fields (id, version, status, created, updated, author, priority)
   - HISTORY section immediately after frontmatter
   - Complete EARS structure with all 5 requirement types
   - Content written in conversation_language
 
-- .moai/specs/SPEC-{ID}/plan.md
+- .modu-arena/specs/SPEC-{ID}/plan.md
   - Implementation plan with task decomposition
   - Technology stack specifications and dependencies
   - Risk analysis and mitigation strategies
 
-- .moai/specs/SPEC-{ID}/acceptance.md
+- .modu-arena/specs/SPEC-{ID}/acceptance.md
   - Minimum 2 Given/When/Then test scenarios
   - Edge case testing scenarios
   - Performance and quality gate criteria
@@ -162,7 +162,7 @@ Skipped when: develop_direct workflow, no flags and user chooses "Use current br
 
 Prerequisite: SPEC files MUST be committed before worktree creation.
 
-- Stage SPEC files: git add .moai/specs/SPEC-{ID}/
+- Stage SPEC files: git add .modu-arena/specs/SPEC-{ID}/
 - Create commit: feat(spec): Add SPEC-{ID} - {title}
 - Create worktree via WorktreeManager with branch feature/SPEC-{ID}
 - Display worktree path and navigation instructions
@@ -197,7 +197,7 @@ Tool: AskUserQuestion (after SPEC creation completes)
 
 Options:
 
-- Start Implementation (execute /moai run SPEC-{ID})
+- Start Implementation (execute /modu run SPEC-{ID})
 - Modify Plan
 - Add New Feature (create additional SPEC)
 
@@ -210,7 +210,7 @@ All of the following must be verified:
 - Phase 1: manager-spec analyzed project and proposed SPEC candidates
 - User approval obtained via AskUserQuestion before SPEC creation
 - Phase 2: All 3 SPEC files created (spec.md, plan.md, acceptance.md)
-- Directory naming follows .moai/specs/SPEC-{ID}/ format
+- Directory naming follows .modu-arena/specs/SPEC-{ID}/ format
 - YAML frontmatter contains all 7 required fields
 - EARS structure is complete
 - Phase 3: Appropriate git action taken based on flags and user choice
@@ -220,4 +220,4 @@ All of the following must be verified:
 ---
 
 Version: 1.0.0
-Source: Extracted from .claude/commands/moai/1-plan.md v5.1.0
+Source: Aligned with `.claude/commands/modu/plan.md`

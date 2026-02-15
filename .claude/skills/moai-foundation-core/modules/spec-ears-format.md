@@ -159,7 +159,7 @@ Test Scenarios:
 ## Complexity Analysis Template
 
 ```yaml
-# .moai/specs/SPEC-001/complexity.yaml
+# .modu-arena/specs/SPEC-001/complexity.yaml
 complexity_metrics:
   total_requirements: 5
   critical_requirements: 3

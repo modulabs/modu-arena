@@ -6,13 +6,13 @@
 
 ```bash
 # Start Ralph loop for automated error fixing
-/moai:loop
+/modu:loop
 
 # Start with custom max iterations
-/moai:loop --max-iterations 5
+/modu:loop --max-iterations 5
 
 # Start with specific completion criteria
-/moai:loop --zero-warnings true
+/modu:loop --zero-warnings true
 ```
 
 **Loop State Management:**
@@ -40,7 +40,7 @@
 **Example Conversation Flow:**
 
 ```
-User: /moai:loop
+User: /modu:loop
 Claude: Ralph loop activated. Starting automated error correction...
 
 [Claude makes code changes]
@@ -125,19 +125,19 @@ Ralph Loop: COMPLETE | Manual cancellation
 
 ```bash
 # Fix all current LSP errors
-/moai:fix
+/modu:fix
 
 # Fix errors in specific file
-/moai:fix src/auth.py
+/modu:fix src/auth.py
 
 # Fix with specific severity threshold
-/moai:fix --severity error
+/modu:fix --severity error
 ```
 
 **Example Session:**
 
 ```
-User: /moai:fix
+User: /modu:fix
 
 Claude: Running LSP diagnostics...
 
@@ -764,7 +764,7 @@ jobs:
 
       - name: Run Ralph Loop
         run: |
-          claude -p "/moai:loop --max-iterations 5" \
+          claude -p "/modu:loop --max-iterations 5" \
             --allowedTools "Read,Write,Edit,Bash" \
             --output-format json
         env:
@@ -806,7 +806,7 @@ jobs:
         run: |
           case "${{ matrix.check }}" in
             lsp)
-              claude -p "/moai:fix --severity error" \
+              claude -p "/modu:fix --severity error" \
                 --allowedTools "Read,Write,Edit"
               ;;
             ast-grep)
@@ -843,7 +843,7 @@ echo "Running Ralph pre-commit checks..."
 moai lsp diagnose --changed-files
 
 if [ $? -ne 0 ]; then
-    echo "❌ LSP errors found. Run '/moai:fix' to resolve."
+    echo "❌ LSP errors found. Run '/modu:fix' to resolve."
     exit 1
 fi
 
@@ -878,7 +878,7 @@ COPY . .
 RUN moai init
 
 # Run Ralph quality check
-RUN claude -p "/moai:loop --max-iterations 3" \
+RUN claude -p "/modu:loop --max-iterations 3" \
     --allowedTools "Read,Write,Edit" \
     --output-format json || exit 1
 
@@ -968,21 +968,21 @@ ralph:
 
 ```bash
 # 1. Start development
-/moai:1-plan "User authentication system"
+/modu:1-plan "User authentication system"
 
 # 2. Implement with Ralph loop
-/moai:loop
+/modu:loop
 
 # (Ralph automatically fixes LSP errors during implementation)
 
 # 3. Verify quality
-/moai:fix --severity warning
+/modu:fix --severity warning
 
 # 4. Run security scan
 moai ast-grep scan --security
 
 # 5. Sync documentation
-/moai:3-sync
+/modu:3-sync
 ```
 
 ---

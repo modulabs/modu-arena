@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { formatNumber, formatCurrency } from '@/lib/utils';
+import { formatNumber, formatCurrency, formatRelativeDate } from '@/lib/utils';
 
 // Claude Sonnet 4 pricing (approximate blended rate)
 // Input: $3/1M, Output: $15/1M, Cache Read: $0.30/1M
@@ -25,7 +25,10 @@ interface UsageEntry {
   username: string;
   avatarUrl: string | null;
   totalTokens: number;
+  weeklyTokens?: number;
   sessionCount: number;
+  score?: number;
+  lastActivityAt?: string | null;
   isPrivate: boolean;
 }
 
@@ -85,9 +88,18 @@ export function UsageTable({ entries, currentUserId }: UsageTableProps) {
                 <HeaderWithTooltip label={t('tokens')} tooltip={t('tokensTooltip')} />
               </TableHead>
               <TableHead className="hidden text-right md:table-cell">
-                <HeaderWithTooltip label={t('sessions')} tooltip={t('sessionsTooltip')} />
+                <HeaderWithTooltip label={t('weeklyTokens')} tooltip={t('weeklyTokensTooltip')} />
+              </TableHead>
+              <TableHead className="hidden text-right lg:table-cell">
+                <HeaderWithTooltip label={t('score')} tooltip={t('scoreTooltip')} />
               </TableHead>
               <TableHead className="hidden text-right xl:table-cell">
+                <HeaderWithTooltip label={t('lastUpdated')} tooltip={t('lastUpdatedTooltip')} />
+              </TableHead>
+              <TableHead className="hidden text-right md:table-cell">
+                <HeaderWithTooltip label={t('sessions')} tooltip={t('sessionsTooltip')} />
+              </TableHead>
+              <TableHead className="hidden text-right 2xl:table-cell">
                 <HeaderWithTooltip label={t('estCost')} tooltip={t('estCostTooltip')} />
               </TableHead>
             </TableRow>
@@ -143,9 +155,20 @@ export function UsageTable({ entries, currentUserId }: UsageTableProps) {
                     <span className="font-mono">{formatNumber(entry.totalTokens)}</span>
                   </TableCell>
                   <TableCell className="hidden text-right md:table-cell">
-                    <span className="font-mono">{entry.sessionCount}</span>
+                    <span className="font-mono">{formatNumber(entry.weeklyTokens ?? entry.totalTokens)}</span>
+                  </TableCell>
+                  <TableCell className="hidden text-right lg:table-cell">
+                    <span className="font-mono">{formatNumber(entry.score ?? 0)}</span>
                   </TableCell>
                   <TableCell className="hidden text-right xl:table-cell">
+                    <span className="font-mono text-muted-foreground">
+                      {entry.lastActivityAt ? formatRelativeDate(entry.lastActivityAt) : '-'}
+                    </span>
+                  </TableCell>
+                  <TableCell className="hidden text-right md:table-cell">
+                    <span className="font-mono">{entry.sessionCount}</span>
+                  </TableCell>
+                  <TableCell className="hidden text-right 2xl:table-cell">
                     <span className="font-mono text-muted-foreground">
                       {formatCurrency(entry.totalTokens * COST_PER_TOKEN)}
                     </span>

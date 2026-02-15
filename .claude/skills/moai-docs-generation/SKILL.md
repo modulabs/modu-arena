@@ -264,7 +264,7 @@ Agents:
 - expert-frontend - Component documentation
 
 Commands:
-- /moai:3-sync - Documentation synchronization with code changes
+- /modu:3-sync - Documentation synchronization with code changes
 
 ---
 

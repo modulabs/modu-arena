@@ -11,13 +11,13 @@ Last Updated: 2026-01-17
 
 SPEC-First DDD is MoAI-ADK's development methodology combining:
 
-1. SPEC Generation - EARS format requirements (/moai:1-plan)
-2. Domain-Driven Development - ANALYZE-PRESERVE-IMPROVE (/moai:2-run)
-3. Documentation Sync - Auto-generated docs (/moai:3-sync)
+1. SPEC Generation - EARS format requirements (/modu:1-plan)
+2. Domain-Driven Development - ANALYZE-PRESERVE-IMPROVE (/modu:2-run)
+3. Documentation Sync - Auto-generated docs (/modu:3-sync)
 
 Three-Phase Workflow:
 ```
-Phase 1: SPEC → spec-builder → .moai/specs/SPEC-XXX/spec.md
+Phase 1: SPEC → spec-builder → .modu-arena/specs/SPEC-XXX/spec.md
 Phase 2: DDD  → ddd-implementer → Code + Tests (≥85% coverage)
 Phase 3: Docs → docs-manager → API docs + diagrams
 ```
@@ -48,10 +48,10 @@ Purpose: Define clear, testable requirements in EARS format before coding.
 Workflow:
 ```bash
 # 1. Generate SPEC
-/moai:1-plan "Implement user authentication with JWT tokens"
+/modu:1-plan "Implement user authentication with JWT tokens"
 
 # 2. spec-builder creates:
-.moai/specs/SPEC-001/
+.modu-arena/specs/SPEC-001/
     spec.md           # EARS format requirements
     acceptance.md     # Acceptance criteria
     complexity.yaml   # Complexity analysis
@@ -133,10 +133,10 @@ pytest tests/auth/test_registration.py --cov=src/auth/registration --cov-report=
 Workflow:
 ```bash
 # 1. Generate documentation
-/moai:3-sync SPEC-001
+/modu:3-sync SPEC-001
 
 # 2. docs-manager creates:
-.moai/specs/SPEC-001/
+.modu-arena/specs/SPEC-001/
     docs/
         api.md           # API reference
         architecture.md  # Architecture diagram
@@ -167,9 +167,9 @@ Skills:
 - moai-workflow-testing - Test frameworks
 
 Commands:
-- /moai:1-plan - SPEC generation (Phase 1)
-- /moai:2-run - DDD implementation (Phase 2)
-- /moai:3-sync - Documentation sync (Phase 3)
+- /modu:1-plan - SPEC generation (Phase 1)
+- /modu:2-run - DDD implementation (Phase 2)
+- /modu:3-sync - Documentation sync (Phase 3)
 - /clear - Token optimization between phases
 
 ---

@@ -141,7 +141,7 @@ Use Case: Prevent context overflow in long-running SPEC-First workflows.
 
 Concept: Proactive context clearing at strategic checkpoints to maintain efficiency.
 
-Mandatory /clear Points: After /moai:1-plan completion to save 45-50K tokens. When context exceeds 150K tokens to prevent overflow. When conversation exceeds 50 messages to remove stale history. Before major phase transitions for clean slate. During model switches for Haiku to Sonnet handoffs.
+Mandatory /clear Points: After /modu:1-plan completion to save 45-50K tokens. When context exceeds 150K tokens to prevent overflow. When conversation exceeds 50 messages to remove stale history. Before major phase transitions for clean slate. During model switches for Haiku to Sonnet handoffs.
 
 Use Case: Maximize token efficiency across SPEC-Run-Sync cycles.
 
@@ -230,7 +230,7 @@ Execute context compression or clearing when usage reaches 85% threshold. This m
 
 Session Initialization: Initialize token budget with Pattern 1, load session state with Pattern 3, setup progressive disclosure with Pattern 5, configure handoff protocols with Pattern 4.
 
-SPEC-First Workflow: Execute /moai:1-plan, then mandatory /clear to save 45-50K tokens, then /moai:2-run SPEC-XXX, then multi-agent handoffs with Pattern 4, then /moai:3-sync SPEC-XXX, then session state persistence with Pattern 3.
+SPEC-First Workflow: Execute /modu:1-plan, then mandatory /clear to save 45-50K tokens, then /modu:2-run SPEC-XXX, then multi-agent handoffs with Pattern 4, then /modu:3-sync SPEC-XXX, then session state persistence with Pattern 3.
 
 Context Monitoring: Continuously track token usage with Pattern 1, apply progressive disclosure with Pattern 5, execute /clear at thresholds with Pattern 2, validate handoffs with Pattern 4.
 

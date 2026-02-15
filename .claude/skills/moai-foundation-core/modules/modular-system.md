@@ -651,8 +651,8 @@ Agents:
 - docs-manager - Generate documentation following modular pattern
 
 Commands:
-- /moai:1-plan - SPEC generation with modular docs
-- /moai:3-sync - Documentation sync to modular structure
+- /modu:1-plan - SPEC generation with modular docs
+- /modu:3-sync - Documentation sync to modular structure
 
 Memory:
 - @.claude/skills/ - Standard skill location

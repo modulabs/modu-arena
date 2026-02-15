@@ -97,8 +97,8 @@ Snapshot contents:
 - Scan results
 
 Resume commands:
-- /moai:fix --resume (uses latest snapshot)
-- /moai:fix --resume fix-20260119-143052 (uses specific snapshot)
+- /modu:fix --resume (uses latest snapshot)
+- /modu:fix --resume fix-20260119-143052 (uses specific snapshot)
 
 ## Execution Summary
 

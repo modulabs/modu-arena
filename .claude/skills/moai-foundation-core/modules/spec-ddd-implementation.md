@@ -242,7 +242,7 @@ name: SPEC-First DDD Pipeline
 on:
   push:
     paths:
-      - '.moai/specs/**'
+      - '.modu-arena/specs/**'
       - 'src/**'
       - 'tests/**'
 

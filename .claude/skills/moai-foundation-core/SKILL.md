@@ -128,11 +128,11 @@ Purpose: Specification-driven development ensuring clear requirements before imp
 
 Three-Phase Workflow:
 
-Phase 1 SPEC (/moai:1-plan): workflow-spec generates EARS format. Output is .moai/specs/SPEC-XXX/spec.md. Execute /clear to save 45-50K tokens.
+Phase 1 SPEC (/modu:1-plan): workflow-spec generates EARS format. Output is .modu-arena/specs/SPEC-XXX/spec.md. Execute /clear to save 45-50K tokens.
 
-Phase 2 DDD (/moai:2-run): ANALYZE for requirements, PRESERVE for existing behavior, IMPROVE for enhancement. Validate with at least 85% coverage.
+Phase 2 DDD (/modu:2-run): ANALYZE for requirements, PRESERVE for existing behavior, IMPROVE for enhancement. Validate with at least 85% coverage.
 
-Phase 3 Docs (/moai:3-sync): API documentation, architecture diagrams, project reports.
+Phase 3 Docs (/modu:3-sync): API documentation, architecture diagrams, project reports.
 
 EARS Format: Ubiquitous for system-wide always active requirements. Event-driven for trigger-based when X do Y requirements. State-driven for conditional while X do Y requirements. Unwanted for prohibited shall not do X requirements. Optional for nice-to-have where possible do X requirements.
 
@@ -182,7 +182,7 @@ Total Budget is 250K tokens across all phases. Phase separation with context res
 
 Token Saving Strategies:
 
-Phase Separation: Execute /clear between phases, after /moai:1-plan to save 45-50K, when context exceeds 150K, after 50+ messages.
+Phase Separation: Execute /clear between phases, after /modu:1-plan to save 45-50K, when context exceeds 150K, after 50+ messages.
 
 Selective Loading: Load only necessary files.
 
@@ -256,7 +256,7 @@ Skills: moai-cc-claude-md for CLAUDE.md with foundation patterns, moai-cc-config
 
 Tools: AskUserQuestion for direct user interaction and clarification needs.
 
-Commands: /moai:1-plan for SPEC-First Phase 1, /moai:2-run for DDD Phase 2, /moai:3-sync for Documentation Phase 3, /moai:9-feedback for continuous improvement, /clear for token management.
+Commands: /modu:1-plan for SPEC-First Phase 1, /modu:2-run for DDD Phase 2, /modu:3-sync for Documentation Phase 3, /modu:9-feedback for continuous improvement, /clear for token management.
 
 Foundation Modules (Extended Documentation): modules/agents-reference.md for 26-agent catalog with 7-tier hierarchy, modules/commands-reference.md for 6 core commands workflow, modules/execution-rules.md for security, Git strategy, and compliance.
 

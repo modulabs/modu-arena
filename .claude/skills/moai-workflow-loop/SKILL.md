@@ -38,9 +38,9 @@ Key Components:
 
 Commands:
 
-- /moai: One-click Plan-Run-Sync automation (default)
-- /moai loop: Start feedback loop
-- /moai fix: One-time auto-fix
+- /modu: One-click Plan-Run-Sync automation (default)
+- /modu loop: Start feedback loop
+- /modu fix: One-time auto-fix
 
 When to Use:
 
@@ -53,7 +53,7 @@ When to Use:
 
 ### Architecture Overview
 
-The Ralph Engine follows a layered architecture. User commands such as /moai:loop, /moai:fix, and /moai:alfred enter the Command Layer. The Command Layer invokes the Hook System, which contains the PostToolUse Hook for LSP diagnostics and the Stop Hook for loop control. The Hook System connects to Backend Services including the LSP Client (MoAILSPClient), AST-grep Scanner, and Test Runner. Backend Services feed into Completion Check which evaluates whether errors are zero, tests pass, and coverage is met. Based on the Completion Check result, the system either continues the loop or completes.
+The Ralph Engine follows a layered architecture. User commands such as /modu:loop, /modu:fix, and /modu:alfred enter the Command Layer. The Command Layer invokes the Hook System, which contains the PostToolUse Hook for LSP diagnostics and the Stop Hook for loop control. The Hook System connects to Backend Services including the LSP Client (MoAILSPClient), AST-grep Scanner, and Test Runner. Backend Services feed into Completion Check which evaluates whether errors are zero, tests pass, and coverage is met. Based on the Completion Check result, the system either continues the loop or completes.
 
 ### Configuration
 
@@ -117,7 +117,7 @@ Extend the loop controller with custom conditions by implementing a check functi
 
 ### Integration with CI/CD
 
-For GitHub Actions integration, create a workflow step that runs Claude with the /moai:loop command and max-iterations flag. Set the MOAI_LOOP_ACTIVE environment variable to true to enable loop mode.
+For GitHub Actions integration, create a workflow step that runs Claude with the /modu:loop command and max-iterations flag. Set the MOAI_LOOP_ACTIVE environment variable to true to enable loop mode.
 
 ### Graceful Degradation
 
@@ -155,8 +155,8 @@ Agents:
 
 Commands:
 
-- /moai:2-run: DDD implementation
-- /moai:3-sync: Documentation sync
+- /modu:2-run: DDD implementation
+- /modu:3-sync: Documentation sync
 
 ## Reference
 
@@ -178,9 +178,9 @@ Configuration is stored at .moai/config/sections/ralph.yaml.
 
 Loop state is stored at .moai/cache/.moai_loop_state.json.
 
-The LSP hook is located at .claude/hooks/moai/post_tool__lsp_diagnostic.py.
+The LSP hook is located at .claude/hooks/modu/post_tool__lsp_diagnostic.py.
 
-The loop hook is located at .claude/hooks/moai/stop__loop_controller.py.
+The loop hook is located at .claude/hooks/modu/stop__loop_controller.py.
 
 ### Supported Languages
 

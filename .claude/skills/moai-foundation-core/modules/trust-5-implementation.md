@@ -209,7 +209,7 @@ def load_secure_config() -> dict:
 ### Traceability Matrix
 
 ```yaml
-# .moai/specs/traceability.yaml
+# .modu-arena/specs/traceability.yaml
 requirements:
   SPEC-001-REQ-01:
     description: "User registration with email/password"

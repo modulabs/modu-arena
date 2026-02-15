@@ -39,7 +39,7 @@ Modu-Arena는 다음과 같은 학습 목적으로 만들어졌습니다:
 
 **제작 특징**:
 
-- Modu-Arena의 `/moai` 통합 자율 자동화 명령어로 핵심 기능 구현
+- Modu-Arena의 `/modu` 통합 자율 자동화 명령어로 핵심 기능 구현
 - GLM 4.7과 Claude Opus를 하이브리드로 활용한 비용 효율적 개발
 - Worktree 병렬 개발로 독립된 기능 모듈 동시 개발
 
@@ -138,7 +138,7 @@ GitHub 인증을 위해 브라우저 열기...
 │ 세션 추적 훅이 전역으로 설치되었습니다.                                │
 │                                                                      │
 │ Claude Code 세션이 자동으로 추적됩니다.                               │
-│ 훅 위치: ~/.claude/hooks/moai/session_end__arena_submit.py            │
+│ 훅 위치: ~/.claude/hooks/modu/session_end__arena_submit.py            │
 │                                                                      │
 │ 특정 프로젝트를 제외하려면:                                           │
 │   moai arena exclude /path/to/project                                │
@@ -180,7 +180,7 @@ Waiting for authorization (timeout: 5 minutes)...
 │ Session tracking hook installed globally.                            │
 │                                                                      │
 │ Your Claude Code sessions will be automatically tracked.             │
-│ Hook location: ~/.claude/hooks/moai/session_end__rank_submit.py      │
+│ Hook location: ~/.claude/hooks/modu/session_end__rank_submit.py      │
 │                                                                      │
 │ To exclude specific projects:                                        │
 │   moai rank exclude /path/to/project                                 │

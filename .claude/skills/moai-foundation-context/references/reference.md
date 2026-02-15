@@ -65,7 +65,7 @@ Customizable Settings:
 ### Clear Execution Settings
 
 Mandatory Clear Points:
-- After `/moai:1-plan` completion
+- After `/modu:1-plan` completion
 - Context exceeds 150K tokens
 - Conversation exceeds 50 messages
 - Before major phase transitions
@@ -99,11 +99,11 @@ Persistence Options:
 ### Plan-Run-Sync Workflow Integration
 
 Workflow Sequence:
-1. `/moai:1-plan` execution
+1. `/modu:1-plan` execution
 2. `/clear` (mandatory - saves 45-50K tokens)
-3. `/moai:2-run SPEC-XXX`
+3. `/modu:2-run SPEC-XXX`
 4. Multi-agent handoffs
-5. `/moai:3-sync SPEC-XXX`
+5. `/modu:3-sync SPEC-XXX`
 6. Session state persistence
 
 Token Savings:

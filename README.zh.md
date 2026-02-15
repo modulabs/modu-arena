@@ -39,7 +39,7 @@ Modu-Arena 的创建目的如下：
 
 **开发特征**：
 
-- 使用 Modu-Arena 的 `/moai` 统一自主自动化命令实现核心功能
+- 使用 Modu-Arena 的 `/modu` 统一自主自动化命令实现核心功能
 - 混合使用 GLM 4.7 和 Claude Opus 进行成本效益开发
 - Worktree 并行开发同时开发独立功能模块
 
@@ -153,7 +153,7 @@ Waiting for authorization (timeout: 5 minutes)...
 │ Session tracking hook installed globally.                            │
 │                                                                      │
 │ Your Claude Code sessions will be automatically tracked.             │
-│ Hook location: ~/.claude/hooks/moai/session_end__rank_submit.py      │
+│ Hook location: ~/.claude/hooks/modu/session_end__rank_submit.py      │
 │                                                                      │
 │ To exclude specific projects:                                        │
 │   moai arena exclude /path/to/project                                 │

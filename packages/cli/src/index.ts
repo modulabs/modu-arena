@@ -18,6 +18,10 @@ import {
   statusCommand,
   submitCommand,
   uninstallCommand,
+  daemonInstallCommand,
+  daemonUninstallCommand,
+  daemonStatusCommand,
+  daemonSyncCommand,
 } from './commands.js';
 
 const args = process.argv.slice(2);
@@ -31,13 +35,17 @@ Usage:
    npx @suncreation/modu-arena <command> [options]
 
 Commands:
-   register    Create a new account (interactive)
-   login       Log in to an existing account (interactive)
-   install     Set up hooks for detected AI coding tools
-   rank        View your current stats and ranking
-   status      Check configuration and installed hooks
-   submit      Submit current project for evaluation
-   uninstall   Remove all hooks and configuration
+   register       Create a new account (interactive)
+   login          Log in to an existing account (interactive)
+   install        Set up hooks for detected AI coding tools
+   rank           View your current stats and ranking
+   status         Check configuration and installed hooks
+   submit         Submit current project for evaluation
+   uninstall      Remove all hooks and configuration
+   daemon-install Install Claude Desktop sync daemon
+   daemon-status  Check daemon status
+   daemon-sync    Manually sync Claude Desktop data
+   daemon-remove  Remove the daemon
 
 Options:
    --api-key <key>   Your Modu-Arena API key (for install)
@@ -49,6 +57,7 @@ Examples:
    npx @suncreation/modu-arena login
    npx @suncreation/modu-arena install --api-key modu_arena_AbCdEfGh_xxx...
    npx @suncreation/modu-arena rank
+   npx @suncreation/modu-arena daemon-install
 `);
 }
 
@@ -87,6 +96,19 @@ async function main(): Promise<void> {
       break;
     case 'uninstall':
       uninstallCommand();
+      break;
+    case 'daemon-install':
+      daemonInstallCommand();
+      break;
+    case 'daemon-uninstall':
+    case 'daemon-remove':
+      daemonUninstallCommand();
+      break;
+    case 'daemon-status':
+      daemonStatusCommand();
+      break;
+    case 'daemon-sync':
+      await daemonSyncCommand();
       break;
     default:
       console.error(`Unknown command: ${command}`);

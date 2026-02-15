@@ -241,7 +241,7 @@ IMPACT: Bias checking prevents 20-30% of flawed technical decisions.
 ### Integration with MoAI Workflow
 
 SPEC Phase Integration:
-- Apply Assumption Audit during /moai:1-plan
+- Apply Assumption Audit during /modu:1-plan
 - Document assumptions in spec.md Problem Analysis section
 - Include alternative approaches considered in plan.md
 - Define validation criteria in acceptance.md
@@ -324,8 +324,8 @@ Skills:
 - moai-domain-frontend: UI/UX decision frameworks
 
 Commands:
-- /moai:1-plan: Apply Philosopher Framework during specification
-- /moai:2-run: Reference documented trade-offs during implementation
+- /modu:1-plan: Apply Philosopher Framework during specification
+- /modu:2-run: Reference documented trade-offs during implementation
 
 ---
 

@@ -1,38 +1,19 @@
 /**
- * Cache TTL Configuration
+ * Cache TTL Configuration (seconds)
  *
- * Defines Time-To-Live (TTL) values for different cache entries.
- * TTL values are specified in seconds.
- *
- * Leaderboard TTL Strategy:
- * - Daily: 23 hours (allows for daily recalculation buffer)
- * - Weekly: 6 days (allows for weekly recalculation buffer)
- * - Monthly: 29 days (allows for monthly recalculation buffer)
- * - All-time: 6 days (refreshes weekly to include new activity)
- *
- * User-specific TTL Strategy:
- * - User Rank: 1 hour (balances freshness with performance)
- * - User Stats: 30 minutes (frequent updates for user engagement)
- * - Global Stats: 15 minutes (highly dynamic, needs frequent refresh)
+ * Short TTLs for near-real-time visibility.
+ * Session ingest also invalidates relevant keys on write.
  */
 export const CACHE_TTL = {
-  /** Leaderboard cache TTL values by period */
   LEADERBOARD: {
-    /** Daily leaderboard - 23 hours (seconds) */
-    daily: 23 * 60 * 60,
-    /** Weekly leaderboard - 6 days (seconds) */
-    weekly: 6 * 24 * 60 * 60,
-    /** Monthly leaderboard - 29 days (seconds) */
-    monthly: 29 * 24 * 60 * 60,
-    /** All-time leaderboard - 6 days (seconds) */
-    all_time: 6 * 24 * 60 * 60,
+    daily: 2 * 60,
+    weekly: 2 * 60,
+    monthly: 5 * 60,
+    all_time: 5 * 60,
   },
-  /** User rank cache TTL - 1 hour (seconds) */
-  USER_RANK: 1 * 60 * 60,
-  /** User stats cache TTL - 30 minutes (seconds) */
-  USER_STATS: 30 * 60,
-  /** Global stats cache TTL - 15 minutes (seconds) */
-  GLOBAL_STATS: 15 * 60,
+  USER_RANK: 2 * 60,
+  USER_STATS: 60,
+  GLOBAL_STATS: 60,
 } as const;
 
 /**

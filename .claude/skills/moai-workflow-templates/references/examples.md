@@ -101,12 +101,12 @@ async def health_check():
 
 ## Example 2: GitHub 피드백 템플릿 활용
 
-**Scenario**: /moai:9-feedback 명령으로 버그 리포트 이슈 생성
+**Scenario**: /modu:9-feedback 명령으로 버그 리포트 이슈 생성
 
 **Input**:
 ```bash
 # 피드백 명령 실행
-/moai:9-feedback "로그인 시 JWT 토큰이 만료되어도 갱신되지 않음"
+/modu:9-feedback "로그인 시 JWT 토큰이 만료되어도 갱신되지 않음"
 ```
 
 **Output**:
@@ -537,10 +537,10 @@ project = template.scaffold(name="my-api")
 
 ```
 프로젝트 초기화:
-/moai:0-project → 코드 템플릿 선택 → 스캐폴딩 → 버전 추적
+/modu:0-project → 코드 템플릿 선택 → 스캐폴딩 → 버전 추적
 
 피드백 제출:
-/moai:9-feedback → 자동 분류 → 템플릿 적용 → GitHub 이슈 생성
+/modu:9-feedback → 자동 분류 → 템플릿 적용 → GitHub 이슈 생성
 
 템플릿 업데이트:
 버전 감지 → 백업 생성 → 스마트 머지 → 버전 기록

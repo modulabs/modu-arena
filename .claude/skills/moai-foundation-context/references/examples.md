@@ -387,7 +387,7 @@ class SessionManager:
             "phase": self.current_session.work_state.phase.value,
             "reload_files": [
                 "CLAUDE.md",
-                f".moai/specs/{self.current_session.work_state.current_spec}.md"
+                f".modu-arena/specs/{self.current_session.work_state.current_spec}.md"
             ]
         }
 
@@ -699,7 +699,7 @@ task_ctx = TaskContext(
     completed_steps=["requirement_analysis", "spec_creation", "architecture_design"],
     next_step="write_tests",
     key_artifacts={
-        "spec_document": ".moai/specs/SPEC-001.md",
+        "spec_document": ".modu-arena/specs/SPEC-001.md",
         "architecture": ".moai/architecture/SPEC-001.mermaid"
     }
 )
@@ -784,7 +784,7 @@ class ClearStrategy:
             "phase": session.work_state.phase.value,
             "reload_sequence": [
                 "CLAUDE.md",
-                f".moai/specs/{session.work_state.current_spec}.md",
+                f".modu-arena/specs/{session.work_state.current_spec}.md",
                 "src/main.py"  # Current working file
             ],
             "preserved_decisions": session.work_state.artifacts.get("decisions", [])

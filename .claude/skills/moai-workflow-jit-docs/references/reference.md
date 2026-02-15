@@ -81,7 +81,7 @@ Quality Scoring:
 
 Local Documentation Paths:
 - `.moai/docs/`: Project-specific documentation
-- `.moai/specs/`: Requirements and specifications
+- `.modu-arena/specs/`: Requirements and specifications
 - `README.md`: General project information
 - `CHANGELOG.md`: Version history
 - `docs/`: Comprehensive documentation directory

@@ -59,10 +59,10 @@ Core command processors directly bound to MoAI commands.
 
 | Agent | Command | Purpose |
 |-------|---------|---------|
-| `workflow-project` | `/moai:0-project` | Project initialization and setup |
-| `workflow-spec` | `/moai:1-plan` | EARS SPEC generation and planning |
-| `workflow-ddd` | `/moai:2-run` | DDD ANALYZE-PRESERVE-IMPROVE execution |
-| `workflow-docs` | `/moai:3-sync` | Documentation generation and synchronization |
+| `workflow-project` | `/modu:0-project` | Project initialization and setup |
+| `workflow-spec` | `/modu:1-plan` | EARS SPEC generation and planning |
+| `workflow-ddd` | `/modu:2-run` | DDD ANALYZE-PRESERVE-IMPROVE execution |
+| `workflow-docs` | `/modu:3-sync` | Documentation generation and synchronization |
 
 Loading: Always active (loaded on command invocation)
 
@@ -74,7 +74,7 @@ Orchestration and quality management agents.
 
 | Agent | Trigger | Purpose |
 |-------|---------|---------|
-| `core-planner` | `/moai:2-run` Phase 1 | SPEC analysis and execution strategy |
+| `core-planner` | `/modu:2-run` Phase 1 | SPEC analysis and execution strategy |
 | `core-quality` | Post-implementation | TRUST 5 validation |
 | `core-git` | Git operations | Branch, commit, and PR management |
 
@@ -347,10 +347,10 @@ Other Modules:
 - [execution-rules.md](execution-rules.md) - Security and permissions
 
 Commands:
-- `/moai:0-project` → `workflow-project`
-- `/moai:1-plan` → `workflow-spec`
-- `/moai:2-run` → `workflow-ddd`
-- `/moai:3-sync` → `workflow-docs`
+- `/modu:0-project` → `workflow-project`
+- `/modu:1-plan` → `workflow-spec`
+- `/modu:2-run` → `workflow-ddd`
+- `/modu:3-sync` → `workflow-docs`
 
 ---
 

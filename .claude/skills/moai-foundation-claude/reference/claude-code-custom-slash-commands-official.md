@@ -52,7 +52,7 @@ IMPORTANT: Command name is automatically derived from file path structure:
 
 - `.claude/commands/{namespace}/{command-name}.md` → `/{namespace}:{command-name}`
 - `.claude/commands/my-command.md` → `/my-command`
-- Example: `.claude/commands/moai/fix.md` → `/moai:fix`
+- Example: `.claude/commands/moai/fix.md` → `/modu:fix`
 
 DO NOT include a `name` field in frontmatter - it is not officially supported.
 

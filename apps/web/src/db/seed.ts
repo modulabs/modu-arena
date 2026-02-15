@@ -79,13 +79,22 @@ const TOOL_TYPES = [
     sortOrder: 1,
   },
   {
+    id: 'claude-desktop',
+    name: 'claude-desktop',
+    displayName: 'Claude Desktop',
+    iconUrl: '/icons/claude.svg',
+    color: '#D97706',
+    isActive: true,
+    sortOrder: 2,
+  },
+  {
     id: 'opencode',
     name: 'opencode',
     displayName: 'OpenCode',
     iconUrl: '/icons/opencode.svg',
     color: '#6366F1',
     isActive: true,
-    sortOrder: 2,
+    sortOrder: 3,
   },
   {
     id: 'gemini',
@@ -94,7 +103,7 @@ const TOOL_TYPES = [
     iconUrl: '/icons/gemini.svg',
     color: '#4285F4',
     isActive: true,
-    sortOrder: 3,
+    sortOrder: 4,
   },
   {
     id: 'codex',
@@ -103,7 +112,7 @@ const TOOL_TYPES = [
     iconUrl: '/icons/codex.svg',
     color: '#10A37F',
     isActive: true,
-    sortOrder: 4,
+    sortOrder: 5,
   },
   {
     id: 'crush',
@@ -112,7 +121,7 @@ const TOOL_TYPES = [
     iconUrl: '/icons/crush.svg',
     color: '#EC4899',
     isActive: true,
-    sortOrder: 5,
+    sortOrder: 6,
   },
 ];
 
@@ -290,17 +299,25 @@ async function seed() {
     const level = DUMMY_USERS.find((u) => u.email === user.email)?.activityLevel ?? 'medium';
     const numEvals = level === 'high' ? randomInt(3, 8) : level === 'medium' ? randomInt(1, 4) : randomInt(0, 2);
 
+    let cumulative = 0;
+
     for (let e = 0; e < numEvals; e++) {
-      const totalScore = randomInt(3, 10);
-      const passed = totalScore >= 5;
+      const localScore = randomInt(0, 6);
+      const backendScore = randomInt(0, 6);
+      const penaltyScore = -randomInt(0, 6);
+      const finalScore = localScore + backendScore + penaltyScore;
+      const passed = finalScore >= 5;
+      cumulative += finalScore;
 
       await db.insert(projectEvaluations).values({
         userId: user.id,
         projectPathHash: randomBytes(32).toString('hex'),
         projectName: `project-${randomInt(1000, 9999)}`,
-        totalScore,
-        rubricFunctionality: Math.floor(totalScore / 2),
-        rubricPracticality: Math.ceil(totalScore / 2),
+        localScore,
+        backendScore,
+        penaltyScore,
+        finalScore,
+        cumulativeScoreAfter: cumulative,
         llmModel: 'claude-sonnet-4',
         llmProvider: 'anthropic',
         passed,

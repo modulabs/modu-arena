@@ -57,7 +57,7 @@ User approval checkpoint via AskUserQuestion:
 ## Phase 1: SPEC Generation
 
 - Delegate to manager-spec subagent
-- Output: EARS-format SPEC document at .moai/specs/SPEC-XXX/spec.md
+- Output: EARS-format SPEC document at .modu-arena/specs/SPEC-XXX/spec.md
 - Includes requirements, acceptance criteria, technical approach
 
 ## Phase 2: DDD Implementation Loop
@@ -100,8 +100,8 @@ Loop behavior (when --loop or ralph.yaml loop.enabled is true):
 ## Completion Markers
 
 AI must add a marker when work is complete:
-- `<moai>DONE</moai>` - Task complete
-- `<moai>COMPLETE</moai>` - Full completion
+- `<moai>DONE</modu>` - Task complete
+- `<moai>COMPLETE</modu>` - Full completion
 - `<moai:done />` - XML format
 
 ## LLM Mode Routing

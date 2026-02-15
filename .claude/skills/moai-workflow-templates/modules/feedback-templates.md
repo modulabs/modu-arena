@@ -88,8 +88,8 @@ Feedback Template Types:
 
 ## Usage Integration
 
-Auto-triggered by `/moai:9-feedback` command:
-1. User executes `/moai:9-feedback "description"`
+Auto-triggered by `/modu:9-feedback` command:
+1. User executes `/modu:9-feedback "description"`
 2. Skill selects appropriate template type
 3. Template is populated with user input
 4. GitHub issue is created automatically

@@ -63,7 +63,7 @@ When a workflow is interrupted or needs to continue from a previous session, use
 
 Behavior:
 
-- Read existing SPEC document from .moai/specs/SPEC-XXX/
+- Read existing SPEC document from .modu-arena/specs/SPEC-XXX/
 - Determine last completed phase from SPEC status markers
 - Skip completed phases and resume from the next pending phase
 - Preserve all prior analysis, decisions, and generated artifacts
@@ -142,18 +142,18 @@ Propagation Method:
 
 ## Legacy Command Mapping
 
-Previous /moai:X-Y command format mapped to new /moai subcommand format:
+Previous /modu:X-Y command format mapped to new /modu subcommand format:
 
-- /moai:0-project maps to /moai project
-- /moai:1-plan maps to /moai plan
-- /moai:2-run maps to /moai run
-- /moai:3-sync maps to /moai sync
-- /moai:9-feedback maps to /moai feedback
-- /moai:fix maps to /moai fix
-- /moai:loop maps to /moai loop
-- /moai:alfred maps to /moai (default autonomous workflow)
+- /modu:0-project maps to /modu project
+- /modu:1-plan maps to /modu plan
+- /modu:2-run maps to /modu run
+- /modu:3-sync maps to /modu sync
+- /modu:9-feedback maps to /modu feedback
+- /modu:fix maps to /modu fix
+- /modu:loop maps to /modu loop
+- /modu:alfred maps to /modu (default autonomous workflow)
 
-Note: /moai:99-release is a separate local-only command, not part of the /moai skill.
+Note: /modu:99-release is a separate local-only command, not part of the /modu skill.
 
 ---
 
@@ -175,9 +175,9 @@ Note: /moai:99-release is a separate local-only command, not part of the /moai s
 
 ### SPEC Documents
 
-- .moai/specs/SPEC-XXX/spec.md: Specification document with EARS format requirements
-- .moai/specs/SPEC-XXX/plan.md: Execution plan with task breakdown
-- .moai/specs/SPEC-XXX/acceptance.md: Acceptance criteria and test plan
+- .modu-arena/specs/SPEC-XXX/spec.md: Specification document with EARS format requirements
+- .modu-arena/specs/SPEC-XXX/plan.md: Execution plan with task breakdown
+- .modu-arena/specs/SPEC-XXX/acceptance.md: Acceptance criteria and test plan
 
 ### Release Artifacts
 
@@ -198,8 +198,8 @@ Note: /moai:99-release is a separate local-only command, not part of the /moai s
 
 AI adds markers to signal workflow state:
 
-- `<moai>DONE</moai>`: Single task or phase completed
-- `<moai>COMPLETE</moai>`: Full workflow completed (all phases finished)
+- `<moai>DONE</modu>`: Single task or phase completed
+- `<moai>COMPLETE</modu>`: Full workflow completed (all phases finished)
 
 These markers enable automation detection and loop termination in the loop workflow.
 
@@ -212,7 +212,7 @@ These markers enable automation detection and loop termination in the loop workf
 - Token limit errors: Execute /clear, then guide user to resume with --resume flag
 - Permission errors: Review .claude/settings.json manually
 - Integration errors: Use expert-devops subagent
-- MoAI-ADK errors: Suggest /moai feedback to create a GitHub issue
+- MoAI-ADK errors: Suggest /modu feedback to create a GitHub issue
 
 ---
 
