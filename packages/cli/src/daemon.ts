@@ -5,7 +5,8 @@
  */
 import { writeFileSync, existsSync, unlinkSync, mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 import { DAEMON_SYNC_INTERVAL_SEC } from './constants.js';
 
@@ -27,7 +28,7 @@ function getNodePath(): string {
 }
 
 function getCliPath(): string {
-  return require.resolve('./index.js').replace(/index\.js$/, 'index.js');
+  return join(dirname(fileURLToPath(import.meta.url)), 'index.js');
 }
 
 export function installDaemon(): { success: boolean; message: string } {
