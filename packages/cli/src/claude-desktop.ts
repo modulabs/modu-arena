@@ -179,6 +179,14 @@ function computeSessionHash(session: SessionAggregate): string {
   return createHash('sha256').update(data).digest('hex').substring(0, 16);
 }
 
+const BATCH_SIZE = 50;
+const BATCH_DELAY_MS = 35_000;   // stay under 100 req/min server limit
+const MAX_BATCHES_PER_RUN = 3;   // cap at ~150 sessions to avoid daemon timeout
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function submitSessions(
   sessions: SessionAggregate[],
   apiKey: string,
@@ -188,54 +196,82 @@ async function submitSessions(
   let skipped = 0;
   const errors: string[] = [];
 
+  const pending: SessionAggregate[] = [];
   for (const session of sessions) {
     const hash = computeSessionHash(session);
     if (state.syncedSessions.includes(hash)) {
       skipped++;
       continue;
     }
-
     if (session.inputTokens === 0 && session.outputTokens === 0) {
       skipped++;
       continue;
     }
+    pending.push(session);
+  }
 
-    try {
-      const body = JSON.stringify({
-        toolType: session.toolType,
-        endedAt: session.endedAt,
-        startedAt: session.startedAt,
-        inputTokens: session.inputTokens,
-        outputTokens: session.outputTokens,
-        cacheCreationTokens: session.cacheCreationTokens,
-        cacheReadTokens: session.cacheReadTokens,
-        modelName: session.model,
-      });
-
-      const ts = Math.floor(Date.now() / 1000).toString();
-      const sig = computeHmacSignature(apiKey, ts, body);
-
-      const res = await fetch(`${API_BASE_URL}/api/v1/sessions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': apiKey,
-          'X-Timestamp': ts,
-          'X-Signature': sig,
-        },
-        body,
-      });
-
-      if (res.ok) {
-        state.syncedSessions.push(hash);
-        synced++;
-      } else {
-        const err = await res.text();
-        errors.push(`[${session.toolType}] ${session.sessionId}: ${err}`);
-      }
-    } catch (e) {
-      errors.push(`[${session.toolType}] ${session.sessionId}: ${e}`);
+  let batchCount = 0;
+  for (let i = 0; i < pending.length; i += BATCH_SIZE) {
+    if (batchCount >= MAX_BATCHES_PER_RUN) {
+      errors.push(`[daemon] Paused after ${batchCount} batches (${synced} synced). Remaining ${pending.length - i} sessions will sync on next run.`);
+      break;
     }
+
+    if (batchCount > 0) {
+      await sleep(BATCH_DELAY_MS);
+    }
+
+    const batch = pending.slice(i, i + BATCH_SIZE);
+    let rateLimited = false;
+
+    for (const session of batch) {
+      const hash = computeSessionHash(session);
+      try {
+        const body = JSON.stringify({
+          toolType: session.toolType,
+          endedAt: session.endedAt,
+          startedAt: session.startedAt,
+          inputTokens: session.inputTokens,
+          outputTokens: session.outputTokens,
+          cacheCreationTokens: session.cacheCreationTokens,
+          cacheReadTokens: session.cacheReadTokens,
+          modelName: session.model,
+        });
+
+        const ts = Math.floor(Date.now() / 1000).toString();
+        const sig = computeHmacSignature(apiKey, ts, body);
+
+        const res = await fetch(`${API_BASE_URL}/api/v1/sessions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': apiKey,
+            'X-Timestamp': ts,
+            'X-Signature': sig,
+          },
+          body,
+        });
+
+        if (res.ok) {
+          state.syncedSessions.push(hash);
+          synced++;
+        } else if (res.status === 429) {
+          rateLimited = true;
+          errors.push(`[daemon] Rate limited. ${synced} synced so far. Will resume on next run.`);
+          break;
+        } else {
+          const err = await res.text();
+          errors.push(`[${session.toolType}] ${session.sessionId}: ${err}`);
+        }
+      } catch (e) {
+        errors.push(`[${session.toolType}] ${session.sessionId}: ${e}`);
+      }
+    }
+
+    saveDaemonState(state);
+    batchCount++;
+
+    if (rateLimited) break;
   }
 
   return { synced, skipped, errors };
@@ -254,10 +290,11 @@ function hasOpenCodeDb(): boolean {
   return existsSync(getOpenCodeDbPath());
 }
 
-function collectOpenCodeSessions(): SessionAggregate[] {
+function collectOpenCodeSessions(sinceMs?: number): SessionAggregate[] {
   const dbPath = getOpenCodeDbPath();
   if (!existsSync(dbPath)) return [];
 
+  const whereClause = sinceMs ? `WHERE s.time_updated >= ${sinceMs}` : '';
   const query = `
 SELECT s.id, s.time_created, s.time_updated,
   COALESCE(SUM(json_extract(m.data, '$.tokens.input')), 0) as input_tokens,
@@ -268,6 +305,7 @@ SELECT s.id, s.time_created, s.time_updated,
   COUNT(m.id) as msg_count
 FROM session s
 LEFT JOIN message m ON m.session_id = s.id AND json_extract(m.data, '$.role') = 'assistant'
+${whereClause}
 GROUP BY s.id
 HAVING input_tokens > 0 OR output_tokens > 0`;
 
@@ -328,9 +366,10 @@ function collectClaudeDesktopSessions(): SessionAggregate[] {
 
 export async function syncAllTools(apiKey: string): Promise<{ synced: number; skipped: number; errors: string[] }> {
   const state = loadDaemonState();
+  const sinceMs = state.lastSync ? new Date(state.lastSync).getTime() : Date.now() - 5 * 60 * 1000;
   const allSessions: SessionAggregate[] = [
     ...collectClaudeDesktopSessions(),
-    ...collectOpenCodeSessions(),
+    ...collectOpenCodeSessions(sinceMs),
   ];
 
   const result = await submitSessions(allSessions, apiKey, state);

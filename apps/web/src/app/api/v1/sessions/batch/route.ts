@@ -22,9 +22,9 @@ import { checkRateLimit } from '@/lib/rate-limiter';
  * Batch API Constants
  */
 const MAX_BATCH_SIZE = 100;
-const MAX_INPUT_TOKENS = 50_000_000;
-const MAX_OUTPUT_TOKENS = 10_000_000;
-const MAX_CACHE_TOKENS = 100_000_000;
+const MAX_INPUT_TOKENS = 500_000_000;
+const MAX_OUTPUT_TOKENS = 100_000_000;
+const MAX_CACHE_TOKENS = 1_000_000_000;
 
 /**
  * Code metrics schema for vibe coding analytics

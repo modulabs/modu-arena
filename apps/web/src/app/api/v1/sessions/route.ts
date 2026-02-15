@@ -30,12 +30,9 @@ import { userKeys, leaderboardPattern } from '@/cache/keys';
  * - Output tokens: Can accumulate to hundreds of thousands
  * - Cache tokens: Can accumulate to tens of millions (context caching)
  */
-// Session-level input token limit (50M tokens per session)
-const MAX_INPUT_TOKENS = 50_000_000;
-// Session-level output token limit (10M tokens per session)
-const MAX_OUTPUT_TOKENS = 10_000_000;
-// Session-level cache token limit (100M tokens per session)
-const MAX_CACHE_TOKENS = 100_000_000;
+const MAX_INPUT_TOKENS = 500_000_000;
+const MAX_OUTPUT_TOKENS = 100_000_000;
+const MAX_CACHE_TOKENS = 1_000_000_000;
 // Minimum time between sessions (1 minute)
 const MIN_SESSION_INTERVAL_MS = 60000;
 // Anomaly detection threshold (10x average)
