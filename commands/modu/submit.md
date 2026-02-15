@@ -75,7 +75,9 @@ if (!readmeRaw.trim()) {
   process.exit(1);
 }
 
-const description = readmeRaw.length > 5000 ? `${readmeRaw.slice(0, 5000)}\n... (truncated)` : readmeRaw;
+const MAX_DESC = 5000;
+const SUFFIX = '\n... (truncated)';
+const description = readmeRaw.length > MAX_DESC ? readmeRaw.slice(0, MAX_DESC - SUFFIX.length) + SUFFIX : readmeRaw;
 
 function extractLocalValidationTestCommand(text) {
   const idx = text.toLowerCase().indexOf('## local validation');
