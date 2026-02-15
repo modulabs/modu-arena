@@ -254,7 +254,11 @@ except ImportError:
         """Recursively merge two configuration dictionaries."""
         result = base.copy()
         for key, value in override.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            if (
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
+            ):
                 result[key] = _merge_configs(result[key], value)
             else:
                 result[key] = value
@@ -305,7 +309,11 @@ except ImportError:
                 is_safe, _ = check_file_size(json_config_path)
                 if is_safe:
                     try:
-                        config = json.loads(json_config_path.read_text(encoding="utf-8", errors="replace"))
+                        config = json.loads(
+                            json_config_path.read_text(
+                                encoding="utf-8", errors="replace"
+                            )
+                        )
                     except (json.JSONDecodeError, OSError):
                         config = {}
                 else:
@@ -342,7 +350,11 @@ except ImportError:
             return {"completed": 0, "total": 0, "percentage": 0}
         try:
             # Only scan SPEC folders in THIS project's .modu/specs/ directory
-            spec_folders = [d for d in specs_dir.iterdir() if d.is_dir() and d.name.startswith("SPEC-")]
+            spec_folders = [
+                d
+                for d in specs_dir.iterdir()
+                if d.is_dir() and d.name.startswith("SPEC-")
+            ]
             total = len(spec_folders)
 
             # FIX: Parse YAML frontmatter to check for status: completed
@@ -362,7 +374,10 @@ except ImportError:
                         if yaml_end > 0:
                             yaml_content = content[3:yaml_end]
                             # Check for status: completed (with or without quotes)
-                            if "status: completed" in yaml_content or 'status: "completed"' in yaml_content:
+                            if (
+                                "status: completed" in yaml_content
+                                or 'status: "completed"' in yaml_content
+                            ):
                                 completed += 1
                 except (OSError, UnicodeDecodeError):
                     # File read failure or encoding error - considered incomplete
@@ -421,7 +436,11 @@ def should_show_setup_messages() -> bool:
 
     try:
         suppressed_at = datetime.fromisoformat(suppressed_at_str)
-        now = datetime.now(suppressed_at.tzinfo) if suppressed_at.tzinfo else datetime.now()
+        now = (
+            datetime.now(suppressed_at.tzinfo)
+            if suppressed_at.tzinfo
+            else datetime.now()
+        )
         days_passed = (now - suppressed_at).days
 
         # Show messages if threshold exceeded
@@ -458,8 +477,8 @@ def get_git_info() -> dict[str, Any]:
     # FIX #1 and #4: Check if git is initialized first
     if not check_git_initialized():
         return {
-            "branch": "Git not initialized → Run 'modu-adk init' to set up Git repository",
-            "last_commit": "Git not initialized → Run 'modu-adk init' to set up Git repository",
+            "branch": "Git not initialized → Run 'git init' to set up Git repository",
+            "last_commit": "Git not initialized → Run 'git init' to set up Git repository",
             "commit_time": "",
             "changes": 0,
             "git_initialized": False,
@@ -511,7 +530,10 @@ def get_git_info() -> dict[str, Any]:
         results = {}
         with ThreadPoolExecutor(max_workers=4) as executor:
             # Submit all tasks
-            futures = {executor.submit(_run_git_command_fallback, cmd): key for cmd, key in git_commands}
+            futures = {
+                executor.submit(_run_git_command_fallback, cmd): key
+                for cmd, key in git_commands
+            }
 
             # Collect results as they complete with overall timeout
             # FIX #254: Add timeout to prevent infinite waiting on stuck git operations
@@ -525,7 +547,9 @@ def get_git_info() -> dict[str, Any]:
                         results[key] = ""
             except concurrent.futures.TimeoutError:
                 # Overall timeout exceeded - use whatever results we have
-                logging.warning("Git operations timeout after 8 seconds - using partial results")
+                logging.warning(
+                    "Git operations timeout after 8 seconds - using partial results"
+                )
                 # Collect any completed futures before timeout
                 for future, key in futures.items():
                     if future.done():
@@ -557,7 +581,11 @@ def get_git_info() -> dict[str, Any]:
             "branch": branch,
             "last_commit": last_commit,
             "commit_time": results.get("commit_time", ""),
-            "changes": (len(results.get("changes_raw", "").splitlines()) if results.get("changes_raw") else 0),
+            "changes": (
+                len(results.get("changes_raw", "").splitlines())
+                if results.get("changes_raw")
+                else 0
+            ),
             "git_initialized": True,
         }
 
@@ -652,55 +680,17 @@ def _is_newer_version(newer: str, older: str) -> bool:
 
 
 def check_version_update() -> tuple[str, bool]:
-    """Check if version update is available (fast version using cached data)
+    """Check if version update is available.
 
-    Reuses PyPI cache from Phase 1 (config_health_check.py).
-    Falls back to importlib.metadata for installed version.
+    modu-arena does not use modu-adk package anymore.
+    Always returns (latest) since there is no external package to check.
 
     Returns:
         (status_indicator, has_update)
-        - status_indicator: "(latest)", "(dev)" or "⬆️ X.X.X available"
-        - has_update: True if update available
+        - status_indicator: Always "(latest)"
+        - has_update: Always False
     """
-    try:
-        import importlib.metadata
-
-        # Get installed version (fast, ~6ms)
-        try:
-            installed_version = importlib.metadata.version("modu-adk")
-        except importlib.metadata.PackageNotFoundError:
-            return "(latest)", False
-
-        # Try to load cached PyPI version from Phase 1
-        version_cache_file = find_project_root() / ".modu" / "cache" / "version-check.json"
-        latest_version = None
-
-        if version_cache_file.exists():
-            try:
-                cache_data = json.loads(version_cache_file.read_text(encoding="utf-8", errors="replace"))
-                latest_version = cache_data.get("latest")
-            except (json.JSONDecodeError, OSError, UnicodeDecodeError):
-                # Cache file read or JSON parsing errors
-                pass
-
-        # If no cache or cache is stale, skip check (avoid slow subprocess)
-        if not latest_version:
-            return "(latest)", False
-
-        # Compare versions with semantic versioning
-        if _is_newer_version(latest_version, installed_version):
-            # PyPI has newer version (use update icon instead of warning)
-            return f"⬆️ {latest_version} available", True
-        elif _is_newer_version(installed_version, latest_version):
-            # Local version is newer (development version)
-            return "(dev)", False
-        else:
-            # Same version
-            return "(latest)", False
-
-    except (ImportError, AttributeError, TypeError):
-        # Import errors or unexpected type/attribute errors
-        return "(latest)", False
+    return "(latest)", False
 
 
 def get_test_info() -> dict[str, Any]:
@@ -812,119 +802,63 @@ def load_user_personalization() -> dict:
     Returns:
         Dictionary with user personalization information
     """
+    import os
+
+    config = get_cached_config()
+
+    user_name = os.getenv("MODU_USER_NAME")
+    conversation_lang = os.getenv("MODU_CONVERSATION_LANG")
+
+    if user_name is None and config:
+        user_name = config.get("user", {}).get("name", "")
+
+    if conversation_lang is None and config:
+        conversation_lang = config.get("language", {}).get(
+            "conversation_language", "en"
+        )
+
+    has_valid_name = (
+        user_name and not user_name.startswith("{{") and not user_name.endswith("}}")
+    )
+
+    lang_name_map = {
+        "ko": "Korean",
+        "en": "English",
+        "ja": "Japanese",
+        "zh": "Chinese",
+    }
+    lang_name = lang_name_map.get(conversation_lang, "Unknown")
+
+    personalization = {
+        "user_name": user_name if has_valid_name else "",
+        "conversation_language": conversation_lang or "en",
+        "conversation_language_name": lang_name,
+        "is_korean": conversation_lang == "ko",
+        "has_personalization": has_valid_name,
+        "config_source": "basic",
+        "personalized_greeting": (
+            f"{user_name}님"
+            if has_valid_name and conversation_lang == "ko"
+            else user_name
+            if has_valid_name
+            else ""
+        ),
+        "needs_setup": not has_valid_name,
+    }
+
+    personalization_cache_file = (
+        find_project_root() / ".modu" / "cache" / "personalization.json"
+    )
     try:
-        # Import the centralized language configuration resolver
-        from src.modu_adk.core.language_config_resolver import get_resolver
+        personalization_cache_file.parent.mkdir(parents=True, exist_ok=True)
+        personalization_cache_file.write_text(
+            json.dumps(personalization, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    except (OSError, PermissionError):
+        pass
 
-        # Get resolver instance and resolve configuration
-        resolver = get_resolver(str(find_project_root()))
-        config = resolver.resolve_config()
-
-        # FIX #5: Check if USER_NAME is a template variable or empty
-        user_name = config.get("user_name", "")
-        has_valid_name = user_name and not user_name.startswith("{{") and not user_name.endswith("}}")
-
-        # Build personalization info using resolved configuration
-        personalization = {
-            "user_name": user_name if has_valid_name else "",
-            "conversation_language": config.get("conversation_language", "en"),
-            "conversation_language_name": config.get("conversation_language_name", "English"),
-            "agent_prompt_language": config.get("agent_prompt_language", "en"),
-            "is_korean": config.get("conversation_language") == "ko",
-            "has_personalization": has_valid_name,
-            "config_source": config.get("config_source", "default"),
-            "personalized_greeting": (resolver.get_personalized_greeting(config) if has_valid_name else ""),
-            "needs_setup": not has_valid_name,  # FIX #5: Flag for setup guidance
-        }
-
-        # Export template variables for other system components
-        template_vars = resolver.export_template_variables(config)
-
-        # Store resolved configuration for session-wide access
-        personalization_cache_file = find_project_root() / ".modu" / "cache" / "personalization.json"
-        try:
-            personalization_cache_file.parent.mkdir(parents=True, exist_ok=True)
-
-            # Store both personalization info and template variables
-            cache_data = {
-                "personalization": personalization,
-                "template_variables": template_vars,
-                "resolved_at": datetime.now().isoformat(),
-                "config_source": config.get("config_source", "default"),
-            }
-            personalization_cache_file.write_text(
-                json.dumps(cache_data, ensure_ascii=False, indent=2), encoding="utf-8"
-            )
-
-        except (OSError, PermissionError):
-            # Cache write errors are non-critical
-            pass
-
-        return personalization
-
-    except ImportError:
-        # Fallback to basic implementation if resolver not available
-        import os
-
-        # Load config from cache or direct file
-        config = get_cached_config()
-
-        # Environment variables take priority
-        user_name = os.getenv("MODU_USER_NAME")
-        conversation_lang = os.getenv("MODU_CONVERSATION_LANG")
-
-        # Fallback to config file if environment variables not set
-        if user_name is None and config:
-            user_name = config.get("user", {}).get("name", "")
-
-        if conversation_lang is None and config:
-            conversation_lang = config.get("language", {}).get("conversation_language", "en")
-
-        # FIX #5: Check if USER_NAME is a template variable or empty
-        has_valid_name = user_name and not user_name.startswith("{{") and not user_name.endswith("}}")
-
-        # Get language name
-        # System provides 4 languages: ko, en, ja, zh
-        # Language names are defined in .modu/config/sections/language.yaml
-        lang_name_map = {
-            "ko": "Korean",
-            "en": "English",
-            "ja": "Japanese",
-            "zh": "Chinese",
-        }
-        lang_name = lang_name_map.get(conversation_lang, "Unknown")
-
-        # Build personalization info
-        personalization = {
-            "user_name": user_name if has_valid_name else "",
-            "conversation_language": conversation_lang or "en",
-            "conversation_language_name": lang_name,
-            "is_korean": conversation_lang == "ko",
-            "has_personalization": has_valid_name,
-            "config_source": "fallback",
-            "personalized_greeting": (
-                f"{user_name}님"
-                if has_valid_name and conversation_lang == "ko"
-                else user_name
-                if has_valid_name
-                else ""
-            ),
-            "needs_setup": not has_valid_name,  # FIX #5: Flag for setup guidance
-        }
-
-        # Store for session-wide access
-        personalization_cache_file = find_project_root() / ".modu" / "cache" / "personalization.json"
-        try:
-            personalization_cache_file.parent.mkdir(parents=True, exist_ok=True)
-            personalization_cache_file.write_text(
-                json.dumps(personalization, ensure_ascii=False, indent=2),
-                encoding="utf-8",
-            )
-        except (OSError, PermissionError):
-            # Cache write errors are non-critical
-            pass
-
-        return personalization
+    return personalization
 
 
 def format_session_output() -> str:
@@ -944,14 +878,20 @@ def format_session_output() -> str:
 
     # Get Modu version from CLI (works with uv tool installations)
     try:
-        result = subprocess.run(["modu", "--version"], capture_output=True, text=True, check=True, timeout=5)
+        result = subprocess.run(
+            ["modu", "--version"], capture_output=True, text=True, check=True, timeout=5
+        )
         # Extract version number from output (e.g., "Modu version X.Y.Z" or "X.Y.Z")
         version_match = re.search(r"(\d+\.\d+\.\d+)", result.stdout)
         if version_match:
             modu_version = version_match.group(1)
         else:
             modu_version = "unknown"
-    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+    except (
+        subprocess.CalledProcessError,
+        FileNotFoundError,
+        subprocess.TimeoutExpired,
+    ):
         # Fallback to config version if CLI fails
         modu_version = "unknown"
         if config:

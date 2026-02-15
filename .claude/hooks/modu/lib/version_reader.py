@@ -121,7 +121,9 @@ class VersionReader:
         "template_version",
     ]
 
-    def __init__(self, config: Optional[VersionConfig] = None, working_dir: Optional[Path] = None):
+    def __init__(
+        self, config: Optional[VersionConfig] = None, working_dir: Optional[Path] = None
+    ):
         """
         Initialize version reader with enhanced configuration.
 
@@ -223,7 +225,9 @@ class VersionReader:
             version = self._check_cache()
             if version is not None:
                 self._cache_stats["hits"] += 1
-                self._cache_stats["cache_hits_by_source"][VersionSource.CACHE.value] += 1
+                self._cache_stats["cache_hits_by_source"][
+                    VersionSource.CACHE.value
+                ] += 1
                 return version
 
             # Priority 1: Try installed package version first (most accurate)
@@ -264,7 +268,9 @@ class VersionReader:
             version = self._check_cache()
             if version is not None:
                 self._cache_stats["hits"] += 1
-                self._cache_stats["cache_hits_by_source"][VersionSource.CACHE.value] += 1
+                self._cache_stats["cache_hits_by_source"][
+                    VersionSource.CACHE.value
+                ] += 1
                 return version
 
             # Priority 1: Try installed package version first (most accurate)
@@ -310,10 +316,14 @@ class VersionReader:
                 entry.access_count += 1
                 entry.last_access = datetime.now()
                 self._cache_stats["hits"] += 1
-                self._cache_stats["cache_hits_by_source"][VersionSource.CACHE.value] += 1
+                self._cache_stats["cache_hits_by_source"][
+                    VersionSource.CACHE.value
+                ] += 1
 
                 if self.config.debug_mode:
-                    self._logger.debug(f"Cache hit: {entry.version} (source: {entry.source.value})")
+                    self._logger.debug(
+                        f"Cache hit: {entry.version} (source: {entry.source.value})"
+                    )
 
                 return entry.version
 
@@ -358,7 +368,9 @@ class VersionReader:
             self._evict_oldest_cache_entry()
 
         if self.config.debug_mode:
-            self._logger.debug(f"Cache updated with version: {version} (source: {source.value})")
+            self._logger.debug(
+                f"Cache updated with version: {version} (source: {source.value})"
+            )
 
     def _evict_oldest_cache_entry(self) -> None:
         """
@@ -514,7 +526,9 @@ class VersionReader:
         logger.debug("No version field found in config")
         return ""
 
-    def _get_nested_value(self, config: Dict[str, Any], field_path: str) -> Optional[str]:
+    def _get_nested_value(
+        self, config: Dict[str, Any], field_path: str
+    ) -> Optional[str]:
         """
         Get nested value from config using dot notation.
 
@@ -596,31 +610,8 @@ class VersionReader:
         return fallback
 
     def _get_package_version(self) -> str:
-        """
-        Get version from installed modu-adk package metadata.
-
-        This allows the statusline to work even when .modu/config/config.json
-        is not found, as long as the modu-adk package is installed.
-
-        Returns:
-            Version string or empty string if package not found
-        """
-        try:
-            from importlib.metadata import PackageNotFoundError, version
-
-            try:
-                pkg_version = version("modu-adk")
-                self._logger.debug(f"Found modu-adk package version: {pkg_version}")
-                return pkg_version
-            except PackageNotFoundError:
-                self._logger.debug("modu-adk package not found in metadata")
-                return ""
-        except ImportError:
-            self._logger.debug("importlib.metadata not available")
-            return ""
-        except Exception as e:
-            self._logger.debug(f"Error getting package version: {e}")
-            return ""
+        """modu-adk package is no longer used. Always returns empty string."""
+        return ""
 
     async def _file_exists_async(self, path: Path) -> bool:
         """Async file existence check"""

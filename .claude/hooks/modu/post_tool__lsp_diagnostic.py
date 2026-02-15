@@ -131,7 +131,9 @@ def load_ralph_config() -> dict[str, Any]:
                     if "enabled" in ralph:
                         config["enabled"] = ralph["enabled"]
                     if "hooks" in ralph and "post_tool_lsp" in ralph["hooks"]:
-                        config["hooks"]["post_tool_lsp"].update(ralph["hooks"]["post_tool_lsp"])
+                        config["hooks"]["post_tool_lsp"].update(
+                            ralph["hooks"]["post_tool_lsp"]
+                        )
         except Exception:
             # Graceful degradation - use defaults
             pass
@@ -202,53 +204,7 @@ async def _get_lsp_diagnostics_async(file_path: str) -> dict[str, Any]:
         "error": None,
     }
 
-    try:
-        # Try to import and use the LSP client
-        project_root = get_project_dir()
-        sys.path.insert(0, str(project_root / "src"))
-
-        from modu_adk.lsp.client import ModuLSPClient
-        from modu_adk.lsp.models import DiagnosticSeverity
-
-        client = ModuLSPClient(project_root)
-        language = client.get_language_for_file(file_path)
-
-        if language is None:
-            result["error"] = f"No LSP support for file type: {Path(file_path).suffix}"
-            return result
-
-        # Ensure server is running
-        await client.ensure_server_running(language)
-
-        # Get diagnostics
-        diagnostics = await client.get_diagnostics(file_path)
-        result["available"] = True
-
-        # Count by severity
-        for diag in diagnostics:
-            if diag.severity == DiagnosticSeverity.ERROR:
-                result["error_count"] += 1
-            elif diag.severity == DiagnosticSeverity.WARNING:
-                result["warning_count"] += 1
-            elif diag.severity == DiagnosticSeverity.INFORMATION:
-                result["info_count"] += 1
-            elif diag.severity == DiagnosticSeverity.HINT:
-                result["hint_count"] += 1
-
-            result["diagnostics"].append(
-                {
-                    "severity": diag.severity.name.lower(),
-                    "message": diag.message,
-                    "line": diag.range.start.line + 1,  # Convert to 1-based
-                    "source": diag.source,
-                    "code": diag.code,
-                }
-            )
-
-    except ImportError:
-        result["error"] = "LSP client not available"
-    except Exception as e:
-        result["error"] = f"LSP error: {str(e)}"
+    result["error"] = "LSP client not available"
 
     return result
 
@@ -324,7 +280,11 @@ def run_fallback_diagnostics(file_path: str) -> dict[str, Any]:
                         issues = json.loads(proc.stdout)
                         result["available"] = True
                         for issue in issues[:10]:  # Limit to 10 issues
-                            severity = "error" if issue.get("code", "").startswith("E") else "warning"
+                            severity = (
+                                "error"
+                                if issue.get("code", "").startswith("E")
+                                else "warning"
+                            )
                             if severity == "error":
                                 result["error_count"] += 1
                             else:
@@ -341,7 +301,12 @@ def run_fallback_diagnostics(file_path: str) -> dict[str, Any]:
                     except json.JSONDecodeError:
                         pass
 
-        elif language in ("typescript", "typescriptreact", "javascript", "javascriptreact"):
+        elif language in (
+            "typescript",
+            "typescriptreact",
+            "javascript",
+            "javascriptreact",
+        ):
             # Try tsc for TypeScript
             if language.startswith("typescript") and shutil.which("tsc"):
                 proc = subprocess.run(
@@ -394,7 +359,12 @@ def format_diagnostic_output(result: dict[str, Any], file_path: str) -> str:
         return f"LSP: No diagnostics available for {filename}"
 
     # No issues found
-    total = result["error_count"] + result["warning_count"] + result["info_count"] + result["hint_count"]
+    total = (
+        result["error_count"]
+        + result["warning_count"]
+        + result["info_count"]
+        + result["hint_count"]
+    )
     if total == 0:
         return f"LSP: No issues in {filename}"
 
@@ -416,7 +386,9 @@ def format_diagnostic_output(result: dict[str, Any], file_path: str) -> str:
 
     # Sort by severity (errors first)
     severity_order = {"error": 0, "warning": 1, "information": 2, "info": 2, "hint": 3}
-    sorted_diags = sorted(diagnostics, key=lambda d: severity_order.get(d["severity"], 4))
+    sorted_diags = sorted(
+        diagnostics, key=lambda d: severity_order.get(d["severity"], 4)
+    )
 
     if sorted_diags:
         issues = []
@@ -501,10 +473,14 @@ def main() -> None:
 
     if severity_threshold == "error" and result.get("error_count", 0) > 0:
         sys.exit(2)  # Attention needed
-    elif severity_threshold == "warning" and (result.get("error_count", 0) > 0 or result.get("warning_count", 0) > 0):
+    elif severity_threshold == "warning" and (
+        result.get("error_count", 0) > 0 or result.get("warning_count", 0) > 0
+    ):
         sys.exit(2)  # Attention needed
     elif severity_threshold == "info" and (
-        result.get("error_count", 0) > 0 or result.get("warning_count", 0) > 0 or result.get("info_count", 0) > 0
+        result.get("error_count", 0) > 0
+        or result.get("warning_count", 0) > 0
+        or result.get("info_count", 0) > 0
     ):
         sys.exit(2)  # Attention needed
 

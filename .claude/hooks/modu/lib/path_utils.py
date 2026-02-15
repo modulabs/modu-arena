@@ -18,31 +18,32 @@ import os
 from pathlib import Path
 from typing import Optional
 
-try:
-    from modu_adk.utils.path_converter import is_wsl, normalize_path_for_wsl
-except ImportError:
-    # Fallback for when modu_adk is not installed
-    def is_wsl() -> bool:
-        """Check if running in WSL (Windows Subsystem for Linux)."""
-        return "WSL_DISTRO_NAME" in os.environ or "WSLENV" in os.environ or "WSL_INTEROP" in os.environ
 
-    def normalize_path_for_wsl(path: str) -> str:
-        """Basic WSL path normalization fallback."""
-        import re
+def is_wsl() -> bool:
+    """Check if running in WSL (Windows Subsystem for Linux)."""
+    return (
+        "WSL_DISTRO_NAME" in os.environ
+        or "WSLENV" in os.environ
+        or "WSL_INTEROP" in os.environ
+    )
 
-        if not path or not is_wsl():
-            return path
 
-        # Check for Windows drive letter
-        drive_pattern = re.compile(r"^([a-zA-Z]):[/\\](.*)$")
-        match = drive_pattern.match(path)
+def normalize_path_for_wsl(path: str) -> str:
+    """Normalize Windows paths to WSL format (C:\\... → /mnt/c/...)."""
+    import re
 
-        if match:
-            drive = match.group(1).lower()
-            rest = match.group(2).replace("\\", "/")
-            return f"/mnt/{drive}/{rest}"
-
+    if not path or not is_wsl():
         return path
+
+    drive_pattern = re.compile(r"^([a-zA-Z]):[/\\](.*)$")
+    match = drive_pattern.match(path)
+
+    if match:
+        drive = match.group(1).lower()
+        rest = match.group(2).replace("\\", "/")
+        return f"/mnt/{drive}/{rest}"
+
+    return path
 
 
 # Project root markers (files/dirs that indicate project root)
@@ -200,7 +201,9 @@ def ensure_modu_dir(subpath: str = "") -> Path:
     try:
         target_dir.resolve().relative_to(project_root.resolve())
     except ValueError:
-        raise ValueError(f"Cannot create .modu directory outside project root: {target_dir}")
+        raise ValueError(
+            f"Cannot create .modu directory outside project root: {target_dir}"
+        )
 
     # Create directory if it doesn't exist
     target_dir.mkdir(parents=True, exist_ok=True)

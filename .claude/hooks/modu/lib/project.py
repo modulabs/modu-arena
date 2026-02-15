@@ -244,7 +244,9 @@ def _run_git_command(args: list[str], cwd: str, timeout: int = 2) -> str:
 
             # Check exit code manually
             if result.returncode != 0:
-                raise subprocess.CalledProcessError(result.returncode, ["git"] + args, result.stdout, result.stderr)
+                raise subprocess.CalledProcessError(
+                    result.returncode, ["git"] + args, result.stdout, result.stderr
+                )
 
             return result.stdout.strip()
 
@@ -416,7 +418,12 @@ def get_project_language(cwd: str) -> str:
     config_path = project_root / ".modu" / "config" / "config.yaml"
     if config_path.exists():
         try:
-            config = yaml.safe_load(config_path.read_text(encoding="utf-8", errors="replace")) or {}
+            config = (
+                yaml.safe_load(
+                    config_path.read_text(encoding="utf-8", errors="replace")
+                )
+                or {}
+            )
             lang = config.get("language", "")
             if lang:
                 return lang
@@ -480,7 +487,10 @@ def get_version_check_config(cwd: str) -> dict[str, Any]:
         return defaults
 
     try:
-        config = yaml.safe_load(config_path.read_text(encoding="utf-8", errors="replace")) or {}
+        config = (
+            yaml.safe_load(config_path.read_text(encoding="utf-8", errors="replace"))
+            or {}
+        )
 
         # Extract modu.version_check section
         modu_config = config.get("modu", {})
@@ -597,180 +607,15 @@ def is_major_version_change(current: str, latest: str) -> bool:
 
 
 def get_package_version_info(cwd: str = ".") -> dict[str, Any]:
-    """Check Modu-ADK current and latest version with caching and offline support.
-
-    ⭐ CRITICAL GUARANTEE: This function ALWAYS returns the current installed version.
-    Network failures, cache issues, and timeouts NEVER result in "unknown" version.
-
-    Execution flow:
-    1. Get current installed version (ALWAYS succeeds) ← CRITICAL
-    2. Build minimal result with current version
-    3. Try to load from cache (< 50ms) - optional enhancement
-    4. If cache valid, return cached latest info
-    5. If cache invalid/miss, optionally query PyPI - optional enhancement
-    6. Save result to cache for next time - optional
-
-    Args:
-        cwd: Project root directory (for cache location)
-
-    Returns:
-        dict with keys:
-            - "current": Current installed version (ALWAYS valid, never empty)
-            - "latest": Latest version available on PyPI (may be "unknown")
-            - "update_available": Boolean indicating if update is available
-            - "upgrade_command": Recommended upgrade command (if update available)
-            - "release_notes_url": URL to release notes
-            - "is_major_update": Boolean indicating major version change
-
-    Guarantees:
-        - Cache hit (< 24 hours): Returns in ~20ms, no network access ✓
-        - Cache miss + online: Query PyPI (1s timeout), cache result ✓
-        - Cache miss + offline: Return current version only (~100ms) ✓
-        - Network timeout: Returns current + "unknown" latest (~50ms) ✓
-        - Any exception: Always returns current version ✓
-
-    DDD History:
-        - ANALYZE: 5 test scenarios (network detection, cache integration, offline mode)
-        - PRESERVE: Integrate VersionCache with network detection
-        - IMPROVE: Extract cache directory constant, improve error handling
-    """
-    import importlib.util
-    import urllib.error
-    import urllib.request
-    from importlib.metadata import PackageNotFoundError, version
-
-    # Import VersionCache from the same directory (using dynamic import for testing compatibility)
-    try:
-        version_cache_path = Path(__file__).parent / "version_cache.py"
-        spec = importlib.util.spec_from_file_location("version_cache", version_cache_path)
-        if spec and spec.loader:
-            version_cache_module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(version_cache_module)
-            version_cache_class = version_cache_module.VersionCache
-        else:
-            # Skip caching if module can't be loaded
-            version_cache_class = None
-    except (ImportError, OSError):
-        # Graceful degradation: skip caching on import errors
-        version_cache_class = None
-
-    # 1. Find project root (ensure cache is always in correct location)
-    # This prevents creating .modu/cache in wrong locations when hooks run
-    # from subdirectories like .claude/hooks/alfred/
-    project_root = find_project_root(cwd)
-
-    # 2. Initialize cache (skip if VersionCache couldn't be imported)
-    cache_dir = project_root / CACHE_DIR_NAME
-    version_cache = version_cache_class(cache_dir) if version_cache_class else None
-
-    # 2. Get current installed version first (needed for cache validation)
-    current_version = "unknown"
-    try:
-        current_version = version("modu-adk")
-    except PackageNotFoundError:
-        current_version = "dev"
-        # Dev mode - skip cache and return immediately
-        return {
-            "current": "dev",
-            "latest": "unknown",
-            "update_available": False,
-            "upgrade_command": "",
-        }
-
-    # 3. Try to load from cache (fast path with version validation)
-    if version_cache and version_cache.is_valid():
-        cached_info = version_cache.load()
-        if cached_info:
-            # Only use cache if the cached version matches current installed version
-            # This prevents stale cache when package is upgraded locally
-            if cached_info.get("current") == current_version:
-                # Ensure new fields exist for backward compatibility
-                if "release_notes_url" not in cached_info:
-                    # Add missing fields to old cached data
-                    cached_info.setdefault("release_notes_url", None)
-                    cached_info.setdefault("is_major_update", False)
-                return cached_info
-            # else: cache is stale (version changed), fall through to re-check
-
-    # 4. Cache miss or stale - need to query PyPI
-    result = {
-        "current": current_version,
+    """Return static version info. modu-arena no longer depends on modu-adk package."""
+    return {
+        "current": "dev",
         "latest": "unknown",
         "update_available": False,
         "upgrade_command": "",
+        "release_notes_url": None,
+        "is_major_update": False,
     }
-
-    # 5. Check if version check is enabled in config
-    config = get_version_check_config(cwd)
-    if not config["enabled"]:
-        # Version check disabled - return only current version
-        return result
-
-    # 6. Check network before PyPI query
-    if not is_network_available():
-        # Offline mode - return current version only
-        return result
-
-    # 7. Network available - query PyPI
-    pypi_data = None
-    try:
-        with timeout_handler(1):
-            url = "https://pypi.org/pypi/modu-adk/json"
-            headers = {"Accept": "application/json"}
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=0.8) as response:
-                pypi_data = json.load(response)
-                result["latest"] = pypi_data.get("info", {}).get("version", "unknown")
-
-                # Extract release notes URL from project_urls
-                try:
-                    project_urls = pypi_data.get("info", {}).get("project_urls", {})
-                    release_url = project_urls.get("Changelog", "")
-                    if not release_url:
-                        # Fallback to GitHub releases URL pattern
-                        release_url = f"https://github.com/modu-ai/modu-adk/releases/tag/v{result['latest']}"
-                    result["release_notes_url"] = release_url
-                except (KeyError, AttributeError, TypeError):
-                    result["release_notes_url"] = None
-
-    except (urllib.error.URLError, TimeoutError, Exception):
-        # PyPI query failed - return current version
-        result["release_notes_url"] = None
-        pass
-
-    # 7. Compare versions (simple comparison)
-    if result["current"] != "unknown" and result["latest"] != "unknown":
-        try:
-            # Parse versions for comparison
-            current_str = str(result["current"])
-            latest_str = str(result["latest"])
-
-            current_parts = [int(x) for x in current_str.split(".")]
-            latest_parts = [int(x) for x in latest_str.split(".")]
-
-            # Pad shorter version with zeros
-            max_len = max(len(current_parts), len(latest_parts))
-            current_parts.extend([0] * (max_len - len(current_parts)))
-            latest_parts.extend([0] * (max_len - len(latest_parts)))
-
-            if latest_parts > current_parts:
-                result["update_available"] = True
-                result["upgrade_command"] = "uv tool upgrade modu-adk"
-
-                # Detect major version change
-                result["is_major_update"] = is_major_version_change(current_str, latest_str)
-            else:
-                result["is_major_update"] = False
-        except (ValueError, AttributeError):
-            # Version parsing failed - skip comparison
-            result["is_major_update"] = False
-            pass
-
-    # 8. Save result to cache (if caching is available)
-    if version_cache:
-        version_cache.save(result)
-
-    return result
 
 
 __all__ = [

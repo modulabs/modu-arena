@@ -60,7 +60,7 @@ DEFAULT_CONFIG = {
         "project_search": {"max_depth": 10},
         "network": {"test_host": "8.8.8.8", "test_port": 53, "timeout_seconds": 0.1},
         "version_check": {
-            "pypi_url": "https://pypi.org/pypi/modu-adk/json",
+            "pypi_url": "",
             "timeout_seconds": 1,
             "cache_ttl_seconds": 86400,
         },
@@ -111,14 +111,18 @@ class ConfigManager:
         config = {}
         if self.config_path.exists():
             try:
-                with open(self.config_path, "r", encoding="utf-8", errors="replace") as f:
+                with open(
+                    self.config_path, "r", encoding="utf-8", errors="replace"
+                ) as f:
                     if self.config_path.suffix in [".yaml", ".yml"]:
                         if not YAML_AVAILABLE:
                             # Fall back to defaults if YAML not available
                             config = DEFAULT_CONFIG.copy()
                         else:
                             file_config = yaml.safe_load(f) or {}
-                            config = self._merge_configs(DEFAULT_CONFIG.copy(), file_config)
+                            config = self._merge_configs(
+                                DEFAULT_CONFIG.copy(), file_config
+                            )
                     else:
                         file_config = json.load(f)
                         config = self._merge_configs(DEFAULT_CONFIG.copy(), file_config)
@@ -339,7 +343,9 @@ class ConfigManager:
 
         return True
 
-    def _merge_configs(self, base: dict[str, Any], override: dict[str, Any]) -> Dict[str, Any]:
+    def _merge_configs(
+        self, base: dict[str, Any], override: dict[str, Any]
+    ) -> Dict[str, Any]:
         """Recursively merge two configuration dictionaries.
 
         This method delegates to common.merge_configs() for consistent behavior.
