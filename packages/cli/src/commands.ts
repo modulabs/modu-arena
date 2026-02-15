@@ -14,7 +14,7 @@ import { getRank, registerUser, loginUser, submitEvaluation } from './api.js';
 import { loadConfig, saveConfig, requireConfig } from './config.js';
 import { API_BASE_URL, TOOL_DISPLAY_NAMES, type ToolType } from './constants.js';
 import { installDaemon, uninstallDaemon, getDaemonStatus } from './daemon.js';
-import { syncClaudeDesktop, hasClaudeDesktopData } from './claude-desktop.js';
+import { syncAllTools, hasAnyToolData, hasClaudeDesktopData } from './claude-desktop.js';
 
 function prompt(question: string): Promise<string> {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
@@ -226,6 +226,13 @@ export async function installCommand(apiKey?: string): Promise<void> {
         '  • Codex CLI (https://github.com/openai/codex)\n' +
         '  • Crush (https://charm.sh/crush)\n',
     );
+  }
+
+  const daemonResult = installDaemon();
+  if (daemonResult.success) {
+    console.log(`✓ Sync daemon installed. ${daemonResult.message}`);
+  } else {
+    console.log(`⚠ Daemon install skipped: ${daemonResult.message}`);
   }
 
   installSlashCommands();
@@ -507,11 +514,11 @@ function extractLocalValidationTestCommand(readme: string): string | null {
 // ─── daemon install ────────────────────────────────────────────────────────
 
 export function daemonInstallCommand(): void {
-  console.log('\n🔄 Modu-Arena — Claude Desktop Daemon\n');
+  console.log('\n🔄 Modu-Arena — Sync Daemon\n');
   
-  if (!hasClaudeDesktopData()) {
-    console.log('  ✗ Claude Desktop data not found.');
-    console.log('    Make sure Claude Desktop is installed and has been used.\n');
+  if (!hasAnyToolData()) {
+    console.log('  ✗ No tool data found (Claude Desktop, OpenCode).');
+    console.log('    Make sure at least one supported tool is installed and has been used.\n');
     process.exit(1);
   }
   
@@ -519,7 +526,7 @@ export function daemonInstallCommand(): void {
   
   if (result.success) {
     console.log(`  ✓ ${result.message}`);
-    console.log('  ✓ Daemon will sync Claude Desktop usage automatically.\n');
+    console.log('  ✓ Daemon will sync all tool usage automatically.\n');
   } else {
     console.error(`  ✗ ${result.message}\n`);
     process.exit(1);
@@ -529,7 +536,7 @@ export function daemonInstallCommand(): void {
 // ─── daemon uninstall ──────────────────────────────────────────────────────
 
 export function daemonUninstallCommand(): void {
-  console.log('\n🔄 Modu-Arena — Claude Desktop Daemon\n');
+  console.log('\n🔄 Modu-Arena — Sync Daemon\n');
   
   const result = uninstallDaemon();
   
@@ -544,7 +551,7 @@ export function daemonUninstallCommand(): void {
 // ─── daemon status ─────────────────────────────────────────────────────────
 
 export function daemonStatusCommand(): void {
-  console.log('\n🔄 Modu-Arena — Claude Desktop Daemon\n');
+  console.log('\n🔄 Modu-Arena — Sync Daemon\n');
   
   const status = getDaemonStatus();
   
@@ -554,11 +561,8 @@ export function daemonStatusCommand(): void {
     console.log(`  Sync Interval: ${Math.floor(status.interval / 60)} minutes`);
   }
   
-  if (hasClaudeDesktopData()) {
-    console.log('  Claude Desktop Data: Found');
-  } else {
-    console.log('  Claude Desktop Data: Not found');
-  }
+  console.log(`  Claude Desktop Data: ${hasClaudeDesktopData() ? 'Found' : 'Not found'}`);
+  console.log(`  Any Tool Data: ${hasAnyToolData() ? 'Found' : 'Not found'}`);
   console.log('');
 }
 
@@ -567,14 +571,14 @@ export function daemonStatusCommand(): void {
 export async function daemonSyncCommand(): Promise<void> {
   const config = requireConfig();
   
-  if (!hasClaudeDesktopData()) {
-    console.log('Claude Desktop data not found. Nothing to sync.\n');
+  if (!hasAnyToolData()) {
+    console.log('No tool data found. Nothing to sync.\n');
     return;
   }
   
-  console.log('Syncing Claude Desktop usage...');
+  console.log('Syncing all tool usage...');
   
-  const result = await syncClaudeDesktop(config.apiKey);
+  const result = await syncAllTools(config.apiKey);
   
   console.log(`  Synced: ${result.synced} sessions`);
   console.log(`  Skipped: ${result.skipped} sessions (already synced)`);

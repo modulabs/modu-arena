@@ -1,13 +1,15 @@
 /**
- * Claude Desktop session parser and sync logic.
+ * Multi-tool session parser and sync logic.
  * 
- * Reads JSONL files from ~/Library/Application Support/Claude/local-agent-mode-sessions/
- * on macOS and %APPDATA%\Claude\local-agent-mode-sessions\ on Windows.
+ * Supports:
+ * - Claude Desktop: JSONL files from ~/Library/Application Support/Claude/local-agent-mode-sessions/
+ * - OpenCode: SQLite DB at ~/.local/share/opencode/opencode.db
  */
 import { readdirSync, readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import { execSync } from 'node:child_process';
 import { API_BASE_URL, DAEMON_STATE_FILE } from './constants.js';
 import { computeHmacSignature } from './crypto.js';
 
@@ -32,6 +34,7 @@ interface JsonlMessage {
 
 interface SessionAggregate {
   sessionId: string;
+  toolType: string;
   inputTokens: number;
   outputTokens: number;
   cacheCreationTokens: number;
@@ -138,6 +141,7 @@ function parseJsonlFile(filePath: string): SessionAggregate | null {
   
   return {
     sessionId,
+    toolType: 'claude-desktop',
     inputTokens,
     outputTokens,
     cacheCreationTokens,
@@ -171,85 +175,180 @@ function saveDaemonState(state: DaemonState): void {
 }
 
 function computeSessionHash(session: SessionAggregate): string {
-  const data = `${session.sessionId}:${session.inputTokens}:${session.outputTokens}:${session.endedAt}`;
+  const data = `${session.toolType}:${session.sessionId}:${session.inputTokens}:${session.outputTokens}:${session.endedAt}`;
   return createHash('sha256').update(data).digest('hex').substring(0, 16);
 }
 
-export async function syncClaudeDesktop(apiKey: string): Promise<{ synced: number; skipped: number; errors: string[] }> {
-  const state = loadDaemonState();
-  const errors: string[] = [];
+async function submitSessions(
+  sessions: SessionAggregate[],
+  apiKey: string,
+  state: DaemonState,
+): Promise<{ synced: number; skipped: number; errors: string[] }> {
   let synced = 0;
   let skipped = 0;
-  
-  const sessionDirs = getSessionDirs();
-  
-  for (const orgDir of sessionDirs) {
-    const jsonlFiles = findJsonlFiles(orgDir);
-    
-    for (const file of jsonlFiles) {
-      const session = parseJsonlFile(file);
-      if (!session) continue;
-      
-      const hash = computeSessionHash(session);
-      if (state.syncedSessions.includes(hash)) {
-        skipped++;
-        continue;
+  const errors: string[] = [];
+
+  for (const session of sessions) {
+    const hash = computeSessionHash(session);
+    if (state.syncedSessions.includes(hash)) {
+      skipped++;
+      continue;
+    }
+
+    if (session.inputTokens === 0 && session.outputTokens === 0) {
+      skipped++;
+      continue;
+    }
+
+    try {
+      const body = JSON.stringify({
+        toolType: session.toolType,
+        endedAt: session.endedAt,
+        startedAt: session.startedAt,
+        inputTokens: session.inputTokens,
+        outputTokens: session.outputTokens,
+        cacheCreationTokens: session.cacheCreationTokens,
+        cacheReadTokens: session.cacheReadTokens,
+        modelName: session.model,
+      });
+
+      const ts = Math.floor(Date.now() / 1000).toString();
+      const sig = computeHmacSignature(apiKey, ts, body);
+
+      const res = await fetch(`${API_BASE_URL}/api/v1/sessions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': apiKey,
+          'X-Timestamp': ts,
+          'X-Signature': sig,
+        },
+        body,
+      });
+
+      if (res.ok) {
+        state.syncedSessions.push(hash);
+        synced++;
+      } else {
+        const err = await res.text();
+        errors.push(`[${session.toolType}] ${session.sessionId}: ${err}`);
       }
-      
-      if (session.inputTokens === 0 && session.outputTokens === 0) {
-        skipped++;
-        continue;
-      }
-      
-      try {
-        const body = JSON.stringify({
-          toolType: 'claude-desktop',
-          endedAt: session.endedAt,
-          startedAt: session.startedAt,
-          inputTokens: session.inputTokens,
-          outputTokens: session.outputTokens,
-          cacheCreationTokens: session.cacheCreationTokens,
-          cacheReadTokens: session.cacheReadTokens,
-          modelName: session.model,
-        });
-        
-        const ts = Math.floor(Date.now() / 1000).toString();
-        const sig = computeHmacSignature(apiKey, ts, body);
-        
-        const res = await fetch(`${API_BASE_URL}/api/v1/sessions`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': apiKey,
-            'X-Timestamp': ts,
-            'X-Signature': sig,
-          },
-          body,
-        });
-        
-        if (res.ok) {
-          state.syncedSessions.push(hash);
-          synced++;
-        } else {
-          const err = await res.text();
-          errors.push(`${session.sessionId}: ${err}`);
-        }
-      } catch (e) {
-        errors.push(`${session.sessionId}: ${e}`);
-      }
+    } catch (e) {
+      errors.push(`[${session.toolType}] ${session.sessionId}: ${e}`);
     }
   }
-  
+
+  return { synced, skipped, errors };
+}
+
+// ─── OpenCode SQLite support ───────────────────────────────────────────────
+
+function getOpenCodeDbPath(): string {
+  if (IS_WIN) {
+    return join(process.env.LOCALAPPDATA || join(homedir(), 'AppData', 'Local'), 'opencode', 'opencode.db');
+  }
+  return join(homedir(), '.local', 'share', 'opencode', 'opencode.db');
+}
+
+function hasOpenCodeDb(): boolean {
+  return existsSync(getOpenCodeDbPath());
+}
+
+function collectOpenCodeSessions(): SessionAggregate[] {
+  const dbPath = getOpenCodeDbPath();
+  if (!existsSync(dbPath)) return [];
+
+  const query = `
+SELECT s.id, s.time_created, s.time_updated,
+  COALESCE(SUM(json_extract(m.data, '$.tokens.input')), 0) as input_tokens,
+  COALESCE(SUM(json_extract(m.data, '$.tokens.output')), 0) as output_tokens,
+  COALESCE(SUM(json_extract(m.data, '$.tokens.cache.read')), 0) as cache_read,
+  COALESCE(SUM(json_extract(m.data, '$.tokens.cache.write')), 0) as cache_write,
+  MAX(json_extract(m.data, '$.modelID')) as model,
+  COUNT(m.id) as msg_count
+FROM session s
+LEFT JOIN message m ON m.session_id = s.id AND json_extract(m.data, '$.role') = 'assistant'
+GROUP BY s.id
+HAVING input_tokens > 0 OR output_tokens > 0`;
+
+  try {
+    const raw = execSync(`sqlite3 -json "${dbPath}" "${query.replace(/\n/g, ' ')}"`, {
+      encoding: 'utf-8',
+      timeout: 10000,
+    }).trim();
+
+    if (!raw || raw === '[]') return [];
+    const rows = JSON.parse(raw) as Array<{
+      id: string;
+      time_created: string;
+      time_updated: string;
+      input_tokens: number;
+      output_tokens: number;
+      cache_read: number;
+      cache_write: number;
+      model: string | null;
+      msg_count: number;
+    }>;
+
+    return rows.map((r) => ({
+      sessionId: r.id,
+      toolType: 'opencode',
+      inputTokens: r.input_tokens,
+      outputTokens: r.output_tokens,
+      cacheCreationTokens: r.cache_write,
+      cacheReadTokens: r.cache_read,
+      model: r.model || 'unknown',
+      startedAt: r.time_created,
+      endedAt: r.time_updated,
+      messageCount: r.msg_count,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+// ─── Claude Desktop JSONL collection ───────────────────────────────────────
+
+function collectClaudeDesktopSessions(): SessionAggregate[] {
+  const sessions: SessionAggregate[] = [];
+  for (const orgDir of getSessionDirs()) {
+    for (const file of findJsonlFiles(orgDir)) {
+      const session = parseJsonlFile(file);
+      if (session) sessions.push(session);
+    }
+  }
+  return sessions;
+}
+
+// ─── Public API ────────────────────────────────────────────────────────────
+
+export async function syncAllTools(apiKey: string): Promise<{ synced: number; skipped: number; errors: string[] }> {
+  const state = loadDaemonState();
+  const allSessions: SessionAggregate[] = [
+    ...collectClaudeDesktopSessions(),
+    ...collectOpenCodeSessions(),
+  ];
+
+  const result = await submitSessions(allSessions, apiKey, state);
+
   state.lastSync = new Date().toISOString();
   saveDaemonState(state);
-  
-  return { synced, skipped, errors };
+
+  return result;
+}
+
+export async function syncClaudeDesktop(apiKey: string): Promise<{ synced: number; skipped: number; errors: string[] }> {
+  return syncAllTools(apiKey);
 }
 
 export function hasClaudeDesktopData(): boolean {
   const dataDir = getClaudeDesktopDataDir();
   const sessionsDir = join(dataDir, 'local-agent-mode-sessions');
   return existsSync(sessionsDir);
+}
+
+export function hasAnyToolData(): boolean {
+  return hasClaudeDesktopData() || hasOpenCodeDb();
 }
 
 export function getClaudeDesktopDataPath(): string {

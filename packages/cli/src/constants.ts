@@ -40,4 +40,4 @@ export const MIN_SESSION_INTERVAL_SEC = 60;
 export const HMAC_TIMESTAMP_TOLERANCE_SEC = 300;
 
 /** Daemon sync interval in seconds */
-export const DAEMON_SYNC_INTERVAL_SEC = 300; // 5 minutes
+export const DAEMON_SYNC_INTERVAL_SEC = 120; // 2 minutes

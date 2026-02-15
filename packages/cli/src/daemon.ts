@@ -1,5 +1,5 @@
 /**
- * Platform-specific daemon installation for Claude Desktop sync.
+ * Platform-specific daemon installation for periodic tool data sync.
  * macOS: launchd (LaunchAgent)
  * Windows: Scheduled Task
  */
