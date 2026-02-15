@@ -280,8 +280,8 @@ HAVING input_tokens > 0 OR output_tokens > 0`;
     if (!raw || raw === '[]') return [];
     const rows = JSON.parse(raw) as Array<{
       id: string;
-      time_created: string;
-      time_updated: string;
+      time_created: string | number;
+      time_updated: string | number;
       input_tokens: number;
       output_tokens: number;
       cache_read: number;
@@ -298,8 +298,12 @@ HAVING input_tokens > 0 OR output_tokens > 0`;
       cacheCreationTokens: r.cache_write,
       cacheReadTokens: r.cache_read,
       model: r.model || 'unknown',
-      startedAt: r.time_created,
-      endedAt: r.time_updated,
+      startedAt: typeof r.time_created === 'number'
+        ? new Date(r.time_created).toISOString()
+        : r.time_created,
+      endedAt: typeof r.time_updated === 'number'
+        ? new Date(r.time_updated).toISOString()
+        : r.time_updated,
       messageCount: r.msg_count,
     }));
   } catch {
