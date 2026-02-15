@@ -160,37 +160,6 @@ export async function POST(request: NextRequest) {
       parseResult.data.projectPathHash ||
       createHash('sha256').update(`${userId}:${projectName}`).digest('hex');
 
-    const existing = await db
-      .select()
-      .from(projectEvaluations)
-      .where(
-        and(
-          eq(projectEvaluations.userId, userId),
-          eq(projectEvaluations.projectPathHash, projectPathHash)
-        )
-      )
-      .limit(1);
-
-    const existingEval = existing[0];
-    if (existingEval) {
-      const response: EvaluationResponse = {
-        success: true,
-        evaluation: {
-          passed: existingEval.passed,
-          projectName: existingEval.projectName,
-          projectPathHash: existingEval.projectPathHash,
-          localScore: existingEval.localScore,
-          backendScore: existingEval.backendScore,
-          penaltyScore: existingEval.penaltyScore,
-          finalScore: existingEval.finalScore,
-          cumulativeScoreAfter: existingEval.cumulativeScoreAfter,
-          feedback: existingEval.feedback || '',
-          evaluatedAt: (existingEval.evaluatedAt || new Date()).toISOString(),
-        },
-      };
-      return successResponse(response);
-    }
-
     // Check rate limiting (max 10 evaluations per day per user)
     // FIX: Filter by today's date so users can re-evaluate on subsequent days
     const todayStart = new Date();
