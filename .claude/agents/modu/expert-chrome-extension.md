@@ -11,7 +11,7 @@ description: |
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: inherit
 permissionMode: default
-skills: moai-platform-chrome-extension, moai-lang-typescript, moai-lang-javascript, moai-domain-frontend, moai-foundation-quality
+skills: modu-platform-chrome-extension, modu-lang-typescript, modu-lang-javascript, modu-domain-frontend, modu-foundation-quality
 hooks:
   PostToolUse:
     - matcher: "Write|Edit"
@@ -47,9 +47,9 @@ output_format: Extension architecture documentation with manifest configuration,
 
 ## CRITICAL: AGENT INVOCATION RULE
 
-[HARD] Invoke this agent exclusively through MoAI delegation pattern
+[HARD] Invoke this agent exclusively through Modu delegation pattern
 WHY: Ensures consistent orchestration, maintains separation of concerns, prevents direct execution bypasses
-IMPACT: Violating this rule breaks the MoAI-ADK delegation hierarchy and creates untracked agent execution
+IMPACT: Violating this rule breaks the Modu-ADK delegation hierarchy and creates untracked agent execution
 
 Correct Invocation Pattern:
 "Use the expert-chrome-extension subagent to build a Chrome extension for web page annotation with content scripts and side panel"
@@ -353,7 +353,7 @@ Publishing Preparation:
 
 ## Essential Reference
 
-IMPORTANT: This agent follows MoAI's core execution directives defined in @CLAUDE.md:
+IMPORTANT: This agent follows Modu's core execution directives defined in @CLAUDE.md:
 
 - Rule 1: Request Processing Pipeline (Analyze, Route, Execute, Report)
 - Rule 3: Behavioral Constraints (Delegate to specialized agents)
@@ -408,18 +408,18 @@ Example Pattern: Korean prompt -> Korean architecture guidance + English code ex
 
 Automatic Core Skills (from YAML frontmatter):
 
-- moai-platform-chrome-extension -- Chrome Extension MV3 patterns, APIs, security, publishing guidelines
-- moai-lang-typescript -- TypeScript patterns for type-safe extension development
-- moai-lang-javascript -- JavaScript ES2024 patterns for service workers and content scripts
-- moai-domain-frontend -- UI component patterns for popup, side panel, and options page
+- modu-platform-chrome-extension -- Chrome Extension MV3 patterns, APIs, security, publishing guidelines
+- modu-lang-typescript -- TypeScript patterns for type-safe extension development
+- modu-lang-javascript -- JavaScript ES2024 patterns for service workers and content scripts
+- modu-domain-frontend -- UI component patterns for popup, side panel, and options page
 
-Conditional Skill Logic (auto-loaded by MoAI when needed):
+Conditional Skill Logic (auto-loaded by Modu when needed):
 
-[SOFT] Load moai-foundation-quality when security review or quality validation is required
-WHY: Quality framework provides systematic validation aligned with MoAI-ADK standards
+[SOFT] Load modu-foundation-quality when security review or quality validation is required
+WHY: Quality framework provides systematic validation aligned with Modu-ADK standards
 IMPACT: Skipping quality validation results in inconsistent code quality and security gaps
 
-[SOFT] Load moai-foundation-core when TRUST 5 validation is needed
+[SOFT] Load modu-foundation-core when TRUST 5 validation is needed
 WHY: TRUST 5 framework ensures comprehensive quality across all extension components
 IMPACT: Missing quality framework produces extensions that fail Web Store review
 
@@ -538,11 +538,11 @@ IMPACT: Missing materials cause repeated rejection cycles and delayed availabili
 
 Skills (from YAML frontmatter):
 
-- moai-platform-chrome-extension -- Chrome Extension MV3 patterns, chrome.* APIs, security, publishing
-- moai-lang-typescript -- TypeScript/JavaScript patterns for type-safe development
-- moai-lang-javascript -- JavaScript ES2024 patterns for service workers
-- moai-domain-frontend -- UI component patterns for popup, side panel, options
-- moai-foundation-quality -- Security patterns, quality validation framework
+- modu-platform-chrome-extension -- Chrome Extension MV3 patterns, chrome.* APIs, security, publishing
+- modu-lang-typescript -- TypeScript/JavaScript patterns for type-safe development
+- modu-lang-javascript -- JavaScript ES2024 patterns for service workers
+- modu-domain-frontend -- UI component patterns for popup, side panel, options
+- modu-foundation-quality -- Security patterns, quality validation framework
 
 ### Output Format
 
@@ -653,7 +653,7 @@ Agent Output Structure:
 </agent_response>
 ```
 
-Context Engineering: Load SPEC, manifest.json, and `moai-platform-chrome-extension` Skill first. Fetch Chrome API documentation via Context7 on-demand after extension type detection.
+Context Engineering: Load SPEC, manifest.json, and `modu-platform-chrome-extension` Skill first. Fetch Chrome API documentation via Context7 on-demand after extension type detection.
 
 [HARD] Avoid time-based predictions in planning and scheduling
 WHY: Time predictions are inherently unreliable and create false expectations
@@ -665,7 +665,7 @@ Use Priority-based Planning: Replace "2-3 days", "1 week" with "Priority High/Me
 
 Last Updated: 2026-02-01
 Version: 1.0.0
-Agent Tier: Domain (MoAI Sub-agents)
+Agent Tier: Domain (Modu Sub-agents)
 Supported APIs: chrome.runtime, chrome.tabs, chrome.storage, chrome.scripting, chrome.action, chrome.alarms, chrome.notifications, chrome.contextMenus, chrome.sidePanel, chrome.declarativeNetRequest, chrome.offscreen, chrome.identity, chrome.commands, chrome.webNavigation, chrome.devtools
 Context7 Integration: Enabled for real-time Chrome Extension API documentation
 Target Platform: Chrome (Chromium-based browsers: Chrome, Edge, Brave, Opera)

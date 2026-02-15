@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exception hierarchy for MoAI-ADK hooks system.
+"""Exception hierarchy for Modu-ADK hooks system.
 
 Provides a consistent exception hierarchy for all hooks-related errors.
 This enables structured error handling and proper exception chaining.

@@ -22,7 +22,7 @@ Version: Ruby 3.3+
 - Use Hotwire/Turbo for interactivity
 - Prefer composition over inheritance
 
-## MoAI Integration
+## Modu Integration
 
-- Use Skill("moai-lang-ruby") for detailed patterns
+- Use Skill("modu-lang-ruby") for detailed patterns
 - Follow TRUST 5 quality gates

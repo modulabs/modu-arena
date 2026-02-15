@@ -60,7 +60,7 @@ def createUser(name: String, age: Age): User = ???
 - Partition data appropriately
 - Cache intermediate results
 
-## MoAI Integration
+## Modu Integration
 
-- Use Skill("moai-lang-scala") for detailed patterns
+- Use Skill("modu-lang-scala") for detailed patterns
 - Follow TRUST 5 quality gates

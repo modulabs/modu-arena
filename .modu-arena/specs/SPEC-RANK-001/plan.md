@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the step-by-step implementation plan for MoAI Token Rank service.
+This document outlines the step-by-step implementation plan for Modu Token Rank service.
 
 ---
 
@@ -111,13 +111,13 @@ This document outlines the step-by-step implementation plan for MoAI Token Rank 
 
 ## Phase 4: CLI Integration (Week 4)
 
-*Note: This phase is implemented in moai-adk repository*
+*Note: This phase is implemented in modu-adk repository*
 
-### 4.1 CLI Commands (moai-adk/src/moai_adk/rank/)
-- [ ] `moai-adk rank register` - OAuth registration
-- [ ] `moai-adk rank status` - Current rank display
-- [ ] `moai-adk rank leaderboard` - CLI leaderboard view
-- [ ] `moai-adk rank enable/disable` - Toggle collection
+### 4.1 CLI Commands (modu-adk/src/modu_adk/rank/)
+- [ ] `modu-adk rank register` - OAuth registration
+- [ ] `modu-adk rank status` - Current rank display
+- [ ] `modu-adk rank leaderboard` - CLI leaderboard view
+- [ ] `modu-adk rank enable/disable` - Toggle collection
 
 ### 4.2 Secure Storage
 - [ ] Keyring integration (macOS/Linux/Windows)
@@ -126,7 +126,7 @@ This document outlines the step-by-step implementation plan for MoAI Token Rank 
 
 ### 4.3 Session Collection
 - [ ] JSONL file parser
-- [ ] MoAI project detection (.moai folder)
+- [ ] Modu project detection (.modu folder)
 - [ ] Token usage extraction
 - [ ] HMAC request signing
 

@@ -92,7 +92,7 @@ Modu-Arena가 설치되면 Modu-Arena CLI를 사용할 수 있습니다.
 ### 명령어 개요
 
 ```bash
-moai arena [OPTIONS] COMMAND [ARGS]...
+modu arena [OPTIONS] COMMAND [ARGS]...
 
 Modu-Arena - Claude Code 토큰 사용량 리더보드
 
@@ -115,7 +115,7 @@ Claude Code 세션을 추적하고 리더보드에서 경쟁하세요.
 #### 1. login - GitHub OAuth 로그인
 
 ```bash
-❯ moai arena login
+❯ modu arena login
 
 ╭──────────────────────────────── 로그인 ───────────────────────────────╮
 │ Modu-Arena 로그인                                                      │
@@ -131,7 +131,7 @@ GitHub 인증을 위해 브라우저 열기...
 │ your-github-id로 성공적으로 로그인했습니다                             │
 │                                                                      │
 │ API 키: modu_arena_a9011fac_c...                                     │
-│ 저장 위치: ~/.moai/arena/credentials.json                             │
+│ 저장 위치: ~/.modu/arena/credentials.json                             │
 ╰──────────────────────────────────────────────────────────────────────╯
 
 ╭───────────────────────── 글로벌 훅 설치됨 ──────────────────────────╮
@@ -141,23 +141,23 @@ GitHub 인증을 위해 브라우저 열기...
 │ 훅 위치: ~/.claude/hooks/modu/session_end__arena_submit.py            │
 │                                                                      │
 │ 특정 프로젝트를 제외하려면:                                           │
-│   moai arena exclude /path/to/project                                │
+│   modu arena exclude /path/to/project                                │
 ╰──────────────────────────────────────────────────────────────────────╯
 ```
 
-> **참고**: `moai rank register`는 하위 호환성을 위해 별칭으로 계속 지원됩니다.
+> **참고**: `modu rank register`는 하위 호환성을 위해 별칭으로 계속 지원됩니다.
 
 **작동 원리**:
 
 1. 브라우저를 열어 GitHub OAuth 인증 수행
 2. 인증 성공 후 API 키 자동 생성 및 저장
 3. 전역 훅(Hook)을 설치하여 세션 자동 추적 시작
-4. `~/.moai/rank/credentials.json`에 안전하게 API 키 저장
+4. `~/.modu/rank/credentials.json`에 안전하게 API 키 저장
 
 **실행 예시**:
 
 ```bash
-❯ moai rank login
+❯ modu rank login
 
 ╭──────────────────────────────── Login ───────────────────────────────╮
 │ Modu-Arena Login                                                      │
@@ -173,7 +173,7 @@ Waiting for authorization (timeout: 5 minutes)...
 │ Successfully logged in as your-github-id                             │
 │                                                                      │
 │ API Key: modu_arena_a9011fac_c...                                     │
-│ Stored in: ~/.moai/rank/credentials.json                             │
+│ Stored in: ~/.modu/rank/credentials.json                             │
 ╰──────────────────────────────────────────────────────────────────────╯
 
 ╭───────────────────────── Global Hook Installed ──────────────────────╮
@@ -183,14 +183,14 @@ Waiting for authorization (timeout: 5 minutes)...
 │ Hook location: ~/.claude/hooks/modu/session_end__rank_submit.py      │
 │                                                                      │
 │ To exclude specific projects:                                        │
-│   moai rank exclude /path/to/project                                 │
+│   modu rank exclude /path/to/project                                 │
 ╰──────────────────────────────────────────────────────────────────────╯
 ```
 
 #### 2. sync - 세션 데이터 동기화
 
 ```bash
-moai rank sync
+modu rank sync
 ```
 
 로컬의 Claude Code 세션 데이터를 Modu-Arena 서버에 동기화합니다.
@@ -198,7 +198,7 @@ moai rank sync
 **출력 예시:**
 
 ```bash
-❯ moai rank sync
+❯ modu rank sync
 
 Syncing 2577 session(s) to Modu-Arena
 Phase 1: Parsing transcripts (parallel: 20 workers)
@@ -219,7 +219,7 @@ Sync Complete
 #### 3. status - 내 순위 확인
 
 ```bash
-moai arena status
+modu arena status
 ```
 
 **작동 원리**:
@@ -231,7 +231,7 @@ moai arena status
 **실행 예시**:
 
 ```bash
-❯ moai arena status
+❯ modu arena status
 
 ╭────────────────────────────── Modu-Arena ────────────────────────────╮
 │ your-github-id                                                       │
@@ -257,19 +257,19 @@ moai arena status
 
 ```bash
 # 현재 프로젝트 제외
-moai arena exclude
+modu arena exclude
 
 # 특정 경로 제외
-moai arena exclude /path/to/private
+modu arena exclude /path/to/private
 
 # 와일드카드 패턴
-moai arena exclude "*/confidential/*"
+modu arena exclude "*/confidential/*"
 
 # 제외된 프로젝트 목록
-moai arena list-excluded
+modu arena list-excluded
 
 # 다시 포함
-moai arena include /path/to/project
+modu arena include /path/to/project
 ```
 
 **프라이버시 보호**:
@@ -280,7 +280,7 @@ moai arena include /path/to/project
 #### 5. logout - 로그아웃
 
 ```bash
-moai arena logout
+modu arena logout
 ```
 
 - 저장된 API 키 제거
@@ -1159,9 +1159,9 @@ Score = (Token * 0.40) + (Efficiency * 0.25) + (Session * 0.20) + (Streak * 0.15
 
 ---
 
-## 🙏 Made with ❤️ by MoAI-ADK Team
+## 🙏 Made with ❤️ by Modu-ADK Team
 
 **Last Updated:** 2026-01-12
-**MoAI**: MoAI는 "모두를 위한 AI (Modu-ui AI)"를 의미합니다.
+**Modu**: Modu는 "모두를 위한 AI (Modu-ui AI)"를 의미합니다.
 
 > **"무한가능주의 - 모두의 AI"**

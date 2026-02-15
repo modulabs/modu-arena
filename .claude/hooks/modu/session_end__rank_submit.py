@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-"""MoAI Rank Session Hook
+"""Modu Rank Session Hook
 
-This hook submits Claude Code session token usage to the MoAI Rank service.
+This hook submits Claude Code session token usage to the Modu Rank service.
 It is triggered automatically when a session ends.
 
 The hook reads session data from stdin and submits it to the rank service
-if the user has registered with MoAI Rank.
+if the user has registered with Modu Rank.
 
 Requirements:
-- User must be registered: Run `moai-adk rank register` to connect GitHub account
-- API key stored securely in ~/.moai/rank/credentials.json
+- User must be registered: Run `modu-adk rank register` to connect GitHub account
+- API key stored securely in ~/.modu/rank/credentials.json
 
 Privacy:
 - Only token counts are submitted (input, output, cache tokens)
 - Project paths are anonymized using one-way hashing
 - No code or conversation content is transmitted
 
-Opt-out: Configure ~/.moai/rank/config.yaml to exclude specific projects:
+Opt-out: Configure ~/.modu/rank/config.yaml to exclude specific projects:
     rank:
       enabled: true
       exclude_projects:
@@ -47,9 +47,9 @@ def main():
 
         # Lazy import to avoid startup delay
         try:
-            from moai_adk.rank.hook import is_project_excluded, submit_session_hook
+            from modu_adk.rank.hook import is_project_excluded, submit_session_hook
         except ImportError:
-            # moai-adk not installed or rank module not available
+            # modu-adk not installed or rank module not available
             return
 
         # Check if this project is excluded
@@ -60,16 +60,16 @@ def main():
         result = submit_session_hook(session_data)
 
         if result["success"]:
-            print("Session submitted to MoAI Rank", file=sys.stderr)
-        elif result["message"] and result["message"] != "Not registered with MoAI Rank":
-            print(f"MoAI Rank: {result['message']}", file=sys.stderr)
+            print("Session submitted to Modu Rank", file=sys.stderr)
+        elif result["message"] and result["message"] != "Not registered with Modu Rank":
+            print(f"Modu Rank: {result['message']}", file=sys.stderr)
 
     except json.JSONDecodeError:
         # Invalid JSON input, silently skip
         pass
     except Exception as e:
         # Log errors but don't fail the hook
-        print(f"MoAI Rank hook error: {e}", file=sys.stderr)
+        print(f"Modu Rank hook error: {e}", file=sys.stderr)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,9 @@
+project:
+  name: modu-rank
+  description: ''
+  type: ''
+  locale: '{{LOCALE}}'
+  created_at: ''
+  initialized: false
+github:
+  profile_name: modu-ai

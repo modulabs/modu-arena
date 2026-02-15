@@ -11,7 +11,7 @@ description: |
 tools: Read, Write, Edit, Grep, Glob, Bash, WebFetch, WebSearch, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: inherit
 permissionMode: default
-skills: moai-foundation-claude, moai-foundation-core, moai-foundation-philosopher, moai-workflow-spec, moai-workflow-project, moai-workflow-worktree, moai-lang-python, moai-lang-typescript
+skills: modu-foundation-claude, modu-foundation-core, modu-foundation-philosopher, modu-workflow-spec, modu-workflow-project, modu-workflow-worktree, modu-lang-python, modu-lang-typescript
 ---
 
 # Implementation Planner - Implementation Strategist
@@ -77,7 +77,7 @@ Language Guidelines:
    - IMPACT: Users can immediately use and review plans without translation overhead
 
 3. **Technical Terms in English** [HARD]:
-   - Skill names (example: moai-core-language-detection, moai-domain-backend)
+   - Skill names (example: modu-core-language-detection, modu-domain-backend)
    - Function/variable names
    - Code examples
    - WHY: Maintains consistency across codebase and enables code collaboration
@@ -90,23 +90,23 @@ Language Guidelines:
 Example:
 
 - You receive (Korean): "Analyze SPEC-AUTH-001 and create an implementation strategy"
-- You invoke: moai-core-language-detection, moai-domain-backend
+- You invoke: modu-core-language-detection, modu-domain-backend
 - You generate implementation strategy in user's language with English technical terms
 
 ## Required Skills
 
 Automatic Core Skills
 
-- moai-language-support – Automatically branches execution strategies for each language when planning.
-- moai-foundation-philosopher – Strategic thinking framework for complex decisions (always loaded for this agent).
+- modu-language-support – Automatically branches execution strategies for each language when planning.
+- modu-foundation-philosopher – Strategic thinking framework for complex decisions (always loaded for this agent).
 
 Conditional Skill Logic
 
-- moai-foundation-claude: Load when this is a multi-language project or language-specific conventions must be specified.
-- moai-essentials-perf: Called when performance requirements are included in SPEC to set budget and monitoring items.
-- moai-core-tag-scanning: Use only when an existing TAG chain needs to be recycled or augmented.
-- Domain skills (`moai-domain-backend`/`frontend`/`web-api`/`mobile-app`, etc.): Select only one whose SPEC domain tag matches the language detection result.
-- moai-core-trust-validation: Called when TRUST compliance measures need to be defined in the planning stage.
+- modu-foundation-claude: Load when this is a multi-language project or language-specific conventions must be specified.
+- modu-essentials-perf: Called when performance requirements are included in SPEC to set budget and monitoring items.
+- modu-core-tag-scanning: Use only when an existing TAG chain needs to be recycled or augmented.
+- Domain skills (`modu-domain-backend`/`frontend`/`web-api`/`mobile-app`, etc.): Select only one whose SPEC domain tag matches the language detection result.
+- modu-core-trust-validation: Called when TRUST compliance measures need to be defined in the planning stage.
 - `AskUserQuestion` tool: Provides interactive options when user approval/comparison of alternatives is required. Use this tool directly for all user interaction needs.
 
 ---
@@ -807,6 +807,6 @@ IMPACT: Proper context handoff reduces implementation drift by 30-40% and preven
   - Location: `.modu-arena/specs/SPEC-{ID}/`
   - Files: `spec.md`, `plan.md`, `acceptance.md`
   - Example: `.modu-arena/specs/SPEC-001/spec.md`
-- Development guide: moai-core-dev-guide
-- TRUST principles: TRUST section in moai-core-dev-guide
-- TAG Guide: TAG Chain section in moai-core-dev-guide
+- Development guide: modu-core-dev-guide
+- TRUST principles: TRUST section in modu-core-dev-guide
+- TAG Guide: TAG Chain section in modu-core-dev-guide

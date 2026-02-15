@@ -274,7 +274,7 @@ def get_coverage_target() -> int:
         Target coverage percentage (default: 100)
     """
     # Try to read from config
-    config_path = Path(".moai/config/sections/quality.yaml")
+    config_path = Path(".modu/config/sections/quality.yaml")
     if config_path.exists():
         import yaml
 

@@ -56,7 +56,7 @@ SUPPORTED_EXTENSIONS = {
 }
 
 # Environment variable to disable AST-Grep scanning
-DISABLE_ENV_VAR = "MOAI_DISABLE_AST_GREP_SCAN"
+DISABLE_ENV_VAR = "MODU_DISABLE_AST_GREP_SCAN"
 
 
 def get_project_dir() -> Path:
@@ -71,7 +71,7 @@ def get_rules_config_path() -> Optional[Path]:
 
     # Check common locations for sgconfig.yml
     possible_paths = [
-        project_dir / ".claude" / "skills" / "moai-tool-ast-grep" / "rules" / "sgconfig.yml",
+        project_dir / ".claude" / "skills" / "modu-tool-ast-grep" / "rules" / "sgconfig.yml",
         project_dir / "sgconfig.yml",
         project_dir / ".ast-grep" / "sgconfig.yml",
     ]

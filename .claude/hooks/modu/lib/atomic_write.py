@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Atomic file operations for MoAI hooks.
+"""Atomic file operations for Modu hooks.
 
 Provides safe file write operations with atomic semantics
 to prevent race conditions and data corruption.

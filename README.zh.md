@@ -92,7 +92,7 @@ uv tool install modu-arena
 ### 命令概述
 
 ```bash
-moai arena [OPTIONS] COMMAND [ARGS]...
+modu arena [OPTIONS] COMMAND [ARGS]...
 
 Modu-Arena - Claude Code 令牌使用量排行榜
 
@@ -115,22 +115,22 @@ Modu-Arena - Claude Code 令牌使用量排行榜
 #### 1. login - GitHub OAuth 登录
 
 ```bash
-moai arena login
+modu arena login
 ```
 
-> **注意**: `moai arena register` 作为别名继续支持,以保持向后兼容性。
+> **注意**: `modu arena register` 作为别名继续支持,以保持向后兼容性。
 
 **工作原理**:
 
 1. 打开浏览器进行 GitHub OAuth 认证
 2. 认证成功后自动生成并存储 API 密钥
 3. 安装全局挂钩开始自动会话追踪
-4. 将 API 密钥安全存储在 `~/.moai/rank/credentials.json`
+4. 将 API 密钥安全存储在 `~/.modu/rank/credentials.json`
 
 **执行示例**:
 
 ```bash
-❯ moai arena login
+❯ modu arena login
 
 ╭──────────────────────────────── Login ───────────────────────────────╮
 │ Modu-Arena Login                                                      │
@@ -146,7 +146,7 @@ Waiting for authorization (timeout: 5 minutes)...
 │ Successfully logged in as your-github-id                             │
 │                                                                      │
 │ API Key: modu_arena_a9011fac_c...                                     │
-│ Stored in: ~/.moai/rank/credentials.json                             │
+│ Stored in: ~/.modu/rank/credentials.json                             │
 ╰──────────────────────────────────────────────────────────────────────╯
 
 ╭───────────────────────── Global Hook Installed ──────────────────────╮
@@ -156,14 +156,14 @@ Waiting for authorization (timeout: 5 minutes)...
 │ Hook location: ~/.claude/hooks/modu/session_end__rank_submit.py      │
 │                                                                      │
 │ To exclude specific projects:                                        │
-│   moai arena exclude /path/to/project                                 │
+│   modu arena exclude /path/to/project                                 │
 ╰──────────────────────────────────────────────────────────────────────╯
 ```
 
 #### 2. sync - 同步会话数据
 
 ```bash
-moai arena sync
+modu arena sync
 ```
 
 将本地 Claude Code 会话数据同步到 Modu-Arena 服务器。
@@ -171,7 +171,7 @@ moai arena sync
 **输出示例:**
 
 ```bash
-❯ moai arena sync
+❯ modu arena sync
 
 Syncing 2577 session(s) to Modu-Arena
 Phase 1: Parsing transcripts (parallel: 20 workers)
@@ -192,7 +192,7 @@ Sync Complete
 #### 3. status - 查看我的排名
 
 ```bash
-moai arena status
+modu arena status
 ```
 
 **工作原理**:
@@ -204,7 +204,7 @@ moai arena status
 **执行示例**:
 
 ```bash
-❯ moai arena status
+❯ modu arena status
 
 ╭────────────────────────────── Modu-Arena ─────────────────────────────╮
 │ your-github-id                                                       │
@@ -230,19 +230,19 @@ moai arena status
 
 ```bash
 # 排除当前项目
-moai arena exclude
+modu arena exclude
 
 # 排除特定路径
-moai arena exclude /path/to/private
+modu arena exclude /path/to/private
 
 # 通配符模式
-moai arena exclude "*/confidential/*"
+modu arena exclude "*/confidential/*"
 
 # 列出排除的项目
-moai arena list-excluded
+modu arena list-excluded
 
 # 重新包含
-moai arena include /path/to/project
+modu arena include /path/to/project
 ```
 
 **隐私保护**:
@@ -253,7 +253,7 @@ moai arena include /path/to/project
 #### 5. logout - 登出
 
 ```bash
-moai arena logout
+modu arena logout
 ```
 
 - 删除存储的 API 密钥
@@ -1133,6 +1133,6 @@ Score = (Token * 0.40) + (Efficiency * 0.25) + (Session * 0.20) + (Streak * 0.15
 ## 🙏 Made with ❤️ by Modu-Arena Team
 
 **Last Updated:** 2026-01-12
-**MoAI**: MoAI 代表"大家的 AI (Modu-ui AI)"。
+**Modu**: Modu 代表"大家的 AI (Modu-ui AI)"。
 
 > **"无限可能主义 - 大家的 AI"**

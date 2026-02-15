@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tool Registry for MoAI-ADK Hooks
+"""Tool Registry for Modu-ADK Hooks
 
 Provides unified registry for formatters, linters, and language tools.
 Supports 16+ languages with automatic tool detection and fallback.

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Star } from 'lucide-react';
 
 const REPOS = [
-  { name: 'MoAI-ADK', repo: 'modu-ai/moai-adk' },
+  { name: 'Modu-ADK', repo: 'modu-ai/modu-adk' },
   { name: 'Modu-Arena', repo: 'modu-ai/modu-arena' },
 ];
 

@@ -54,7 +54,7 @@ class Config {
 - Use database indexing on frequently queried columns
 - Use Laravel Octane for long-running processes
 
-## MoAI Integration
+## Modu Integration
 
-- Use Skill("moai-lang-php") for detailed patterns
+- Use Skill("modu-lang-php") for detailed patterns
 - Follow TRUST 5 quality gates

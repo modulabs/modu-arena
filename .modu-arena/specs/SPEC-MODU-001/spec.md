@@ -1,11 +1,11 @@
-# SPEC-MODU-001: MoAI Rank to Modu-Arena Migration
+# SPEC-MODU-001: Modu Rank to Modu-Arena Migration
 
 ## Metadata
 
 | Field | Value |
 |-------|-------|
 | SPEC ID | SPEC-MODU-001 |
-| Title | MoAI Rank to Modu-Arena Migration |
+| Title | Modu Rank to Modu-Arena Migration |
 | Version | 1.0.0 |
 | Status | Planned |
 | Created | 2026-02-10 |
@@ -17,7 +17,7 @@
 
 ## 1. Executive Summary
 
-This SPEC defines the migration of MoAI Rank (legacy Claude Code Agent Leaderboard) to Modu-Arena, transforming it from a single-tool monitoring system to a multi-AI-tool monitoring and project evaluation platform.
+This SPEC defines the migration of Modu Rank (legacy Claude Code Agent Leaderboard) to Modu-Arena, transforming it from a single-tool monitoring system to a multi-AI-tool monitoring and project evaluation platform.
 
 ### Migration Goals
 
@@ -45,7 +45,7 @@ This SPEC defines the migration of MoAI Rank (legacy Claude Code Agent Leaderboa
 **The system shall** replace all product-facing "moai" references with "modu-arena" / "Modu-Arena" throughout the codebase.
 
 **WHEN** a user views any UI element,
-**THEN** the system shall display "Modu-Arena" or "modu-arena" instead of "MoAI" or "moai".
+**THEN** the system shall display "Modu-Arena" or "modu-arena" instead of "Modu" or "moai".
 
 **Acceptance Criteria:**
 - All user-facing UI text, labels, and titles use Modu-Arena branding
@@ -55,7 +55,7 @@ This SPEC defines the migration of MoAI Rank (legacy Claude Code Agent Leaderboa
 
 **Notes / Exceptions:**
 - Developer tooling slash command `/modu` is the primary Claude Code interface for this repo's workflow.
-- Internal directory names under `.moai/` and `.claude/` may retain moai naming when referring to the orchestration framework.
+- Internal directory names under `.modu/` and `.claude/` may retain moai naming when referring to the orchestration framework.
 
 #### FR-002: Multi-Tool Token Monitoring
 
@@ -653,7 +653,7 @@ The platform shall normalize these to a unified API key format for the Modu API.
 
 ## 8. References
 
-- Parent SPEC: SPEC-RANK-001 (MoAI Token Rank Service - legacy)
+- Parent SPEC: SPEC-RANK-001 (Modu Token Rank Service - legacy)
 - Current Schema: `apps/web/src/db/schema.ts`
 - Auth Module: `apps/web/src/lib/auth.ts`
 - Deployment: `DEPLOY.md`

@@ -29,7 +29,7 @@ This document defines the acceptance criteria for SPEC-MODU-001 using Given-When
 GIVEN a user visits the application
 WHEN they view any page
 THEN all visible text displays "Modu" or "modu"
-AND no "MoAI", "moai", or "MOAI" references appear
+AND no "Modu", "moai", or "MOAI" references appear
 ```
 
 **Scenario 2: API endpoints use new branding**

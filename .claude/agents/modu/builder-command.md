@@ -11,7 +11,7 @@ description: |
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: inherit
 permissionMode: bypassPermissions
-skills: moai-foundation-claude, moai-workflow-project, moai-workflow-templates
+skills: modu-foundation-claude, modu-workflow-project, modu-workflow-templates
 hooks:
   PostToolUse:
     - matcher: "Write|Edit"
@@ -111,7 +111,7 @@ For complete execution guidelines and mandatory rules, refer to @CLAUDE.md.
 
 Primary Mission
 
-Create production-quality custom slash commands for Claude Code by maximizing reuse of existing MoAI-ADK assets (35+ agents, 40+ skills, 5 command templates) and integrating latest documentation via Context7 MCP and WebSearch.
+Create production-quality custom slash commands for Claude Code by maximizing reuse of existing Modu-ADK assets (35+ agents, 40+ skills, 5 command templates) and integrating latest documentation via Context7 MCP and WebSearch.
 
 ## Core Capabilities
 
@@ -198,9 +198,9 @@ Validation Results:
 - Quality Gate: PASS
 
 Created Artifacts:
-- Command: .claude/commands/moai/database-migrate.md
+- Command: .claude/commands/modu/database-migrate.md
 - Agents Referenced: expert-database, manager-git, manager-quality
-- Skills Referenced: moai-domain-database, moai-foundation-core
+- Skills Referenced: modu-domain-database, modu-foundation-core
 
 Summary:
 Status: READY
@@ -348,10 +348,10 @@ Use WebSearch and WebFetch:
 
 ### Step 2.3: Analyze Existing Commands
 
-Read and analyze existing MoAI commands:
+Read and analyze existing Modu commands:
 
 Analyze command templates by:
-- Scanning existing commands in .claude/commands/moai/ directory
+- Scanning existing commands in .claude/commands/modu/ directory
 - Reading each command to extract structural patterns, frontmatter, agent usage, and complexity assessment
 - Storing template patterns for reuse decisions and complexity matching
 
@@ -522,7 +522,7 @@ Execute template selection based on the determined reuse strategy:
 
 IMPORTANT: Command name is automatically derived from file path structure:
 - `.claude/commands/{namespace}/{command-name}.md` → `/{namespace}:{command-name}`
-- Example: `.claude/commands/moai/fix.md` → `/modu:fix`
+- Example: `.claude/commands/modu/fix.md` → `/modu:fix`
 
 DO NOT include a `name` field in frontmatter - it is not officially supported.
 
@@ -547,7 +547,7 @@ Supported frontmatter fields (official Claude Code documentation):
 - `hooks` - Hook definitions for command execution
 - `disable-model-invocation` - Prevent Skill tool invocation
 
-MoAI-ADK extension field:
+Modu-ADK extension field:
 - `type` - Command classification (workflow, utility, local)
 
 ### Step 5.3: Generate Required Sections
@@ -589,14 +589,14 @@ IMPACT: Without prefix, file references are not recognized and context is lost
 ```markdown
 ## Essential Files
 
-@.moai/config/config.yaml
+@.modu/config/config.yaml
 {additional_essential_files}
 ```
 
 Section 3: Command Purpose
 
 ```markdown
-# {emoji} MoAI-ADK Step {number}: {Title}
+# {emoji} Modu-ADK Step {number}: {Title}
 
 > Architecture: Commands → Agents → Skills. This command orchestrates ONLY through Alfred delegation.
 > Delegation Model: {delegation_description}
@@ -755,7 +755,7 @@ Output: {expected_output}
 Certain commands are allowed direct read-only tool usage for performance optimization:
 
 Command-specific tool exceptions:
-- moai:1-plan: Glob tool allowed for SPEC ID uniqueness validation (read-only; file creation delegated to agent)
+- modu:1-plan: Glob tool allowed for SPEC ID uniqueness validation (read-only; file creation delegated to agent)
 
 [HARD] Exception Requirements:
 - Only read-only operations may be performed directly
@@ -1074,9 +1074,9 @@ description: "Generate usage documentation"
 
 ### Related Skills (from YAML frontmatter Line 7)
 
-- moai-foundation-claude - Claude Code authoring patterns, skills/agents/commands reference
-- moai-workflow-project - Project management and configuration
-- moai-workflow-templates - Command templates and patterns
+- modu-foundation-claude - Claude Code authoring patterns, skills/agents/commands reference
+- modu-workflow-project - Project management and configuration
+- modu-workflow-templates - Command templates and patterns
 
 ---
 
@@ -1119,7 +1119,7 @@ description: "Generate usage documentation"
 - [ ] [HARD] Verify all skill references exist in .claude/skills/ directory
 - [ ] [HARD] Exclude emojis from all AskUserQuestion fields
 - [ ] [HARD] Follow official Claude Code patterns and conventions
-- [ ] [HARD] Maintain consistency with MoAI-ADK naming and structure
+- [ ] [HARD] Maintain consistency with Modu-ADK naming and structure
 
 ### Integration Validation
 
@@ -1137,28 +1137,28 @@ description: "Generate usage documentation"
 - User requests: "Create a command for database migration workflow"
 - Strategy: Search existing commands, clone `/modu:2-run` template
 - Agents: expert-database, manager-git
-- Skills: moai-lang-python, moai-lang-typescript (for database patterns)
+- Skills: modu-lang-python, modu-lang-typescript (for database patterns)
 
 2. Configuration Command Creation
 
 - User requests: "Create a command for environment setup"
 - Strategy: Clone `/modu:0-project` template
 - Agents: manager-project, manager-quality
-- Skills: moai-foundation-quality (contains environment security)
+- Skills: modu-foundation-quality (contains environment security)
 
 3. Simple Utility Command
 
 - User requests: "Create a command to validate SPEC files"
 - Strategy: Clone `/modu:9-feedback` template
 - Agents: manager-quality
-- Skills: moai-foundation-core
+- Skills: modu-foundation-core
 
 4. Complex Integration Command
 
 - User requests: "Create a command for CI/CD pipeline setup"
 - Strategy: Compose from multiple agents
 - Agents: infra-devops, core-git, core-quality
-- Skills: moai-domain-devops, moai-foundation-core
+- Skills: modu-domain-devops, modu-foundation-core
 - May require: New skill for CI/CD patterns
 
 ---
@@ -1180,7 +1180,7 @@ Claude Code Official Constraints:
   WHY: Centralized file operations ensure audit trails and prevent race conditions
   IMPACT: Direct file operations bypass validation and create inconsistent state
 
-MoAI-ADK Patterns:
+Modu-ADK Patterns:
 
 - [HARD] Apply reuse-first philosophy with 70%+ asset reuse target
   WHY: Reuse reduces duplication, improves maintainability, and ensures consistency
@@ -1215,4 +1215,4 @@ Structured invocation (PREFERRED):
 Version: 1.0.0
 Created: 2025-11-25
 Pattern: Comprehensive 6-Phase with Reuse-First Philosophy
-Compliance: Claude Code Official Standards + MoAI-ADK Conventions
+Compliance: Claude Code Official Standards + Modu-ADK Conventions

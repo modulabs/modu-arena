@@ -36,22 +36,22 @@ if sys.platform == "win32":
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 # Environment variables
-DISABLE_ENV_VAR = "MOAI_DISABLE_LOOP_CONTROLLER"
-LOOP_ACTIVE_ENV_VAR = "MOAI_LOOP_ACTIVE"
-LOOP_ITERATION_ENV_VAR = "MOAI_LOOP_ITERATION"
+DISABLE_ENV_VAR = "MODU_DISABLE_LOOP_CONTROLLER"
+LOOP_ACTIVE_ENV_VAR = "MODU_LOOP_ACTIVE"
+LOOP_ITERATION_ENV_VAR = "MODU_LOOP_ITERATION"
 
 # State file for tracking loop status across invocations
-STATE_FILE_NAME = ".moai_loop_state.json"
+STATE_FILE_NAME = ".modu_loop_state.json"
 
 # Maximum state file size (64KB should be more than enough)
 MAX_STATE_FILE_SIZE = 64 * 1024
 
-# Completion markers (MoAI branding)
+# Completion markers (Modu branding)
 COMPLETION_MARKERS = [
-    "<moai>DONE</moai>",
-    "<moai>COMPLETE</moai>",
-    "<moai:done />",
-    "<moai:complete />",
+    "<modu>DONE</modu>",
+    "<modu>COMPLETE</modu>",
+    "<modu:done />",
+    "<modu:complete />",
 ]
 
 
@@ -116,7 +116,7 @@ def get_project_dir() -> Path:
 
 def get_state_file_path() -> Path:
     """Get path to the loop state file."""
-    return get_project_dir() / ".moai" / "cache" / STATE_FILE_NAME
+    return get_project_dir() / ".modu" / "cache" / STATE_FILE_NAME
 
 
 def load_loop_state() -> LoopState:
@@ -225,7 +225,7 @@ def load_ralph_config() -> dict[str, Any]:
     }
 
     # Try to load from config file
-    config_path = get_project_dir() / ".moai" / "config" / "sections" / "ralph.yaml"
+    config_path = get_project_dir() / ".modu" / "config" / "sections" / "ralph.yaml"
     if config_path.exists():
         try:
             import yaml
@@ -540,7 +540,7 @@ def main() -> None:
     if check_completion_promise(conversation_text):
         state.active = False
         state.completion_reason = "Completion promise detected"
-        action = "COMPLETE - <moai>DONE</moai> detected"
+        action = "COMPLETE - <modu>DONE</modu> detected"
         clear_loop_state()
         exit_code = 0
 

@@ -33,7 +33,7 @@ if sys.platform == "win32":
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 # Environment variable to disable LSP diagnostics
-DISABLE_ENV_VAR = "MOAI_DISABLE_LSP_DIAGNOSTIC"
+DISABLE_ENV_VAR = "MODU_DISABLE_LSP_DIAGNOSTIC"
 
 # Supported file extensions for LSP diagnostics
 SUPPORTED_EXTENSIONS = {
@@ -118,7 +118,7 @@ def load_ralph_config() -> dict[str, Any]:
     }
 
     # Try to load from config file
-    config_path = get_project_dir() / ".moai" / "config" / "sections" / "ralph.yaml"
+    config_path = get_project_dir() / ".modu" / "config" / "sections" / "ralph.yaml"
     if config_path.exists():
         try:
             import yaml
@@ -207,10 +207,10 @@ async def _get_lsp_diagnostics_async(file_path: str) -> dict[str, Any]:
         project_root = get_project_dir()
         sys.path.insert(0, str(project_root / "src"))
 
-        from moai_adk.lsp.client import MoAILSPClient
-        from moai_adk.lsp.models import DiagnosticSeverity
+        from modu_adk.lsp.client import ModuLSPClient
+        from modu_adk.lsp.models import DiagnosticSeverity
 
-        client = MoAILSPClient(project_root)
+        client = ModuLSPClient(project_root)
         language = client.get_language_for_file(file_path)
 
         if language is None:

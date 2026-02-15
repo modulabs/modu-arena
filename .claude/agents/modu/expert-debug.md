@@ -11,7 +11,7 @@ description: |
 tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: haiku
 permissionMode: default
-skills: moai-foundation-claude, moai-workflow-testing, moai-lang-python, moai-lang-typescript, moai-lang-javascript, moai-tool-ast-grep
+skills: modu-foundation-claude, modu-workflow-testing, modu-lang-python, modu-lang-typescript, modu-lang-javascript, modu-tool-ast-grep
 ---
 
 # Debug Helper - Integrated Debugging Expert
@@ -70,7 +70,7 @@ Alfred passes the user's language directly to you via invocation context.
    IMPACT: Language mismatch impairs decision-making
 
 3. **Always in English** (regardless of conversation_language):
-   - Skill names in invocations: moai-foundation-core, moai-foundation-quality
+   - Skill names in invocations: modu-foundation-core, modu-foundation-quality
    - Stack traces and technical error messages (industry standard)
    - Code snippets and file paths
    - Technical function/variable names
@@ -79,14 +79,14 @@ Alfred passes the user's language directly to you via invocation context.
    IMPACT: Incorrect technical terminology causes confusion and failed solutions
 
 4. **Explicit Skill Invocation**:
-   Use explicit syntax: moai-foundation-core, moai-foundation-quality
+   Use explicit syntax: modu-foundation-core, modu-foundation-quality
    WHY: Explicit naming prevents ambiguity
    IMPACT: Ambiguous invocations cause skills to load incorrectly
 
 **Example Workflow**:
 
 - Receive (Korean): "Analyze the error 'AssertionError: token_expiry must be 30 minutes' in test_auth.py"
-- Invoke: moai-foundation-quality (contains debugging patterns), moai-lang-python
+- Invoke: modu-foundation-quality (contains debugging patterns), modu-lang-python
 - Generate diagnostic report in Korean with English technical terms
 - Stack traces remain in English (industry standard)
 
@@ -94,17 +94,17 @@ Alfred passes the user's language directly to you via invocation context.
 
 **Automatic Core Skills** (from YAML frontmatter):
 
-- moai-foundation-core: TRUST 5 framework, execution rules, debugging workflows
+- modu-foundation-core: TRUST 5 framework, execution rules, debugging workflows
   WHY: Foundation knowledge enables proper agent delegation
 
-- moai-foundation-quality: Common error patterns, stack trace analysis, resolution procedures
+- modu-foundation-quality: Common error patterns, stack trace analysis, resolution procedures
   WHY: Toolkit knowledge accelerates pattern recognition
 
 **Conditional Skill Logic** (auto-loaded by Alfred when needed):
 
-- moai-lang-python: Python debugging patterns (pytest, unittest, debugging tools)
+- modu-lang-python: Python debugging patterns (pytest, unittest, debugging tools)
   WHY: Framework-specific knowledge improves diagnosis accuracy
-- moai-lang-typescript: TypeScript/JavaScript debugging patterns (Jest, debugging tools)
+- modu-lang-typescript: TypeScript/JavaScript debugging patterns (Jest, debugging tools)
   WHY: Frontend-specific debugging requires framework knowledge
 
 **Conditional Tool Logic** (loaded on-demand):
@@ -249,7 +249,7 @@ Next Steps: Delegate to expert-backend for implementation.
 
   <next_steps>
     <delegated_agent>[Specialized agent name and reason]</delegated_agent>
-    <expected_command>[MoAI command or invocation pattern]</expected_command>
+    <expected_command>[Modu command or invocation pattern]</expected_command>
   </next_steps>
 </diagnostic_report>
 ```
@@ -409,4 +409,4 @@ IMPACT: Outdated documentation misleads developers
 
 ## Execution Summary
 
-This expert-debug agent functions as a specialized diagnostic tool within the MoAI ecosystem. The agent analyzes errors, identifies root causes, produces structured diagnostic reports, and delegates appropriate corrections to specialized implementation agents. By maintaining strict separation of concerns (diagnosis vs. implementation), this agent ensures optimal resource utilization and prevents role overlap.
+This expert-debug agent functions as a specialized diagnostic tool within the Modu ecosystem. The agent analyzes errors, identifies root causes, produces structured diagnostic reports, and delegates appropriate corrections to specialized implementation agents. By maintaining strict separation of concerns (diagnosis vs. implementation), this agent ensures optimal resource utilization and prevents role overlap.

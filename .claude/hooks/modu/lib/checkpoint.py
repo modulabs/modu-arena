@@ -71,11 +71,11 @@ def detect_risky_operation(tool_name: str, tool_args: dict[str, Any], cwd: str) 
             "CLAUDE.md",
             "config.json",
             "config.yaml",
-            ".claude/skills/moai-core-dev-guide/reference.md",
-            ".claude/skills/moai-core-spec-metadata-extended/reference.md",
-            ".moai/config/config.json",  # Legacy monolithic config
-            ".moai/config/config.yaml",  # Legacy monolithic config
-            ".moai/config/sections/",  # Section-based config (any file in sections/)
+            ".claude/skills/modu-core-dev-guide/reference.md",
+            ".claude/skills/modu-core-spec-metadata-extended/reference.md",
+            ".modu/config/config.json",  # Legacy monolithic config
+            ".modu/config/config.yaml",  # Legacy monolithic config
+            ".modu/config/sections/",  # Section-based config (any file in sections/)
         ]
 
         if any(cf in file_path for cf in critical_files):
@@ -116,7 +116,7 @@ def create_checkpoint(cwd: str, operation_type: str) -> str:
         - Create only local branch (no remote push)
         - Fallback in case of Git error (ignore and continue)
         - Do not check dirty working directory (allow uncommitted changes)
-        - Automatically record checkpoint logs (.moai/checkpoints.log)
+        - Automatically record checkpoint logs (.modu/checkpoints.log)
 
     """
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -148,7 +148,7 @@ def create_checkpoint(cwd: str, operation_type: str) -> str:
 
 
 def log_checkpoint(cwd: str, branch_name: str, operation_type: str) -> None:
-    """Checkpoint log records (.moai/checkpoints.log)
+    """Checkpoint log records (.modu/checkpoints.log)
 
     Checkpoint creation history is recorded in JSON Lines format.
     SessionStart reads this log to display a list of checkpoints.
@@ -163,7 +163,7 @@ def log_checkpoint(cwd: str, branch_name: str, operation_type: str) -> None:
 
     Examples:
         >>> log_checkpoint(".", "before-delete-20251015-143000", "delete")
-        # Add 1 line to .moai/checkpoints.log
+        # Add 1 line to .modu/checkpoints.log
 
     Notes:
         - If the file does not exist, it is automatically created.
@@ -171,7 +171,7 @@ def log_checkpoint(cwd: str, branch_name: str, operation_type: str) -> None:
         - Ignored in case of failure (not critical)
 
     """
-    log_file = Path(cwd) / ".moai" / "checkpoints.log"
+    log_file = Path(cwd) / ".modu" / "checkpoints.log"
 
     try:
         log_file.parent.mkdir(parents=True, exist_ok=True)
@@ -191,10 +191,10 @@ def log_checkpoint(cwd: str, branch_name: str, operation_type: str) -> None:
 
 
 def list_checkpoints(cwd: str, max_count: int = 10) -> list[dict[str, str]]:
-    """Checkpoint list (parsing .moai/checkpoints.log)
+    """Checkpoint list (parsing .modu/checkpoints.log)
 
     Returns a list of recently created checkpoints.
-    Used in the SessionStart, /moai:0-project restore command.
+    Used in the SessionStart, /modu:0-project restore command.
 
     Args:
         cwd: Project root directory path
@@ -217,7 +217,7 @@ def list_checkpoints(cwd: str, max_count: int = 10) -> list[dict[str, str]]:
         - Return only the latest max_count
 
     """
-    log_file = Path(cwd) / ".moai" / "checkpoints.log"
+    log_file = Path(cwd) / ".modu" / "checkpoints.log"
 
     if not log_file.exists():
         return []

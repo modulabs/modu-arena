@@ -622,7 +622,7 @@ def validate_hook_config(
     validator = get_config_validator()
 
     if config_path is None:
-        config_path = Path(".moai/config/config.yaml")
+        config_path = Path(".modu/config/config.yaml")
 
     if not config_path.exists():
         # Return success with info about missing file

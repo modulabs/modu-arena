@@ -1,5 +1,5 @@
 """
-Enhanced Version reader for MoAI-ADK from config.yaml with performance optimizations
+Enhanced Version reader for Modu-ADK from config.yaml with performance optimizations
 
 Refactored for improved performance, error handling, configurability, and caching strategies
 """
@@ -20,7 +20,7 @@ try:
     import yaml
 except ImportError as e:
     raise ImportError(
-        "PyYAML is required for MoAI-ADK hooks. "
+        "PyYAML is required for Modu-ADK hooks. "
         "Install with: pip install pyyaml\n"
         f"Or use: uv run --with pyyaml <hook_script>\n"
         f"Original error: {e}"
@@ -80,10 +80,10 @@ class VersionConfig:
     track_performance_metrics: bool = True
 
     # Version field priority configuration
-    # Order: 1) MoAI package version, 2) Project version, 3) Fallbacks
+    # Order: 1) Modu package version, 2) Project version, 3) Fallbacks
     version_fields: List[str] = field(
         default_factory=lambda: [
-            "moai.version",  # ← 1st priority: MoAI-ADK version
+            "modu.version",  # ← 1st priority: Modu-ADK version
             "project.version",  # ← 2nd priority: Project version
             "version",  # ← 3rd priority: General version
             "project.template_version",  # ← 4th priority: Template version
@@ -94,7 +94,7 @@ class VersionConfig:
 
 class VersionReader:
     """
-    Enhanced version reader for MoAI-ADK with advanced caching,
+    Enhanced version reader for Modu-ADK with advanced caching,
     performance optimization, and comprehensive error handling.
 
     Features:
@@ -112,9 +112,9 @@ class VersionReader:
     DEFAULT_CONFIG = VersionConfig()
 
     # Supported version fields in order of priority
-    # Order: 1) MoAI package version, 2) Project version, 3) Fallbacks
+    # Order: 1) Modu package version, 2) Project version, 3) Fallbacks
     DEFAULT_VERSION_FIELDS = [
-        "moai.version",  # ← 1st priority: MoAI-ADK version
+        "modu.version",  # ← 1st priority: Modu-ADK version
         "project.version",  # ← 2nd priority: Project version
         "version",  # ← 3rd priority: General version
         "project.template_version",  # ← 4th priority: Template version
@@ -142,7 +142,7 @@ class VersionReader:
         else:
             base_dir = Path.cwd()
 
-        self._config_path = base_dir / ".moai" / "config" / "config.yaml"
+        self._config_path = base_dir / ".modu" / "config" / "config.yaml"
 
         # Enhanced caching with LRU support
         self._cache: Dict[str, CacheEntry] = {}
@@ -187,7 +187,7 @@ class VersionReader:
 
     def get_version(self, force_refresh: bool = False) -> str:
         """
-        Get MoAI-ADK version from config with enhanced caching.
+        Get Modu-ADK version from config with enhanced caching.
 
         Args:
             force_refresh: If True, bypass cache and force fresh read
@@ -449,7 +449,7 @@ class VersionReader:
 
     def _read_version_from_config_sync(self) -> str:
         """
-        Synchronous version of reading from .moai/config/config.yaml.
+        Synchronous version of reading from .modu/config/config.yaml.
 
         Returns:
             Version string or empty string if not found
@@ -473,7 +473,7 @@ class VersionReader:
 
     async def _read_version_from_config_async(self) -> str:
         """
-        Read version from .moai/config/config.yaml asynchronously.
+        Read version from .modu/config/config.yaml asynchronously.
 
         Returns:
             Version string or empty string if not found
@@ -520,7 +520,7 @@ class VersionReader:
 
         Args:
             config: Configuration dictionary
-            field_path: Dot-separated path (e.g., "moai.version")
+            field_path: Dot-separated path (e.g., "modu.version")
 
         Returns:
             Value or None if not found
@@ -559,11 +559,11 @@ class VersionReader:
             Display version string
         """
         if version == "unknown":
-            return "MoAI-ADK unknown version"
+            return "Modu-ADK unknown version"
         elif version.startswith("v"):
-            return f"MoAI-ADK {version}"
+            return f"Modu-ADK {version}"
         else:
-            return f"MoAI-ADK v{version}"
+            return f"Modu-ADK v{version}"
 
     def _is_valid_version_format(self, version: str) -> bool:
         """
@@ -597,10 +597,10 @@ class VersionReader:
 
     def _get_package_version(self) -> str:
         """
-        Get version from installed moai-adk package metadata.
+        Get version from installed modu-adk package metadata.
 
-        This allows the statusline to work even when .moai/config/config.json
-        is not found, as long as the moai-adk package is installed.
+        This allows the statusline to work even when .modu/config/config.json
+        is not found, as long as the modu-adk package is installed.
 
         Returns:
             Version string or empty string if package not found
@@ -609,11 +609,11 @@ class VersionReader:
             from importlib.metadata import PackageNotFoundError, version
 
             try:
-                pkg_version = version("moai-adk")
-                self._logger.debug(f"Found moai-adk package version: {pkg_version}")
+                pkg_version = version("modu-adk")
+                self._logger.debug(f"Found modu-adk package version: {pkg_version}")
                 return pkg_version
             except PackageNotFoundError:
-                self._logger.debug("moai-adk package not found in metadata")
+                self._logger.debug("modu-adk package not found in metadata")
                 return ""
         except ImportError:
             self._logger.debug("importlib.metadata not available")

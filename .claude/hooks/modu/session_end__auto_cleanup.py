@@ -54,9 +54,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
 
 from lib.atomic_write import atomic_write_json  # noqa: E402
 from lib.path_utils import (  # noqa: E402
-    ensure_moai_dir,
+    ensure_modu_dir,
     find_project_root,
-    get_safe_moai_path,
+    get_safe_modu_path,
 )
 
 # Import unified timeout manager and Git operations manager
@@ -65,7 +65,7 @@ try:
         format_duration,
         get_summary_stats,
         is_root_whitelisted,
-        suggest_moai_location,
+        suggest_modu_location,
     )
     from lib.config_manager import ConfigManager  # noqa: E402
     from lib.config_validator import ValidationIssue, get_config_validator
@@ -156,7 +156,7 @@ def load_hook_timeout() -> int:
     try:
         import yaml
 
-        config_file = get_safe_moai_path("config/config.yaml")
+        config_file = get_safe_modu_path("config/config.yaml")
         # Direct open without exists() check to prevent race condition
         with open(config_file, "r", encoding="utf-8", errors="replace") as f:
             config: dict[str, Any] = yaml.safe_load(f) or {}
@@ -179,7 +179,7 @@ def get_graceful_degradation() -> bool:
     try:
         import yaml
 
-        config_file = get_safe_moai_path("config/config.yaml")
+        config_file = get_safe_modu_path("config/config.yaml")
         # Direct open without exists() check to prevent race condition
         with open(config_file, "r", encoding="utf-8", errors="replace") as f:
             config: dict[str, Any] = yaml.safe_load(f) or {}
@@ -211,12 +211,12 @@ def cleanup_old_files(config: dict[str, Any]) -> dict[str, int]:
         cutoff_date = datetime.now() - timedelta(days=cleanup_days)
 
         # Clean up temporary files (use safe path to prevent creation in wrong directory)
-        temp_dir = get_safe_moai_path("temp")
+        temp_dir = get_safe_modu_path("temp")
         if temp_dir.exists():
             stats["temp_cleaned"] = cleanup_directory(temp_dir, cutoff_date, None, patterns=["*"])
 
         # Clean up cache files (use safe path to prevent creation in wrong directory)
-        cache_dir = get_safe_moai_path("cache")
+        cache_dir = get_safe_modu_path("cache")
         if cache_dir.exists():
             stats["cache_cleaned"] = cleanup_directory(cache_dir, cutoff_date, None, patterns=["*"])
 
@@ -294,8 +294,8 @@ def save_session_metrics(payload: dict[str, Any]) -> bool:
         Success status
     """
     try:
-        # Create logs directory (use ensure_moai_dir for safe creation in project root)
-        logs_dir = ensure_moai_dir("logs/sessions")
+        # Create logs directory (use ensure_modu_dir for safe creation in project root)
+        logs_dir = ensure_modu_dir("logs/sessions")
 
         # Collect session information
         session_metrics = {
@@ -329,8 +329,8 @@ def save_work_state(payload: dict[str, Any]) -> bool:
         Success status
     """
     try:
-        # Create memory directory (use ensure_moai_dir for safe creation in project root)
-        ensure_moai_dir("memory")
+        # Create memory directory (use ensure_modu_dir for safe creation in project root)
+        ensure_modu_dir("memory")
 
         # Collect work state
         work_state = {
@@ -342,7 +342,7 @@ def save_work_state(payload: dict[str, Any]) -> bool:
         }
 
         # Save work state using atomic write (H3)
-        state_file = get_safe_moai_path("memory/last-session-state.json")
+        state_file = get_safe_modu_path("memory/last-session-state.json")
         atomic_write_json(state_file, work_state, indent=2, ensure_ascii=False)
 
         logger.info(f"Work state saved: {state_file}")
@@ -530,7 +530,7 @@ def extract_specs_from_memory() -> list[str]:
 
     try:
         # Query recent SPECs from command_execution_state.json (use safe path)
-        state_file = get_safe_moai_path("memory/command-execution-state.json")
+        state_file = get_safe_modu_path("memory/command-execution-state.json")
         # Direct open without exists() check to prevent race condition
         with open(state_file, "r", encoding="utf-8", errors="replace") as f:
             state_data = json.load(f)
@@ -549,7 +549,7 @@ def extract_specs_from_memory() -> list[str]:
     return specs
 
 
-# Note: is_root_whitelisted, get_file_pattern_category, and suggest_moai_location
+# Note: is_root_whitelisted, get_file_pattern_category, and suggest_modu_location
 # are now imported from lib.common (consolidated from duplicate implementations)
 
 
@@ -574,7 +574,7 @@ def scan_root_violations(config: dict[str, Any]) -> list[dict[str, str]]:
             if item.is_dir():
                 # Check for backup directories
                 if item.name.endswith("-backup") or item.name.endswith("_backup") or "_backup_" in item.name:
-                    suggested = suggest_moai_location(item.name, config)
+                    suggested = suggest_modu_location(item.name, config)
                     violations.append(
                         {
                             "file": item.name + "/",
@@ -593,7 +593,7 @@ def scan_root_violations(config: dict[str, Any]) -> list[dict[str, str]]:
                 continue
 
             # Not whitelisted - add to violations
-            suggested = suggest_moai_location(item.name, config)
+            suggested = suggest_modu_location(item.name, config)
             violations.append({"file": item.name, "type": "file", "suggested": suggested})
 
     except Exception as e:
@@ -625,7 +625,7 @@ def generate_migration_report(violations: list[dict[str, str]]) -> str:
         report_lines.append(f"   {idx}. {file_display} → {suggested}")
 
     report_lines.append("\n   Action: Move files to suggested locations or update root_whitelist")
-    report_lines.append('   Guide: Skill("moai-core-document-management")')
+    report_lines.append('   Guide: Skill("modu-core-document-management")')
 
     return "\n".join(report_lines)
 

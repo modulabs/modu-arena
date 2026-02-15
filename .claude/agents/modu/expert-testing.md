@@ -11,7 +11,7 @@ description: |
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs, mcp__claude-in-chrome__*
 model: inherit
 permissionMode: default
-skills: moai-foundation-claude, moai-lang-python, moai-lang-typescript, moai-lang-javascript, moai-workflow-testing, moai-foundation-quality, moai-tool-ast-grep
+skills: modu-foundation-claude, modu-lang-python, modu-lang-typescript, modu-lang-javascript, modu-workflow-testing, modu-foundation-quality, modu-tool-ast-grep
 ---
 
 # Testing Expert
@@ -185,14 +185,14 @@ Example: Korean prompt → Korean test strategy guidance + English code examples
 ## Required Skills
 
 Automatic Core Skills (from YAML frontmatter)
-- moai-foundation-claude – Core execution rules and agent delegation patterns
-- moai-lang-python – Python/pytest/unittest testing patterns
-- moai-lang-typescript – TypeScript/Jest/Vitest/Playwright testing patterns
-- moai-workflow-testing – Testing strategies and comprehensive test patterns
-- moai-foundation-quality – Quality gates and TRUST 5 framework
+- modu-foundation-claude – Core execution rules and agent delegation patterns
+- modu-lang-python – Python/pytest/unittest testing patterns
+- modu-lang-typescript – TypeScript/Jest/Vitest/Playwright testing patterns
+- modu-workflow-testing – Testing strategies and comprehensive test patterns
+- modu-foundation-quality – Quality gates and TRUST 5 framework
 
 Conditional Skills (auto-loaded by Alfred when needed)
-- moai-foundation-core – SPEC integration and workflow patterns
+- modu-foundation-core – SPEC integration and workflow patterns
 
 ## Core Mission
 
@@ -433,7 +433,7 @@ Conditional Skills (auto-loaded by Alfred when needed)
 
 ### Step 5: Generate Test Strategy Documentation
 
-Create `.moai/docs/test-strategy-{SPEC-ID}.md`:
+Create `.modu/docs/test-strategy-{SPEC-ID}.md`:
 
 ```markdown
 ## Test Strategy: SPEC-{ID}
@@ -684,14 +684,14 @@ IMPACT: Unstructured output requires stakeholder parsing and creates interpretat
 ## Additional Resources
 
 Skills (from YAML frontmatter):
-- moai-foundation-claude – Core execution rules and agent delegation patterns
-- moai-lang-python – Python/pytest/unittest testing patterns
-- moai-lang-typescript – TypeScript/Jest/Vitest/Playwright testing patterns
-- moai-workflow-testing – Comprehensive testing strategies and patterns
-- moai-foundation-quality – Quality gates and TRUST 5 framework
+- modu-foundation-claude – Core execution rules and agent delegation patterns
+- modu-lang-python – Python/pytest/unittest testing patterns
+- modu-lang-typescript – TypeScript/Jest/Vitest/Playwright testing patterns
+- modu-workflow-testing – Comprehensive testing strategies and patterns
+- modu-foundation-quality – Quality gates and TRUST 5 framework
 
 Conditional Skills (loaded by Alfred when needed):
-- moai-workflow-testing – Testing patterns and automation workflows
+- modu-workflow-testing – Testing patterns and automation workflows
 
 Testing Frameworks:
 - Frontend Unit: Jest, Vitest, React Testing Library, Vue Test Utils

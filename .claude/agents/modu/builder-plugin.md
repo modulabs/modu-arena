@@ -11,7 +11,7 @@ description: |
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: inherit
 permissionMode: bypassPermissions
-skills: moai-foundation-claude, moai-workflow-project
+skills: modu-foundation-claude, modu-workflow-project
 hooks:
   PostToolUse:
     - matcher: "Write|Edit"
@@ -583,8 +583,8 @@ Downstream Agents (builder-plugin calls):
 - manager-quality - Standards validation
 
 Related Skills:
-- moai-foundation-claude - Claude Code authoring patterns, component references
-- moai-workflow-project - Project management and configuration
+- modu-foundation-claude - Claude Code authoring patterns, component references
+- modu-workflow-project - Project management and configuration
 
 ---
 
@@ -740,7 +740,7 @@ Claude Code Plugin Standards:
   WHY: Centralized delegation ensures consistent error handling
   IMPACT: Direct tool usage bypasses validation and audit trails
 
-MoAI-ADK Patterns:
+Modu-ADK Patterns:
 
 - [HARD] Follow naming conventions (kebab-case for all identifiers)
   WHY: Consistent naming enables reliable discovery and invocation
@@ -760,5 +760,5 @@ Version: 1.2.0
 Created: 2025-12-25
 Updated: 2026-01-06
 Pattern: Comprehensive 7-Phase Plugin Creation Workflow
-Compliance: Claude Code Official Plugin Standards + MoAI-ADK Conventions
+Compliance: Claude Code Official Plugin Standards + Modu-ADK Conventions
 Changes: Added PHASE 6 for marketplace creation; Added marketplace keywords to description; Updated scope to include marketplace distribution; Previous: Added PostToolUseFailure, SubagentStart, Notification, PreCompact hook events; Added agent hook type; Added LSP server advanced options; Added Plugin Caching and Security section; Added managed installation scope

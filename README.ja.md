@@ -92,7 +92,7 @@ Modu-Arena がインストールされると、Modu-Arena CLI を使用できま
 ### コマンド概要
 
 ```bash
-moai arena [OPTIONS] COMMAND [ARGS]...
+modu arena [OPTIONS] COMMAND [ARGS]...
 
 Modu-Arena - Claude Code トークン使用量リーダーボード
 
@@ -115,22 +115,22 @@ Claude Code セッションを追跡し、リーダーボードで競いまし�
 #### 1. login - GitHub OAuth ログイン
 
 ```bash
-moai arena login
+modu arena login
 ```
 
-> **注記**: `moai arena register` は下位互換性のためエイリアスとして引き続きサポートされます。
+> **注記**: `modu arena register` は下位互換性のためエイリアスとして引き続きサポートされます。
 
 **動作原理**:
 
 1. ブラウザを開いて GitHub OAuth 認証を実行
 2. 認証成功後に API キーを自動生成・保存
 3. グローバルフックをインストールしてセッション自動追跡を開始
-4. `~/.moai/rank/credentials.json` に安全に API キーを保存
+4. `~/.modu/rank/credentials.json` に安全に API キーを保存
 
 **実行例**:
 
 ```bash
-❯ moai arena login
+❯ modu arena login
 
 ╭──────────────────────────────── Login ───────────────────────────────╮
 │ Modu-Arena Login                                                      │
@@ -146,7 +146,7 @@ Waiting for authorization (timeout: 5 minutes)...
 │ Successfully logged in as your-github-id                             │
 │                                                                      │
 │ API Key: modu_arena_a9011fac_c...                                     │
-│ Stored in: ~/.moai/rank/credentials.json                             │
+│ Stored in: ~/.modu/rank/credentials.json                             │
 ╰──────────────────────────────────────────────────────────────────────╯
 
 ╭───────────────────────── Global Hook Installed ──────────────────────╮
@@ -156,14 +156,14 @@ Waiting for authorization (timeout: 5 minutes)...
 │ Hook location: ~/.claude/hooks/modu/session_end__rank_submit.py      │
 │                                                                      │
 │ To exclude specific projects:                                        │
-│   moai arena exclude /path/to/project                                 │
+│   modu arena exclude /path/to/project                                 │
 ╰──────────────────────────────────────────────────────────────────────╯
 ```
 
 #### 2. sync - セッションデータの同期
 
 ```bash
-moai arena sync
+modu arena sync
 ```
 
 ローカルのClaude CodeセッションデータをModu-Arenaサーバーに同期します。
@@ -171,7 +171,7 @@ moai arena sync
 **出力例:**
 
 ```bash
-❯ moai arena sync
+❯ modu arena sync
 
 Syncing 2577 session(s) to Modu-Arena
 Phase 1: Parsing transcripts (parallel: 20 workers)
@@ -192,7 +192,7 @@ Sync Complete
 #### 3. status - マイランク確認
 
 ```bash
-moai arena status
+modu arena status
 ```
 
 **動作原理**:
@@ -204,7 +204,7 @@ moai arena status
 **実行例**:
 
 ```bash
-❯ moai arena status
+❯ modu arena status
 
 ╭────────────────────────────── Modu-Arena ─────────────────────────────╮
 │ your-github-id                                                       │
@@ -230,19 +230,19 @@ moai arena status
 
 ```bash
 # 現在のプロジェクトを除外
-moai arena exclude
+modu arena exclude
 
 # 特定のパスを除外
-moai arena exclude /path/to/private
+modu arena exclude /path/to/private
 
 # ワイルドカードパターン
-moai arena exclude "*/confidential/*"
+modu arena exclude "*/confidential/*"
 
 # 除外リストを確認
-moai arena list-excluded
+modu arena list-excluded
 
 # 再包含
-moai arena include /path/to/project
+modu arena include /path/to/project
 ```
 
 **プライバシー保護**:
@@ -253,7 +253,7 @@ moai arena include /path/to/project
 #### 5. logout - ログアウト
 
 ```bash
-moai arena logout
+modu arena logout
 ```
 
 - 保存された API キーを削除
@@ -1133,6 +1133,6 @@ Score = (Token * 0.40) + (Efficiency * 0.25) + (Session * 0.20) + (Streak * 0.15
 ## 🙏 Made with ❤️ by Modu-Arena Team
 
 **Last Updated:** 2026-01-12
-**MoAI**: MoAI は「みんなのための AI (Modu-ui AI)」を意味します。
+**Modu**: Modu は「みんなのための AI (Modu-ui AI)」を意味します。
 
 > **「無限可能主義 - みんなの AI」**

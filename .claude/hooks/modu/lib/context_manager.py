@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Context Manager for MoAI
+"""Context Manager for Modu
 
 Placeholder module for future context management features.
 """

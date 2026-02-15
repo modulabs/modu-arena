@@ -76,7 +76,7 @@ test_that("analysis returns expected structure", {
 - Profile with `profvis`
 - Use `bench` for micro-benchmarking
 
-## MoAI Integration
+## Modu Integration
 
-- Use Skill("moai-lang-r") for detailed patterns
+- Use Skill("modu-lang-r") for detailed patterns
 - Follow TRUST 5 quality gates

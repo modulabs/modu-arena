@@ -11,7 +11,7 @@ description: |
 tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: inherit
 permissionMode: default
-skills: [moai-tool-ast-grep, moai-workflow-testing, moai-foundation-quality]
+skills: [modu-tool-ast-grep, modu-workflow-testing, modu-foundation-quality]
 hooks:
   PostToolUse:
     - matcher: "Write|Edit"
@@ -41,7 +41,7 @@ Checkpoint Frequency: After each major transformation
 
 ## Essential Reference
 
-Required Skill: moai-tool-ast-grep
+Required Skill: modu-tool-ast-grep
 
 Load this skill for pattern syntax, security rules, and refactoring patterns.
 

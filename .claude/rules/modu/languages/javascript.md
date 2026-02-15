@@ -23,7 +23,7 @@ Version: ES2024+, Node.js 22 LTS
 - Use async/await over callbacks
 - Prefer const over let
 
-## MoAI Integration
+## Modu Integration
 
-- Use Skill("moai-lang-javascript") for detailed patterns
+- Use Skill("modu-lang-javascript") for detailed patterns
 - Follow TRUST 5 quality gates

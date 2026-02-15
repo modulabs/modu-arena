@@ -31,7 +31,7 @@ try:
     import yaml
 except ImportError as e:
     raise ImportError(
-        "PyYAML is required for MoAI-ADK hooks. "
+        "PyYAML is required for Modu-ADK hooks. "
         "Install with: pip install pyyaml\n"
         f"Or use: uv run --with pyyaml <hook_script>\n"
         f"Original error: {e}"
@@ -282,7 +282,7 @@ class UnifiedTimeoutManager:
     def load_config(self) -> Dict[str, Any]:
         """Load timeout configuration from project config"""
         try:
-            config_file = Path(".moai/config/config.yaml")
+            config_file = Path(".modu/config/config.yaml")
             if config_file.exists():
                 with open(config_file, "r", encoding="utf-8", errors="replace") as f:
                     config = yaml.safe_load(f) or {}

@@ -11,7 +11,7 @@ description: |
 tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: inherit
 permissionMode: default
-skills: moai-foundation-claude, moai-workflow-ddd, moai-tool-ast-grep, moai-workflow-testing, moai-foundation-quality
+skills: modu-foundation-claude, modu-workflow-ddd, modu-tool-ast-grep, modu-workflow-testing, modu-foundation-quality
 hooks:
   PostToolUse:
     - matcher: "Write|Edit"
@@ -43,7 +43,7 @@ output_format: Refactored code with identical behavior, preserved tests, charact
 checkpoint_strategy:
   enabled: true
   interval: every_transformation
-  location: .moai/memory/checkpoints/ddd/
+  location: .modu/memory/checkpoints/ddd/
   resume_capability: true
 
 memory_management:
@@ -205,12 +205,12 @@ Always in English (regardless of conversation_language):
 
 Skills Pre-loaded:
 
-- Skills from YAML frontmatter: moai-workflow-ddd, moai-tool-ast-grep, moai-workflow-testing
+- Skills from YAML frontmatter: modu-workflow-ddd, modu-tool-ast-grep, modu-workflow-testing
 
 Example:
 
 - Receive (Korean): "Refactor SPEC-REFACTOR-001 to improve module separation"
-- Skills pre-loaded: moai-workflow-ddd (DDD methodology), moai-tool-ast-grep (structural analysis), moai-workflow-testing (characterization tests)
+- Skills pre-loaded: modu-workflow-ddd (DDD methodology), modu-tool-ast-grep (structural analysis), modu-workflow-testing (characterization tests)
 - Write code in English with English comments
 - Provide status updates to user in their language
 
@@ -220,15 +220,15 @@ Example:
 
 Automatic Core Skills (from YAML frontmatter):
 
-- moai-foundation-claude: Core execution rules and agent delegation patterns
-- moai-workflow-ddd: DDD methodology and ANALYZE-PRESERVE-IMPROVE cycle
-- moai-tool-ast-grep: AST-based structural analysis and code transformation
-- moai-workflow-testing: Characterization tests and behavior verification
+- modu-foundation-claude: Core execution rules and agent delegation patterns
+- modu-workflow-ddd: DDD methodology and ANALYZE-PRESERVE-IMPROVE cycle
+- modu-tool-ast-grep: AST-based structural analysis and code transformation
+- modu-workflow-testing: Characterization tests and behavior verification
 
 Conditional Skills (auto-loaded by Alfred when needed):
 
-- moai-workflow-project: Project management and configuration patterns
-- moai-foundation-quality: Quality validation and metrics analysis
+- modu-workflow-project: Project management and configuration patterns
+- modu-foundation-quality: Quality validation and metrics analysis
 
 ---
 
@@ -609,7 +609,7 @@ To prevent V8 heap memory overflow during long-running refactoring sessions, thi
 
 **Checkpoint Strategy**:
 - Checkpoint after every transformation completion
-- Checkpoint location: `.moai/memory/checkpoints/ddd/`
+- Checkpoint location: `.modu/memory/checkpoints/ddd/`
 - Auto-checkpoint on memory pressure detection
 
 **Checkpoint Content**:

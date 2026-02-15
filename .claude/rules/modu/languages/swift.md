@@ -20,7 +20,7 @@ Version: Swift 6+
 - Use SwiftUI for UI
 - Use actors for state isolation
 
-## MoAI Integration
+## Modu Integration
 
-- Use Skill("moai-lang-swift") for detailed patterns
+- Use Skill("modu-lang-swift") for detailed patterns
 - Follow TRUST 5 quality gates

@@ -1,4 +1,4 @@
-"""Common utility functions for MoAI hooks
+"""Common utility functions for Modu hooks
 
 Consolidated fallback implementations used across multiple hooks.
 """
@@ -128,8 +128,8 @@ def get_file_pattern_category(filename: str, config: dict[str, Any]) -> tuple[st
     return None
 
 
-def suggest_moai_location(filename: str, config: dict[str, Any]) -> str:
-    """Suggest appropriate .moai/ location based on file pattern.
+def suggest_modu_location(filename: str, config: dict[str, Any]) -> str:
+    """Suggest appropriate .modu/ location based on file pattern.
 
     Consolidated from pre_tool__document_management.py and session_end__auto_cleanup.py
 
@@ -138,7 +138,7 @@ def suggest_moai_location(filename: str, config: dict[str, Any]) -> str:
         config: Configuration dictionary
 
     Returns:
-        Suggested .moai/ path
+        Suggested .modu/ path
     """
     # Try pattern matching first
     match = get_file_pattern_category(filename, config)
@@ -151,11 +151,11 @@ def suggest_moai_location(filename: str, config: dict[str, Any]) -> str:
 
     # Default fallback suggestions
     if filename.endswith(".md"):
-        return ".moai/temp/work/"
+        return ".modu/temp/work/"
     elif filename.endswith((".sh", ".py", ".js")):
-        return ".moai/scripts/dev/"
+        return ".modu/scripts/dev/"
     elif filename.endswith((".tmp", ".temp", ".bak")):
-        return ".moai/temp/work/"
+        return ".modu/temp/work/"
 
     # Ultimate fallback
-    return ".moai/temp/work/"
+    return ".modu/temp/work/"

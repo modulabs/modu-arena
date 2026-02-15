@@ -11,7 +11,7 @@ description: |
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: inherit
 permissionMode: default
-skills: moai-foundation-claude, moai-lang-python, moai-lang-typescript, moai-lang-javascript, moai-domain-backend, moai-domain-database, moai-platform-supabase, moai-platform-neon, moai-tool-ast-grep
+skills: modu-foundation-claude, modu-lang-python, modu-lang-typescript, modu-lang-javascript, modu-domain-backend, modu-domain-database, modu-platform-supabase, modu-platform-neon, modu-tool-ast-grep
 hooks:
   PreToolUse:
     - matcher: "Write|Edit"
@@ -204,14 +204,14 @@ Example: Korean prompt → Korean architecture guidance + English code examples
 
 Automatic Core Skills (from YAML frontmatter Line 7)
 
-- moai-foundation-claude – Core execution rules and agent delegation patterns
-- moai-lang-python – Python/FastAPI/Django/Flask patterns
-- moai-lang-typescript – TypeScript/Node.js/Express/NestJS patterns
-- moai-domain-backend – Backend infrastructure, databases, authentication, microservices architecture
+- modu-foundation-claude – Core execution rules and agent delegation patterns
+- modu-lang-python – Python/FastAPI/Django/Flask patterns
+- modu-lang-typescript – TypeScript/Node.js/Express/NestJS patterns
+- modu-domain-backend – Backend infrastructure, databases, authentication, microservices architecture
 
 Conditional Skills (auto-loaded by Alfred when needed)
 
-- moai-foundation-core – TRUST 5 framework and quality gates
+- modu-foundation-core – TRUST 5 framework and quality gates
 
 ## Core Mission
 
@@ -323,22 +323,22 @@ IMPACT: Guessing framework leads to misaligned architectures and wasted effort
 
 Framework Coverage Provided:
 
-Python Frameworks: FastAPI, Flask, Django patterns provided by moai-lang-python
+Python Frameworks: FastAPI, Flask, Django patterns provided by modu-lang-python
 
-TypeScript Frameworks: Express, Fastify, NestJS, Sails patterns provided by moai-lang-typescript
+TypeScript Frameworks: Express, Fastify, NestJS, Sails patterns provided by modu-lang-typescript
 
-Go Frameworks: Gin, Beego patterns provided by moai-lang-go
+Go Frameworks: Gin, Beego patterns provided by modu-lang-go
 
-Rust Frameworks: Axum, Rocket patterns provided by moai-lang-rust
+Rust Frameworks: Axum, Rocket patterns provided by modu-lang-rust
 
-Java Frameworks: Spring Boot patterns provided by moai-lang-java
+Java Frameworks: Spring Boot patterns provided by modu-lang-java
 
-PHP Frameworks: Laravel, Symfony patterns provided by moai-lang-php
+PHP Frameworks: Laravel, Symfony patterns provided by modu-lang-php
 
 WHY: Centralized skill loading ensures consistent patterns across all frameworks
 IMPACT: Inconsistent patterns create integration issues and maintenance burden
 
-[HARD] Use moai-domain-backend skill for backend infrastructure patterns
+[HARD] Use modu-domain-backend skill for backend infrastructure patterns
 WHY: Infrastructure patterns ensure consistent deployment and scaling approaches
 IMPACT: Missing infrastructure patterns create operational issues
 
@@ -514,7 +514,7 @@ IMPACT: Missing infrastructure patterns create operational issues
 
 ### Step 5: Generate Architecture Documentation
 
-Create `.moai/docs/backend-architecture-{SPEC-ID}.md`:
+Create `.modu/docs/backend-architecture-{SPEC-ID}.md`:
 
 ```markdown
 ## Backend Architecture: SPEC-{ID}
@@ -916,14 +916,14 @@ IMPACT: Unstructured output requires stakeholder parsing and creates interpretat
 
 Skills (from YAML frontmatter):
 
-- moai-foundation-claude – Core execution rules and agent delegation patterns
-- moai-lang-python – Python/FastAPI/Django/Flask patterns
-- moai-lang-typescript – TypeScript/Node.js/Express/NestJS patterns
-- moai-domain-backend – Backend infrastructure, databases, authentication, microservices
+- modu-foundation-claude – Core execution rules and agent delegation patterns
+- modu-lang-python – Python/FastAPI/Django/Flask patterns
+- modu-lang-typescript – TypeScript/Node.js/Express/NestJS patterns
+- modu-domain-backend – Backend infrastructure, databases, authentication, microservices
 
 Conditional Skills (loaded by Alfred when needed):
 
-- moai-foundation-core – MCP server integration patterns
+- modu-foundation-core – MCP server integration patterns
 
 Research Resources:
 

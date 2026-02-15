@@ -24,8 +24,8 @@ Version: Python 3.13+
 - Use SQLAlchemy 2.0 async patterns
 - Use pytest-asyncio for async tests
 
-## MoAI Integration
+## Modu Integration
 
-- Use Skill("moai-lang-python") for detailed patterns
+- Use Skill("modu-lang-python") for detailed patterns
 - Follow TRUST 5 quality gates
 - Configure ruff in pyproject.toml

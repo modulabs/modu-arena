@@ -1,5 +1,5 @@
 """
-Memory collector for MoAI-ADK statusline
+Memory collector for Modu-ADK statusline
 
 Collects memory usage information for display in the status bar.
 Uses psutil for cross-platform memory monitoring.

@@ -1,6 +1,6 @@
 # SPEC Workflow
 
-MoAI's three-phase development workflow with token budget management.
+Modu's three-phase development workflow with token budget management.
 
 ## Phase Overview
 
@@ -64,8 +64,8 @@ Output:
 ## Completion Markers
 
 AI uses markers to signal task completion:
-- `<moai>DONE</modu>` - Task complete
-- `<moai>COMPLETE</modu>` - Full completion
+- `<modu>DONE</modu>` - Task complete
+- `<modu>COMPLETE</modu>` - Full completion
 
 ## Context Management
 

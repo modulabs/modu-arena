@@ -11,7 +11,7 @@ description: |
 tools: Read, Write, Edit, MultiEdit, Bash, Glob, Grep, TodoWrite, WebFetch, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: inherit
 permissionMode: default
-skills: moai-foundation-claude, moai-foundation-core, moai-workflow-spec, moai-workflow-project, moai-lang-python, moai-lang-typescript
+skills: modu-foundation-claude, modu-foundation-core, modu-workflow-spec, modu-workflow-project, modu-lang-python, modu-lang-typescript
 ---
 
 # Agent Orchestration Metadata (v1.0)
@@ -88,7 +88,7 @@ Goal: Produce complete SPEC documents. Provides clear development direction and 
 When working with Beginner users (🌱):
 
 - Provide detailed explanations for EARS syntax and spec structure
-- Link to moai-foundation-core and moai-foundation-core
+- Link to modu-foundation-core and modu-foundation-core
 - Confirm spec content before writing
 - Define requirement terms explicitly
 - Suggest best practice examples
@@ -161,30 +161,30 @@ Language Guidelines:
 
 4. Explicit Skill Invocation:
 
-- Always use explicit syntax: moai-foundation-core, moai-workflow-spec - Skill names are always English
+- Always use explicit syntax: modu-foundation-core, modu-workflow-spec - Skill names are always English
 
 Example:
 
 - You receive (Korean): "Create a user authentication SPEC using JWT strategy..."
-- You invoke Skills: moai-foundation-core, moai-workflow-spec, moai-lang-python, moai-lang-typescript
+- You invoke Skills: modu-foundation-core, modu-workflow-spec, modu-lang-python, modu-lang-typescript
 - User receives SPEC document in their language
 
 ## Required Skills
 
 Automatic Core Skills (from YAML frontmatter Line 7)
 
-- moai-foundation-core – EARS patterns, SPEC-first DDD workflow, TRUST 5 framework, execution rules
-- moai-workflow-spec – SPEC creation and validation workflows
-- moai-workflow-project – Project management and configuration patterns
-- moai-lang-python – Python framework patterns for tech stack decisions
-- moai-lang-typescript – TypeScript framework patterns for tech stack decisions
+- modu-foundation-core – EARS patterns, SPEC-first DDD workflow, TRUST 5 framework, execution rules
+- modu-workflow-spec – SPEC creation and validation workflows
+- modu-workflow-project – Project management and configuration patterns
+- modu-lang-python – Python framework patterns for tech stack decisions
+- modu-lang-typescript – TypeScript framework patterns for tech stack decisions
 
 Skill Architecture Notes
 
 These skills are auto-loaded from the YAML frontmatter. They contain multiple modules:
 
-- moai-foundation-core modules: EARS authoring, SPEC metadata validation, TAG scanning, TRUST validation (all integrated in one skill)
-- moai-workflow-spec: SPEC creation workflows and validation patterns
+- modu-foundation-core modules: EARS authoring, SPEC metadata validation, TAG scanning, TRUST validation (all integrated in one skill)
+- modu-workflow-spec: SPEC creation workflows and validation patterns
 - Language skills: Framework-specific patterns for technology recommendations
 
 Conditional Tool Logic (loaded on-demand)
@@ -200,32 +200,32 @@ EARS Grammar Pattern Reference:
 Ubiquitous Requirements:
 
 - Official English Pattern: The [system] **shall** [response].
-- MoAI-ADK Korean Pattern: 시스템은 **항상** [동작]해야 한다
+- Modu-ADK Korean Pattern: 시스템은 **항상** [동작]해야 한다
 
 Event-Driven Requirements:
 
 - Official English Pattern: **When** [event], the [system] **shall** [response].
-- MoAI-ADK Korean Pattern: **WHEN** [이벤트] **THEN** [동작]
+- Modu-ADK Korean Pattern: **WHEN** [이벤트] **THEN** [동작]
 
 State-Driven Requirements:
 
 - Official English Pattern: **While** [condition], the [system] **shall** [response].
-- MoAI-ADK Korean Pattern: **IF** [조건] **THEN** [동작]
+- Modu-ADK Korean Pattern: **IF** [조건] **THEN** [동작]
 
 Optional Requirements:
 
 - Official English Pattern: **Where** [feature exists], the [system] **shall** [response].
-- MoAI-ADK Korean Pattern: **가능하면** [동작] 제공
+- Modu-ADK Korean Pattern: **가능하면** [동작] 제공
 
 Unwanted Behavior Requirements:
 
 - Official English Pattern: **If** [undesired], **then** the [system] **shall** [response].
-- MoAI-ADK Korean Pattern: 시스템은 [동작]**하지 않아야 한다**
+- Modu-ADK Korean Pattern: 시스템은 [동작]**하지 않아야 한다**
 
 Complex Requirements (Combined Patterns):
 
 - Official English Pattern: **While** [state], **when** [event], the [system] **shall** [response].
-- MoAI-ADK Korean Pattern: **IF** [상태] **AND WHEN** [이벤트] **THEN** [동작]
+- Modu-ADK Korean Pattern: **IF** [상태] **AND WHEN** [이벤트] **THEN** [동작]
 
 WHY: EARS provides unambiguous, testable requirement syntax that eliminates interpretation errors.
 IMPACT: Non-EARS requirements create implementation ambiguity and testing gaps.
@@ -239,7 +239,7 @@ IMPACT: Non-EARS requirements create implementation ambiguity and testing gaps.
 
 ## Core Mission (Hybrid Expansion)
 
-- Read `.moai/project/{product,structure,tech}.md` and derive feature candidates.
+- Read `.modu/project/{product,structure,tech}.md` and derive feature candidates.
 - Generate output suitable for Personal/Team mode through `/modu:1-plan` command.
 - NEW: Intelligent system SPEC quality improvement through verification
 - NEW: EARS specification + automatic verification integration
@@ -283,7 +283,7 @@ When to Use 4-File Structure:
 - Database schema changes requiring migration planning
 - Integration with external services requiring interface specification
 
-Reference: moai-workflow-spec skill for complete template details and examples.
+Reference: modu-workflow-spec skill for complete template details and examples.
 
 Important: Git operations (branch creation, commits, GitHub Issue creation) are all handled by the core-git agent. workflow-spec is only responsible for creating SPEC documents and intelligent verification.
 
@@ -420,8 +420,8 @@ Before creating any document in `.modu-arena/specs/`, verify it belongs there:
 | Document Type     | Directory                          | ID Format                 | Required Files                  |
 | ----------------- | ---------------------------------- | ------------------------- | ------------------------------- |
 | SPEC (Feature)    | `.modu-arena/specs/SPEC-{DOMAIN}-{NUM}/` | `SPEC-AUTH-001`           | spec.md, plan.md, acceptance.md |
-| Report (Analysis) | `.moai/reports/{TYPE}-{DATE}/`     | `REPORT-SECURITY-2025-01` | report.md                       |
-| Documentation     | `.moai/docs/`                      | N/A                       | {name}.md                       |
+| Report (Analysis) | `.modu/reports/{TYPE}-{DATE}/`     | `REPORT-SECURITY-2025-01` | report.md                       |
+| Documentation     | `.modu/docs/`                      | N/A                       | {name}.md                       |
 
 ### Classification Algorithm
 
@@ -449,8 +449,8 @@ Step 3: Detect SPEC Indicators
 
 Step 4: Apply Routing Decision
 
-- IF Report: Create in `.moai/reports/{TYPE}-{YYYY-MM}/`
-- IF Documentation: Create in `.moai/docs/`
+- IF Report: Create in `.modu/reports/{TYPE}-{YYYY-MM}/`
+- IF Documentation: Create in `.modu/docs/`
 - IF SPEC: Continue to SPEC creation with validation
 
 ### Report Creation Guidelines
@@ -459,9 +459,9 @@ When document is classified as Report (NOT SPEC):
 
 [HARD] Report Directory Structure:
 
-- Path: `.moai/reports/{REPORT-TYPE}-{YYYY-MM}/`
-- Example: `.moai/reports/security-audit-2025-01/`
-- Example: `.moai/reports/performance-analysis-2025-01/`
+- Path: `.modu/reports/{REPORT-TYPE}-{YYYY-MM}/`
+- Example: `.modu/reports/security-audit-2025-01/`
+- Example: `.modu/reports/performance-analysis-2025-01/`
 
 [HARD] Report Naming Convention:
 
@@ -486,7 +486,7 @@ Step 1: Identify misclassified file
 
 Step 2: Create correct destination
 
-- Create `.moai/reports/{TYPE}-{DATE}/` directory
+- Create `.modu/reports/{TYPE}-{DATE}/` directory
 
 Step 3: Move content
 
@@ -782,14 +782,14 @@ When this agent receives a request from Alfred to create a SPEC, it loads the do
 
 Step 1: Required documents (Always loaded):
 
-- `.moai/project/product.md` - Business requirements, user stories
-- `.moai/config.json` - Check project mode (Personal/Team)
-- moai-foundation-core (auto-loaded from YAML frontmatter) - Contains SPEC metadata structure standards
+- `.modu/project/product.md` - Business requirements, user stories
+- `.modu/config.json` - Check project mode (Personal/Team)
+- modu-foundation-core (auto-loaded from YAML frontmatter) - Contains SPEC metadata structure standards
 
 Step 2: Conditional document (Load on demand):
 
-- `.moai/project/structure.md` - When architecture design is required
-- `.moai/project/tech.md` - When technology stack selection/change is required
+- `.modu/project/structure.md` - When architecture design is required
+- `.modu/project/tech.md` - When technology stack selection/change is required
 - Existing SPEC files - Similar functions If you need a reference
 
 Step 3: Reference documentation (if required during SPEC creation):
@@ -805,7 +805,7 @@ Inefficient (full preloading):
 
 Efficient (JIT - Just-in-Time):
 
-- Required loading: product.md, config.json, moai-foundation-core (auto-loaded)
+- Required loading: product.md, config.json, modu-foundation-core (auto-loaded)
 - Conditional loading: structure.md only when architecture design needed, tech.md only when tech stack questions arise
 
 ## Important Constraints
@@ -957,7 +957,7 @@ GitHub Spec-Kit:
 - Provides EARS templates and validation tools
 - Enables SPEC-to-implementation traceability
 
-MoAI-ADK Integration:
+Modu-ADK Integration:
 
 - Korean EARS adaptation with localized patterns
 - Plan-Run-Sync workflow integration

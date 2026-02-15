@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""File utility functions for MoAI hooks.
+"""File utility functions for Modu hooks.
 
 Provides common file operations with safety checks.
 """

@@ -5,7 +5,7 @@
 Claude Code Statusline Integration
 
 
-Main entry point for MoAI-ADK statusline rendering in Claude Code.
+Main entry point for Modu-ADK statusline rendering in Claude Code.
 Collects all necessary information from the project and renders it
 in the specified format for display in the status bar.
 """
@@ -109,7 +109,7 @@ def safe_collect_alfred_task() -> str:
 
 def safe_collect_version() -> str:
     """
-    Safely collect MoAI-ADK version with fallback.
+    Safely collect Modu-ADK version with fallback.
 
     Returns:
         Version string
@@ -279,7 +279,7 @@ def build_statusline_data(session_context: dict, mode: str = "compact") -> str:
     - Git repository
     - Session metrics
     - Alfred workflow state
-    - MoAI-ADK version
+    - Modu-ADK version
     - Update checker
     - Output style
     - Context window usage
@@ -370,7 +370,7 @@ def main():
     and outputs the formatted statusline string.
     """
     # Debug mode check
-    debug_mode = os.environ.get("MOAI_STATUSLINE_DEBUG") == "1"
+    debug_mode = os.environ.get("MODU_STATUSLINE_DEBUG") == "1"
 
     # Read session context from Claude Code
     session_context = read_session_context()
@@ -386,7 +386,7 @@ def main():
     # Determine display mode (priority: session context > environment > config > default)
     mode = (
         session_context.get("statusline", {}).get("mode")
-        or os.environ.get("MOAI_STATUSLINE_MODE")
+        or os.environ.get("MODU_STATUSLINE_MODE")
         or config.get("statusline.mode")
         or "extended"
     )

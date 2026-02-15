@@ -23,7 +23,7 @@ Version: TypeScript 5.9+
 - Use Zod for runtime validation
 - Use React 19 Server Components by default
 
-## MoAI Integration
+## Modu Integration
 
-- Use Skill("moai-lang-typescript") for detailed patterns
+- Use Skill("modu-lang-typescript") for detailed patterns
 - Follow TRUST 5 quality gates

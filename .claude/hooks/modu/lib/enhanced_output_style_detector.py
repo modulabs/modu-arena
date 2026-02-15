@@ -143,10 +143,10 @@ class OutputStyleDetector:
             cwd = Path.cwd()
 
             # Check for active Yoda session indicators
-            moai_dir = cwd / ".moai"
-            if moai_dir.exists():
+            modu_dir = cwd / ".modu"
+            if modu_dir.exists():
                 # Look for recent Yoda-related activity
-                yoda_files = list(moai_dir.rglob("*yoda*"))
+                yoda_files = list(modu_dir.rglob("*yoda*"))
                 if yoda_files:
                     # Check if any Yoda files are recently modified
                     recent_yoda = any(f.stat().st_mtime > (time.time() - 300) for f in yoda_files)  # Last 5 minutes
@@ -161,7 +161,7 @@ class OutputStyleDetector:
                     return "Explanatory"
 
             # Check for TODO/task tracking patterns
-            todo_file = cwd / ".moai" / "current_session_todo.txt"
+            todo_file = cwd / ".modu" / "current_session_todo.txt"
             if todo_file.exists():
                 content = todo_file.read_text(encoding="utf-8", errors="replace")
                 if "plan" in content.lower() or "phase" in content.lower():

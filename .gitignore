@@ -1,5 +1,5 @@
 # ============================================
-# MoAI-ADK Package Distribution .gitignore
+# Modu-ADK Package Distribution .gitignore
 # ============================================
 # Version: 0.33.0
 # Updated: 2026-01-10
@@ -99,7 +99,7 @@ logs/
 # ===========================================
 # Backups
 # ===========================================
-.moai-backups/
+.modu-backups/
 *.backup/
 *-backup/
 *_backup_*/
@@ -157,46 +157,46 @@ secret-*.*
 .claude/skills/*/*/*token*
 
 # ===========================================
-# .moai/ Directory Management
+# .modu/ Directory Management
 # ===========================================
-# Exclude all .moai/* by default
-.moai/*
+# Exclude all .modu/* by default
+.modu/*
 
 # Include tracked directories
-!.moai/config/
-!.moai/config/**
-!.moai/memory/
-!.moai/memory/**
-!.moai/project/
-!.moai/project/**
-!.moai/scripts/
-!.moai/scripts/**
-!.moai/specs/
-!.moai/specs/**
+!.modu/config/
+!.modu/config/**
+!.modu/memory/
+!.modu/memory/**
+!.modu/project/
+!.modu/project/**
+!.modu/scripts/
+!.modu/scripts/**
+!.modu/specs/
+!.modu/specs/**
 
 # Legacy config format (migrated to YAML in v0.32.0)
-.moai/config/config.json
+.modu/config/config.json
 
 # Exclude local-only directories
-.moai/cache/
-.moai/logs/
-.moai/docs/
-.moai/reports/
-.moai/analytics/
-.moai/archive/
-.moai/archived-skills/
-.moai/backups/
-.moai/error_logs/
-.moai/temp/
-.moai/work/
+.modu/cache/
+.modu/logs/
+.modu/docs/
+.modu/reports/
+.modu/analytics/
+.modu/archive/
+.modu/archived-skills/
+.modu/backups/
+.modu/error_logs/
+.modu/temp/
+.modu/work/
 
 # Exclude local development scripts
-.moai/scripts/phase*.py
-.moai/scripts/phase*.sh
-.moai/scripts/sync-*.sh
-.moai/scripts/sync-*.py
-.moai/scripts/*sync*.sh
-.moai/scripts/__pycache__/
+.modu/scripts/phase*.py
+.modu/scripts/phase*.sh
+.modu/scripts/sync-*.sh
+.modu/scripts/sync-*.py
+.modu/scripts/*sync*.sh
+.modu/scripts/__pycache__/
 
 # ===========================================
 # Node.js (for docs/Nextra)

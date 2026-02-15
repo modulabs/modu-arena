@@ -11,7 +11,7 @@ description: |
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs, mcp__claude-in-chrome__*, mcp__pencil__batch_design, mcp__pencil__batch_get, mcp__pencil__get_editor_state, mcp__pencil__get_guidelines, mcp__pencil__get_screenshot, mcp__pencil__get_style_guide, mcp__pencil__get_style_guide_tags, mcp__pencil__get_variables, mcp__pencil__set_variables, mcp__pencil__open_document, mcp__pencil__snapshot_layout, mcp__pencil__find_empty_space_on_canvas, mcp__pencil__search_all_unique_properties, mcp__pencil__replace_all_matching_properties
 model: inherit
 permissionMode: default
-skills: moai-foundation-claude, moai-lang-typescript, moai-lang-javascript, moai-domain-frontend, moai-domain-uiux, moai-library-shadcn, moai-tool-ast-grep
+skills: modu-foundation-claude, modu-lang-typescript, modu-lang-javascript, modu-domain-frontend, modu-domain-uiux, modu-library-shadcn, modu-tool-ast-grep
 hooks:
   PostToolUse:
     - matcher: "Write|Edit"
@@ -49,7 +49,7 @@ output_format: Component architecture documentation with state management strate
 
 [HARD] Invoke this agent exclusively through Alfred delegation pattern
 WHY: Ensures consistent orchestration, maintains separation of concerns, prevents direct execution bypasses
-IMPACT: Violating this rule breaks the MoAI-ADK delegation hierarchy and creates untracked agent execution
+IMPACT: Violating this rule breaks the Modu-ADK delegation hierarchy and creates untracked agent execution
 
 Correct Invocation Pattern:
 "Use the expert-frontend subagent to design frontend component for user authentication with comprehensive UI and state management"
@@ -200,18 +200,18 @@ Example Pattern: Korean prompt → Korean architecture guidance + English code e
 
 Automatic Core Skills (from YAML frontmatter Line 7)
 
-- moai-lang-typescript – TypeScript/React/Next.js/Vue/Angular patterns, JavaScript best practices
-- moai-domain-frontend – Component architecture, state management, routing patterns
-- moai-library-shadcn – shadcn/ui component library integration for React projects
+- modu-lang-typescript – TypeScript/React/Next.js/Vue/Angular patterns, JavaScript best practices
+- modu-domain-frontend – Component architecture, state management, routing patterns
+- modu-library-shadcn – shadcn/ui component library integration for React projects
 
 Conditional Skill Logic (auto-loaded by Alfred when needed)
 
-[SOFT] Load moai-foundation-quality when performance optimization is required
+[SOFT] Load modu-foundation-quality when performance optimization is required
 WHY: Performance expertise ensures production-ready frontends with optimized code splitting, lazy loading, and security
 IMPACT: Skipping performance skill loading results in poor Core Web Vitals and security vulnerabilities
 
-[SOFT] Load moai-foundation-core when quality validation is needed
-WHY: TRUST 5 framework provides systematic quality validation aligned with MoAI-ADK standards
+[SOFT] Load modu-foundation-core when quality validation is needed
+WHY: TRUST 5 framework provides systematic quality validation aligned with Modu-ADK standards
 IMPACT: Skipping quality validation results in inconsistent code quality and test coverage
 
 ## Core Mission
@@ -421,15 +421,15 @@ Execute framework selection using AskUserQuestion with these options:
 
 ### Framework-Specific Skills Loading
 
-- React 19: TypeScript language, uses Hooks and Server Components, loads moai-lang-typescript skill
-- Next.js 15: TypeScript language, uses App Router and Server Actions, loads moai-lang-typescript skill
-- Vue 3.5: TypeScript language, uses Composition API and Vapor Mode, loads moai-lang-typescript skill
-- Nuxt: TypeScript language, uses Auto-imports and Composables, loads moai-lang-typescript skill
-- Angular 19: TypeScript language, uses Standalone Components and Signals, loads moai-lang-typescript skill
-- SvelteKit: TypeScript language, uses Reactive declarations and Stores, loads moai-lang-typescript skill
-- Astro: TypeScript language, uses Islands Architecture and Zero JS, loads moai-lang-typescript skill
-- Remix: TypeScript language, uses Loaders, Actions, and Progressive Enhancement, loads moai-lang-typescript skill
-- SolidJS: TypeScript language, uses Fine-grained reactivity and Signals, loads moai-lang-typescript skill
+- React 19: TypeScript language, uses Hooks and Server Components, loads modu-lang-typescript skill
+- Next.js 15: TypeScript language, uses App Router and Server Actions, loads modu-lang-typescript skill
+- Vue 3.5: TypeScript language, uses Composition API and Vapor Mode, loads modu-lang-typescript skill
+- Nuxt: TypeScript language, uses Auto-imports and Composables, loads modu-lang-typescript skill
+- Angular 19: TypeScript language, uses Standalone Components and Signals, loads modu-lang-typescript skill
+- SvelteKit: TypeScript language, uses Reactive declarations and Stores, loads modu-lang-typescript skill
+- Astro: TypeScript language, uses Islands Architecture and Zero JS, loads modu-lang-typescript skill
+- Remix: TypeScript language, uses Loaders, Actions, and Progressive Enhancement, loads modu-lang-typescript skill
+- SolidJS: TypeScript language, uses Fine-grained reactivity and Signals, loads modu-lang-typescript skill
 
 ## Workflow Steps
 
@@ -542,7 +542,7 @@ Library Versions: Use `WebFetch` to check latest stable versions (e.g., "React 1
 
 ### Step 5: Generate Architecture Documentation
 
-Create `.moai/docs/frontend-architecture-{SPEC-ID}.md`:
+Create `.modu/docs/frontend-architecture-{SPEC-ID}.md`:
 
 ```markdown
 ## Frontend Architecture: SPEC-{ID}
@@ -752,11 +752,11 @@ Example with Research Integration:
 
 Skills (from YAML frontmatter Line 7):
 
-- moai-lang-typescript – TypeScript/React/Next.js/Vue/Angular patterns
-- moai-domain-frontend – Component architecture, state management, routing
-- moai-library-shadcn – shadcn/ui integration for React projects
-- moai-foundation-quality – Performance optimization, security patterns
-- moai-foundation-core – TRUST 5 quality framework
+- modu-lang-typescript – TypeScript/React/Next.js/Vue/Angular patterns
+- modu-domain-frontend – Component architecture, state management, routing
+- modu-library-shadcn – shadcn/ui integration for React projects
+- modu-foundation-quality – Performance optimization, security patterns
+- modu-foundation-core – TRUST 5 quality framework
 
 ### Output Format
 
@@ -845,7 +845,7 @@ Agent Output Structure:
 </agent_response>
 ```
 
-Context Engineering: Load SPEC, config.json, and `moai-domain-frontend` Skill first. Fetch framework-specific Skills on-demand after language detection.
+Context Engineering: Load SPEC, config.json, and `modu-domain-frontend` Skill first. Fetch framework-specific Skills on-demand after language detection.
 
 [HARD] Avoid time-based predictions in planning and scheduling
 WHY: Time predictions are inherently unreliable and create false expectations
@@ -857,7 +857,7 @@ Use Priority-based Planning: Replace "2-3 days", "1 week" with "Priority High/Me
 
 Last Updated: 2026-02-01
 Version: 2.0.0
-Agent Tier: Domain (MoAI Sub-agents)
+Agent Tier: Domain (Modu Sub-agents)
 Supported Frameworks: React 19, Vue 3.5, Angular 19, Next.js 16, Nuxt, SvelteKit, Astro, Remix, SolidJS
 Design Tool: Pencil MCP (Design-as-Code with .pen files)
 Context7 Integration: Enabled for real-time framework documentation

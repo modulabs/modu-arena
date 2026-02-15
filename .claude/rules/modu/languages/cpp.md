@@ -65,7 +65,7 @@ struct Widget {
 - Profile with Valgrind/AddressSanitizer
 - Use `-O2` or `-O3` for release builds
 
-## MoAI Integration
+## Modu Integration
 
-- Use Skill("moai-lang-cpp") for detailed patterns
+- Use Skill("modu-lang-cpp") for detailed patterns
 - Follow TRUST 5 quality gates

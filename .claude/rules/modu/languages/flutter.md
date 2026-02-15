@@ -81,7 +81,7 @@ final router = GoRouter(
 - Profile with DevTools
 - Minimize widget rebuilds with selective providers
 
-## MoAI Integration
+## Modu Integration
 
-- Use Skill("moai-lang-flutter") for detailed patterns
+- Use Skill("modu-lang-flutter") for detailed patterns
 - Follow TRUST 5 quality gates

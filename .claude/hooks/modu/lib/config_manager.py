@@ -45,12 +45,12 @@ DEFAULT_CONFIG = {
                 }
             },
             "config": {
-                "missing": "❌ Project configuration not found - run /moai:0-project",
+                "missing": "❌ Project configuration not found - run /modu:0-project",
                 "missing_fields": "⚠️ Missing configuration:",
             },
         },
         "cache": {
-            "directory": ".moai/cache",
+            "directory": ".modu/cache",
             "version_ttl_seconds": 1800,
             "git_ttl_seconds": 10,
         },
@@ -60,7 +60,7 @@ DEFAULT_CONFIG = {
         "project_search": {"max_depth": 10},
         "network": {"test_host": "8.8.8.8", "test_port": 53, "timeout_seconds": 0.1},
         "version_check": {
-            "pypi_url": "https://pypi.org/pypi/moai-adk/json",
+            "pypi_url": "https://pypi.org/pypi/modu-adk/json",
             "timeout_seconds": 1,
             "cache_ttl_seconds": 86400,
         },
@@ -78,15 +78,15 @@ class ConfigManager:
         """Initialize configuration manager.
 
         Args:
-            config_path: Path to configuration file (defaults to .moai/config/config.yaml or config.json)
+            config_path: Path to configuration file (defaults to .modu/config/config.yaml or config.json)
         """
         if config_path:
             self.config_path = config_path
         else:
             # Auto-detect YAML (preferred) or JSON (fallback)
             project_root = find_project_root()
-            yaml_path = project_root / ".moai" / "config" / "config.yaml"
-            json_path = project_root / ".moai" / "config" / "config.json"
+            yaml_path = project_root / ".modu" / "config" / "config.yaml"
+            json_path = project_root / ".modu" / "config" / "config.json"
 
             if YAML_AVAILABLE and yaml_path.exists():
                 self.config_path = yaml_path

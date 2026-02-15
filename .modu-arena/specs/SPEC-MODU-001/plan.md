@@ -65,7 +65,7 @@
 - [ ] Update base URLs in environment config
 - [ ] Update CORS settings if needed
 
-**Success Criteria**: No remaining product-facing references to "moai", "MoAI", or "MOAI" in user-facing code
+**Success Criteria**: No remaining product-facing references to "moai", "Modu", or "MOAI" in user-facing code
 
 ### Milestone 2: Tool Type Extension (Primary)
 

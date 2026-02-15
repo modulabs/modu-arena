@@ -2,7 +2,7 @@
 """Test Suite for Hooks System Improvements
 
 Comprehensive testing script to validate all the improvements made to prevent
-aborted() errors and optimize timeout handling in the MoAI-ADK hooks system.
+aborted() errors and optimize timeout handling in the Modu-ADK hooks system.
 
 Test Coverage:
 - Unified timeout manager functionality

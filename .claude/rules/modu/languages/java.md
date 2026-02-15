@@ -22,7 +22,7 @@ Version: Java 21 LTS
 - Use records for data classes
 - Use Spring Boot 3.3 for web apps
 
-## MoAI Integration
+## Modu Integration
 
-- Use Skill("moai-lang-java") for detailed patterns
+- Use Skill("modu-lang-java") for detailed patterns
 - Follow TRUST 5 quality gates

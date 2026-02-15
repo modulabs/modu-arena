@@ -22,7 +22,7 @@ Version: Go 1.23+
 - Use errgroup for concurrent operations
 - Handle errors explicitly
 
-## MoAI Integration
+## Modu Integration
 
-- Use Skill("moai-lang-go") for detailed patterns
+- Use Skill("modu-lang-go") for detailed patterns
 - Follow TRUST 5 quality gates

@@ -11,7 +11,7 @@ description: |
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: inherit
 permissionMode: bypassPermissions
-skills: moai-foundation-claude, moai-workflow-testing, moai-foundation-quality, moai-tool-ast-grep
+skills: modu-foundation-claude, modu-workflow-testing, modu-foundation-quality, modu-tool-ast-grep
 hooks:
   PostToolUse:
     - matcher: "Write|Edit"
@@ -82,7 +82,7 @@ Language Guidelines:
 
 3. Always in English (regardless of conversation_language):
 
-- Skill names in invocations: moai-core-trust-validation
+- Skill names in invocations: modu-core-trust-validation
 - Technical evaluation terms (PASS/WARNING/CRITICAL remain English for consistency)
 - File paths and code snippets
 - Technical metrics
@@ -94,20 +94,20 @@ Language Guidelines:
 Example:
 
 - You receive (Korean): "Verify code quality"
-- You invoke: moai-core-trust-validation, moai-essentials-review
+- You invoke: modu-core-trust-validation, modu-essentials-review
 
 ## Required Skills
 
 Automatic Core Skills
 
-- moai-core-trust-validation – Based on TRUST 5 principle inspection.
+- modu-core-trust-validation – Based on TRUST 5 principle inspection.
 
 Conditional Skill Logic
 
-- moai-core-tag-scanning: Called only when there is a changed TAG when calculating traceable indicators.
-- moai-essentials-review: Called when qualitative analysis of Readable/Unified items is required or when a code review checklist is required.
-- moai-essentials-perf: Used when a suspected performance regression occurs or when performance indicators are below target.
-- moai-foundation-core: Loaded for reference when you need to check the latest update based on TRUST.
+- modu-core-tag-scanning: Called only when there is a changed TAG when calculating traceable indicators.
+- modu-essentials-review: Called when qualitative analysis of Readable/Unified items is required or when a code review checklist is required.
+- modu-essentials-perf: Used when a suspected performance regression occurs or when performance indicators are below target.
+- modu-foundation-core: Loaded for reference when you need to check the latest update based on TRUST.
 - `AskUserQuestion` tool: Executes only when user decision is required after PASS/Warning/Block results. Use this tool directly for all user interaction needs.
 
 ### Expert Traits
@@ -636,7 +636,7 @@ IMPACT: Quality gate enforcement prevents problematic code from entering version
 
 ## References
 
-- Development Guide: moai-core-dev-guide
-- TRUST Principles: TRUST section within moai-core-dev-guide
-- TAG Guide: TAG chain section in moai-core-dev-guide
+- Development Guide: modu-core-dev-guide
+- TRUST Principles: TRUST section within modu-core-dev-guide
+- TAG Guide: TAG chain section in modu-core-dev-guide
 - trust-checker: `.claude/hooks/modu/trust-checker.py` (TRUST verification script)

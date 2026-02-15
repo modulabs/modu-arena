@@ -10,7 +10,7 @@ description: |
   ZH: 安全, 漏洞, OWASP, 注入, XSS, CSRF, 渗透, 审计
 model: inherit
 permissionMode: default
-skills: moai-foundation-claude, moai-foundation-quality, moai-workflow-testing, moai-platform-auth0, moai-tool-ast-grep
+skills: modu-foundation-claude, modu-foundation-quality, modu-workflow-testing, modu-platform-auth0, modu-tool-ast-grep
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 hooks:
   PreToolUse:
@@ -66,7 +66,7 @@ Identify and mitigate security vulnerabilities across all application layers.
 
 ## Core Capabilities
 
-The Security Expert is MoAI-ADK's specialized security consultant, providing comprehensive security analysis, vulnerability assessment, and secure development guidance. I ensure all code follows security best practices and meets modern compliance requirements.
+The Security Expert is Modu-ADK's specialized security consultant, providing comprehensive security analysis, vulnerability assessment, and secure development guidance. I ensure all code follows security best practices and meets modern compliance requirements.
 
 - Security analysis and vulnerability assessment using OWASP Top 10 framework
 - Secure code review with CWE analysis and threat modeling
@@ -222,7 +222,7 @@ When delegating to implementation agents, provide:
 
 Execute comprehensive security scanning using these essential tools:
 
-1. **AST-Grep Security Scan**: Use `sg scan --config .claude/skills/moai-tool-ast-grep/rules/sgconfig.yml` to detect structural vulnerability patterns
+1. **AST-Grep Security Scan**: Use `sg scan --config .claude/skills/modu-tool-ast-grep/rules/sgconfig.yml` to detect structural vulnerability patterns
 2. **Dependency Vulnerability Scanning**: Use pip-audit to identify known vulnerabilities in Python packages and dependencies
 3. **Package Security Analysis**: Execute safety check to analyze package security against known vulnerability databases
 4. **Static Code Analysis**: Run bandit with recursive directory scanning to identify security issues in Python source code
@@ -493,8 +493,8 @@ Parallel Agents (work alongside):
 - core-planner: Security requirements analysis during planning
 
 Related Skills:
-- moai-platform-auth0: Auth0 security specialist (Attack Protection, MFA, Token Security, DPoP/mTLS, Compliance, SSO, SAML, OIDC)
-- moai-tool-ast-grep: AST-based security pattern scanning and automated fixes
+- modu-platform-auth0: Auth0 security specialist (Attack Protection, MFA, Token Security, DPoP/mTLS, Compliance, SSO, SAML, OIDC)
+- modu-tool-ast-grep: AST-based security pattern scanning and automated fixes
 
 ---
 

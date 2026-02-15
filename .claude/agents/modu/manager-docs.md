@@ -11,7 +11,7 @@ description: |
 tools: Read, Write, Edit, Grep, Glob, Bash, WebFetch, WebSearch, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: inherit
 permissionMode: acceptEdits
-skills: moai-foundation-claude, moai-foundation-core, moai-library-mermaid, moai-library-nextra, moai-formats-data, moai-docs-generation, moai-workflow-jit-docs
+skills: modu-foundation-claude, modu-foundation-core, modu-library-mermaid, modu-library-nextra, modu-formats-data, modu-docs-generation, modu-workflow-jit-docs
 ---
 
 # Documentation Manager Expert
@@ -32,7 +32,7 @@ output_format: Professional documentation with Nextra framework setup, MDX conte
 checkpoint_strategy:
   enabled: true
   interval: every_phase
-  location: .moai/memory/checkpoints/docs/
+  location: .modu/memory/checkpoints/docs/
   resume_capability: true
 
 memory_management:
@@ -173,7 +173,7 @@ To prevent V8 heap memory overflow during large documentation generation session
 
 **Checkpoint Strategy**:
 - Checkpoint after each phase completion (Source Analysis, Architecture Design, Content Generation, Quality Assurance)
-- Checkpoint location: `.moai/memory/checkpoints/docs/`
+- Checkpoint location: `.modu/memory/checkpoints/docs/`
 - Auto-checkpoint on memory pressure detection
 
 **Checkpoint Content**:
@@ -217,20 +217,20 @@ To prevent V8 heap memory overflow during large documentation generation session
 
 Core documentation skills (auto-loaded):
 
-- moai-foundation-core: SPEC-first DDD, TRUST 5 framework, execution rules
-- moai-workflow-docs: Documentation workflow, validation scripts
-- moai-library-mermaid: Mermaid diagram creation and validation
-- moai-foundation-claude: Claude Code authoring patterns, skills/agents/commands
-- moai-library-nextra: Nextra framework setup and optimization
+- modu-foundation-core: SPEC-first DDD, TRUST 5 framework, execution rules
+- modu-workflow-docs: Documentation workflow, validation scripts
+- modu-library-mermaid: Mermaid diagram creation and validation
+- modu-foundation-claude: Claude Code authoring patterns, skills/agents/commands
+- modu-library-nextra: Nextra framework setup and optimization
 
 # Conditional skills (auto-loaded by Alfred when needed)
 
 conditional_skills = [
-"moai-domain-uiux", # WCAG compliance, accessibility patterns, Pencil MCP integration
-"moai-lang-python", # Python documentation patterns
-"moai-lang-typescript", # TypeScript documentation patterns
-"moai-workflow-project", # Project documentation management
-"moai-ai-nano-banana" # AI content generation
+"modu-domain-uiux", # WCAG compliance, accessibility patterns, Pencil MCP integration
+"modu-lang-python", # Python documentation patterns
+"modu-lang-typescript", # TypeScript documentation patterns
+"modu-workflow-project", # Project documentation management
+"modu-ai-nano-banana" # AI content generation
 ]
 
 ````
@@ -435,16 +435,16 @@ Execute thorough documentation validation across all quality dimensions:
 
 ## Integration Points
 
-### 1. MoAI-ADK Ecosystem Integration
+### 1. Modu-ADK Ecosystem Integration
 
-**MoAI-ADK Component Integration Workflow:**
+**Modu-ADK Component Integration Workflow:**
 
-Coordinate documentation workflows with existing MoAI-ADK components:
+Coordinate documentation workflows with existing Modu-ADK components:
 
 **Core Integration Points:**
 - **Self-Reference**: Handle documentation workflows internally within this agent
 - **Quality Gate Coordination**: Collaborate with manager-quality agent for validation
-- **Documentation Synchronization**: Sync Nextra docs with .moai/docs/ directory structure
+- **Documentation Synchronization**: Sync Nextra docs with .modu/docs/ directory structure
 
 **Integration Process:**
 
@@ -452,7 +452,7 @@ Coordinate documentation workflows with existing MoAI-ADK components:
 2. **Quality Assurance Coordination**: Use manager-quality subagent for comprehensive validation
 3. **Documentation Synchronization**:
    - Source: Nextra documentation structure
-   - Target: .moai/docs/ directory
+   - Target: .modu/docs/ directory
    - Format: Nextra-compatible structure
 4. **System-Wide Consistency**: Ensure documentation aligns with project standards and formats
 

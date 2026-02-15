@@ -6,8 +6,8 @@
 
 #### Scenario 1.1: Successful Session Submission
 ```gherkin
-Given a user has registered with moai-adk rank register
-And the user is working in a MoAI project (contains .moai folder)
+Given a user has registered with modu-adk rank register
+And the user is working in a Modu project (contains .modu folder)
 When the Claude Code session ends
 Then the session hook should execute
 And token usage data should be extracted from .jsonl logs
@@ -16,10 +16,10 @@ And the server should return 200 OK
 And the session should appear in the user's dashboard
 ```
 
-#### Scenario 1.2: Non-MoAI Project Ignored
+#### Scenario 1.2: Non-Modu Project Ignored
 ```gherkin
-Given a user has registered with moai-adk rank register
-And the user is working in a non-MoAI project (no .moai folder)
+Given a user has registered with modu-adk rank register
+And the user is working in a non-Modu project (no .modu folder)
 When the Claude Code session ends
 Then the session hook should NOT collect any data
 And no API request should be made
@@ -42,7 +42,7 @@ And when network is restored, queued sessions should be submitted
 #### Scenario 2.1: Fresh Registration
 ```gherkin
 Given a user has NOT previously registered
-When the user runs "moai-adk rank register"
+When the user runs "modu-adk rank register"
 Then the system should open a browser for GitHub OAuth
 And after successful authentication
 Then an API key should be generated (256-bit entropy)
@@ -53,7 +53,7 @@ And the user should see a confirmation message with profile link
 #### Scenario 2.2: Already Registered
 ```gherkin
 Given a user has previously registered
-When the user runs "moai-adk rank register"
+When the user runs "modu-adk rank register"
 Then the system should display current registration status
 And offer option to re-authenticate or regenerate API key
 ```
@@ -159,7 +159,7 @@ And rankings should be updated based on new aggregates
 
 #### Scenario 6.1: Rank Status
 ```gherkin
-Given a registered user runs "moai-adk rank status"
+Given a registered user runs "modu-adk rank status"
 When the command executes
 Then the output should display:
   - Current rank: #X (top Y%)
@@ -170,7 +170,7 @@ Then the output should display:
 
 #### Scenario 6.2: CLI Leaderboard
 ```gherkin
-Given a registered user runs "moai-adk rank leaderboard --limit 10"
+Given a registered user runs "modu-adk rank leaderboard --limit 10"
 When the command executes
 Then a formatted table should display:
   - Top 10 users with rank, username, score

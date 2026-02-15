@@ -2,7 +2,7 @@
 """
 Statusline configuration loader for Claude Code
 
-Loads and manages statusline configuration from .moai/config/statusline-config.yaml
+Loads and manages statusline configuration from .modu/config/statusline-config.yaml
 
 Performance: Thread-safe singleton with double-checked locking pattern
 """
@@ -62,7 +62,7 @@ class DisplayConfig:
     """Information display settings - Custom ordered status bar"""
 
     model: bool = True  # 🤖 Model name (glm-4.6, claude-3.5-sonnet, etc.)
-    version: bool = True  # 🗿 MoAI-ADK version (0.23.0, etc.)
+    version: bool = True  # 🗿 Modu-ADK version (0.23.0, etc.)
     output_style: bool = True  # ✍️ Output style (Explanatory, Concise, etc.)
     memory_usage: bool = True  # 💾 Session memory usage
     todo_count: bool = True  # 📋 Active TODO items count
@@ -119,7 +119,7 @@ class StatuslineConfig:
     """
     Thread-safe singleton configuration loader for statusline
 
-    Loads configuration from .moai/config/statusline-config.yaml
+    Loads configuration from .modu/config/statusline-config.yaml
     Falls back to default values if file not found or parsing fails
 
     Performance: Double-checked locking pattern for thread safety
@@ -164,9 +164,9 @@ class StatuslineConfig:
         """
         # Try common locations
         locations = [
-            Path.cwd() / ".moai" / "config" / "statusline-config.yaml",
-            Path.cwd() / ".moai" / "config" / "statusline-config.yml",
-            Path.home() / ".moai" / "config" / "statusline-config.yaml",
+            Path.cwd() / ".modu" / "config" / "statusline-config.yaml",
+            Path.cwd() / ".modu" / "config" / "statusline-config.yml",
+            Path.home() / ".modu" / "config" / "statusline-config.yaml",
         ]
 
         for path in locations:
@@ -255,7 +255,7 @@ class StatuslineConfig:
                 },
                 "display": {
                     "model": True,  # 🤖 Model name (glm-4.6, claude-3.5-sonnet, etc.)
-                    "version": True,  # 🗿 MoAI-ADK version (0.23.0, etc.)
+                    "version": True,  # 🗿 Modu-ADK version (0.23.0, etc.)
                     "output_style": True,  # ✍️ Output style (Explanatory, Concise, etc.)
                     "memory_usage": True,  # 💾 Session memory usage
                     "todo_count": True,  # 📋 Active TODO items count

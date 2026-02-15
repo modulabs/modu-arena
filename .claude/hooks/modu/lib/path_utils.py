@@ -1,10 +1,10 @@
-r"""Path utility functions for MoAI-ADK hooks
+r"""Path utility functions for Modu-ADK hooks
 
-Provides safe project root detection and .moai directory management.
-Prevents .moai directory creation outside of project root.
+Provides safe project root detection and .modu directory management.
+Prevents .modu directory creation outside of project root.
 
 Environment Variables:
-- MOAI_PROJECT_ROOT: Override project root detection (absolute path)
+- MODU_PROJECT_ROOT: Override project root detection (absolute path)
 - CLAUDE_PROJECT_DIR: Claude Code project directory (fallback)
 
 WSL Support:
@@ -19,9 +19,9 @@ from pathlib import Path
 from typing import Optional
 
 try:
-    from moai_adk.utils.path_converter import is_wsl, normalize_path_for_wsl
+    from modu_adk.utils.path_converter import is_wsl, normalize_path_for_wsl
 except ImportError:
-    # Fallback for when moai_adk is not installed
+    # Fallback for when modu_adk is not installed
     def is_wsl() -> bool:
         """Check if running in WSL (Windows Subsystem for Linux)."""
         return "WSL_DISTRO_NAME" in os.environ or "WSLENV" in os.environ or "WSL_INTEROP" in os.environ
@@ -47,8 +47,8 @@ except ImportError:
 
 # Project root markers (files/dirs that indicate project root)
 PROJECT_ROOT_MARKERS = [
-    ".moai/config/config.yaml",  # Primary: MoAI config
-    ".moai/config/sections",  # Section-based config
+    ".modu/config/config.yaml",  # Primary: Modu config
+    ".modu/config/sections",  # Section-based config
     "CLAUDE.md",  # Claude Code project marker
     ".claude",  # Claude directory
     ".git",  # Git repository root
@@ -66,7 +66,7 @@ def get_project_root_from_env() -> Optional[Path]:
     """Get project root from environment variables.
 
     Checks in order:
-    1. MOAI_PROJECT_ROOT - explicit override
+    1. MODU_PROJECT_ROOT - explicit override
     2. CLAUDE_PROJECT_DIR - Claude Code's project directory (WSL-normalized)
 
     WSL Support:
@@ -77,10 +77,10 @@ def get_project_root_from_env() -> Optional[Path]:
     Returns:
         Path if valid directory found, None otherwise
     """
-    # Check MOAI_PROJECT_ROOT first (explicit override)
-    moai_root = os.environ.get("MOAI_PROJECT_ROOT")
-    if moai_root:
-        root_path = Path(moai_root).resolve()
+    # Check MODU_PROJECT_ROOT first (explicit override)
+    modu_root = os.environ.get("MODU_PROJECT_ROOT")
+    if modu_root:
+        root_path = Path(modu_root).resolve()
         if root_path.is_dir():
             return root_path
 
@@ -104,7 +104,7 @@ def find_project_root(start_path: Path | None = None) -> Path:
     """Find project root by locating project markers.
 
     Search order:
-    1. Environment variables (MOAI_PROJECT_ROOT, CLAUDE_PROJECT_DIR)
+    1. Environment variables (MODU_PROJECT_ROOT, CLAUDE_PROJECT_DIR)
     2. Traverse upward from start_path looking for project markers
     3. Fallback to current working directory
 
@@ -161,26 +161,26 @@ def clear_project_root_cache() -> None:
     _project_root_cache = None
 
 
-def get_moai_dir() -> Path:
-    """Get the .moai directory path in project root.
+def get_modu_dir() -> Path:
+    """Get the .modu directory path in project root.
 
     Returns:
-        Path: Absolute path to .moai directory
+        Path: Absolute path to .modu directory
 
     Note:
-        Does NOT create the directory. Use ensure_moai_dir() for that.
+        Does NOT create the directory. Use ensure_modu_dir() for that.
     """
-    return find_project_root() / ".moai"
+    return find_project_root() / ".modu"
 
 
-def ensure_moai_dir(subpath: str = "") -> Path:
-    """Ensure .moai subdirectory exists in project root.
+def ensure_modu_dir(subpath: str = "") -> Path:
+    """Ensure .modu subdirectory exists in project root.
 
     Creates the directory structure if it doesn't exist.
     ONLY creates within project root to prevent pollution.
 
     Args:
-        subpath: Subdirectory path within .moai (e.g., "cache", "logs/sessions")
+        subpath: Subdirectory path within .modu (e.g., "cache", "logs/sessions")
 
     Returns:
         Path: Absolute path to the directory
@@ -189,18 +189,18 @@ def ensure_moai_dir(subpath: str = "") -> Path:
         ValueError: If attempting to create outside project root
     """
     project_root = find_project_root()
-    moai_dir = project_root / ".moai"
+    modu_dir = project_root / ".modu"
 
     if subpath:
-        target_dir = moai_dir / subpath
+        target_dir = modu_dir / subpath
     else:
-        target_dir = moai_dir
+        target_dir = modu_dir
 
     # Safety check: ensure target is within project root
     try:
         target_dir.resolve().relative_to(project_root.resolve())
     except ValueError:
-        raise ValueError(f"Cannot create .moai directory outside project root: {target_dir}")
+        raise ValueError(f"Cannot create .modu directory outside project root: {target_dir}")
 
     # Create directory if it doesn't exist
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -224,26 +224,26 @@ def is_within_project_root(path: Path) -> bool:
         return False
 
 
-def get_safe_moai_path(relative_path: str) -> Path:
-    """Get absolute path within .moai directory safely.
+def get_safe_modu_path(relative_path: str) -> Path:
+    """Get absolute path within .modu directory safely.
 
-    This is the recommended way to get paths within .moai.
+    This is the recommended way to get paths within .modu.
     Always returns absolute path based on project root.
 
     Args:
-        relative_path: Path relative to .moai (e.g., "cache/version.json")
+        relative_path: Path relative to .modu (e.g., "cache/version.json")
 
     Returns:
-        Path: Absolute path within project root's .moai directory
+        Path: Absolute path within project root's .modu directory
 
     Example:
-        >>> get_safe_moai_path("logs/sessions")
-        PosixPath('/path/to/project/.moai/logs/sessions')
+        >>> get_safe_modu_path("logs/sessions")
+        PosixPath('/path/to/project/.modu/logs/sessions')
 
-        >>> get_safe_moai_path("memory/last-session-state.json")
-        PosixPath('/path/to/project/.moai/memory/last-session-state.json')
+        >>> get_safe_modu_path("memory/last-session-state.json")
+        PosixPath('/path/to/project/.modu/memory/last-session-state.json')
     """
-    return find_project_root() / ".moai" / relative_path
+    return find_project_root() / ".modu" / relative_path
 
 
 def validate_cwd_is_project_root() -> bool:
@@ -253,7 +253,7 @@ def validate_cwd_is_project_root() -> bool:
         True if CWD is project root, False otherwise
 
     Use Case:
-        Hooks should check this before creating .moai directories
+        Hooks should check this before creating .modu directories
         to prevent creating them in wrong locations.
     """
     cwd = Path.cwd().resolve()

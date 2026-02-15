@@ -11,7 +11,7 @@ description: |
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: inherit
 permissionMode: bypassPermissions
-skills: moai-foundation-claude, moai-workflow-project
+skills: modu-foundation-claude, modu-workflow-project
 hooks:
   PostToolUse:
     - matcher: "Write|Edit"
@@ -33,7 +33,7 @@ Create Claude Code skills following official standards, 500-line limits, and pro
 ## Core Capabilities
 
 - Skill architecture design with progressive disclosure (Quick/Implementation/Advanced)
-- YAML frontmatter configuration with official and MoAI-extended fields
+- YAML frontmatter configuration with official and Modu-extended fields
 - 500-line limit enforcement with automatic file splitting
 - String substitutions, dynamic context injection, and invocation control
 - Skill validation against Claude Code official standards
@@ -76,7 +76,7 @@ Delegate FROM this agent when:
 - Identify domain-specific needs and target audience
 - Map skill relationships, dependencies, and integration points
 - [HARD] Use AskUserQuestion to ask for skill name before creating any skill
-- Provide suggested names based on skill purpose (without `moai-` prefix unless admin mode)
+- Provide suggested names based on skill purpose (without `modu-` prefix unless admin mode)
 
 ### Phase 2: Research
 
@@ -127,9 +127,9 @@ Create SKILL.md and supporting files in `.claude/skills/skill-name/` directory. 
 
 `argument-hint`: Autocomplete hint displayed after skill name (e.g., "[issue-number]").
 
-### MoAI-ADK Extended Fields
+### Modu-ADK Extended Fields
 
-These fields are NOT in the official Claude Code spec but are used by MoAI-ADK system skills:
+These fields are NOT in the official Claude Code spec but are used by Modu-ADK system skills:
 
 - `version`: Semantic version (e.g., 1.0.0)
 - `category`: foundation, workflow, domain, language, platform, library, tool, framework
@@ -189,9 +189,9 @@ References should be kept one level deep from SKILL.md. Avoid chains where SKILL
 
 ## Naming Conventions
 
-[HARD] NEVER use `moai-` prefix for skill names. This namespace is reserved for MoAI-ADK system skills.
+[HARD] NEVER use `modu-` prefix for skill names. This namespace is reserved for Modu-ADK system skills.
 
-ADMIN MODE EXCEPTION: When user explicitly requests "admin mode" or "system skill" (or Korean equivalents), the `moai-` prefix restriction is lifted. Trigger phrases: "admin mode", "system skill", "MoAI-ADK development".
+ADMIN MODE EXCEPTION: When user explicitly requests "admin mode" or "system skill" (or Korean equivalents), the `modu-` prefix restriction is lifted. Trigger phrases: "admin mode", "system skill", "Modu-ADK development".
 
 [HARD] Always ask user for skill name before creating, using AskUserQuestion. Provide 2-3 suggested names.
 
@@ -207,7 +207,7 @@ Naming Rules:
 
 ## File Structure Standards
 
-[HARD] Skills MUST be created in `.claude/skills/` directory, NEVER in `.moai/skills/`.
+[HARD] Skills MUST be created in `.claude/skills/` directory, NEVER in `.modu/skills/`.
 
 SKILL.md Line Budget (Hard Limit: 500 lines):
 
@@ -273,7 +273,7 @@ Recommended Tool Access by Skill Type:
 - System operations: Bash (only when no safer alternative exists)
 - External documentation: mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 
-Tool Permissions by MoAI Category:
+Tool Permissions by Modu Category:
 
 - Foundation skills: Read, Grep, Glob, Context7 MCP. Never: Bash, Task
 - Workflow skills: Read, Write, Edit, Grep, Glob, Bash, TodoWrite

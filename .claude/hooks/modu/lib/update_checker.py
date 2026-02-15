@@ -1,6 +1,6 @@
 # type: ignore
 """
-Update checker for MoAI-ADK using PyPI API
+Update checker for Modu-ADK using PyPI API
 
 """
 
@@ -24,11 +24,11 @@ class UpdateInfo:
 
 
 class UpdateChecker:
-    """Checks for MoAI-ADK updates from PyPI with 300-second caching"""
+    """Checks for Modu-ADK updates from PyPI with 300-second caching"""
 
     # Configuration
     _CACHE_TTL_SECONDS = 300
-    _PYPI_API_URL = "https://pypi.org/pypi/moai-adk/json"
+    _PYPI_API_URL = "https://pypi.org/pypi/modu-adk/json"
     _TIMEOUT_SECONDS = 5
 
     def __init__(self):
@@ -43,7 +43,7 @@ class UpdateChecker:
         Check for available updates
 
         Args:
-            current_version: Current MoAI-ADK version (e.g., "0.20.1")
+            current_version: Current Modu-ADK version (e.g., "0.20.1")
 
         Returns:
             UpdateInfo with availability and latest version

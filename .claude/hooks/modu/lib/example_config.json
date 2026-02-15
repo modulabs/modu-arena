@@ -63,22 +63,22 @@
       "LICENSE",
       ".gitignore",
       ".claude",
-      ".moai",
+      ".modu",
       "pyproject.toml",
       "src"
     ],
     "directories": {
       "temp": {
-        "base": ".moai/temp/"
+        "base": ".modu/temp/"
       },
       "scripts": {
-        "base": ".moai/scripts/"
+        "base": ".modu/scripts/"
       },
       "work": {
-        "base": ".moai/temp/work/"
+        "base": ".modu/temp/work/"
       },
       "dev": {
-        "base": ".moai/scripts/dev/"
+        "base": ".modu/scripts/dev/"
       }
     },
     "file_patterns": {

@@ -11,7 +11,7 @@ description: |
 tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: haiku
 permissionMode: default
-skills: moai-foundation-claude, moai-workflow-project, moai-workflow-testing, moai-workflow-worktree
+skills: modu-foundation-claude, modu-workflow-project, modu-workflow-testing, modu-workflow-worktree
 ---
 
 # Git Manager Agent - Git Operations Specialist
@@ -103,9 +103,9 @@ Team Mode:
 - Deployment: Continuous
 - Best For: 3+ developers
 
-Key Advantage: Simple, consistent GitHub Flow for all modes. Users select mode manually via `.moai/config.json` without auto-switching.
+Key Advantage: Simple, consistent GitHub Flow for all modes. Users select mode manually via `.modu/config.json` without auto-switching.
 
-This is a dedicated agent that optimizes and processes all Git operations in moai-rank for each mode.
+This is a dedicated agent that optimizes and processes all Git operations in modu-rank for each mode.
 
 ## Agent Persona
 
@@ -140,13 +140,13 @@ Element-Specific Language Requirements:
 
 Git Artifacts Language [CONFIGURATION-DRIVEN]:
 
-- Commit messages: Read git_commit_messages from .moai/config/sections/language.yaml
+- Commit messages: Read git_commit_messages from .modu/config/sections/language.yaml
   - If git_commit_messages == "en": Use English
   - If git_commit_messages == "ko": Use Korean
   - Default: English (when config missing)
 - Branch names: Always English (feature/SPEC-_, hotfix/_, main) for CI/CD compatibility
 - PR titles and descriptions: Respect git_commit_messages setting
-- Tag names: Always English (v1.0.0, moai_cp/20251203_120000) for version consistency
+- Tag names: Always English (v1.0.0, modu_cp/20251203_120000) for version consistency
 
 WHY: Branch/tag names require English for CI/CD parsing, but commit messages can respect user preference
 IMPACT: English branch names ensure tool compatibility; localized commit messages improve accessibility for individual developers
@@ -155,9 +155,9 @@ Skill Invocation Pattern [HARD]:
 
 Required Skills (automatic from YAML frontmatter Line 7):
 
-- moai-foundation-claude – Provides Claude Code agent patterns, hook integration, settings management
-- moai-workflow-project – Provides Git workflow strategies, GitHub Flow patterns, project configuration
-- moai-foundation-quality – Provides Git command patterns, validation scripts, error handling
+- modu-foundation-claude – Provides Claude Code agent patterns, hook integration, settings management
+- modu-workflow-project – Provides Git workflow strategies, GitHub Flow patterns, project configuration
+- modu-foundation-quality – Provides Git command patterns, validation scripts, error handling
 
 Always invoke skills explicitly by name from frontmatter
 WHY: Explicit invocation ensures consistent skill loading and knowledge access
@@ -166,13 +166,13 @@ IMPACT: Implicit skills miss critical context and validation rules
 Example Workflow:
 
 1. User provides input in Korean: "Create feature branch for SPEC-AUTH-001"
-2. Load moai-workflow-project skill for branch strategy
+2. Load modu-workflow-project skill for branch strategy
 3. Create English branch: feature/SPEC-AUTH-001
 4. Provide status report to user in Korean: "특성 브랜치가 생성되었습니다"
 
 # Git Manager - Agent dedicated to Git tasks
 
-This is a dedicated agent that optimizes and processes all Git operations in MoAI-ADK for each mode.
+This is a dedicated agent that optimizes and processes all Git operations in Modu-ADK for each mode.
 
 ## Core Operational Principles
 
@@ -189,7 +189,7 @@ Operational Strategy by Function:
 
 Checkpoint Operations [HARD]:
 
-- Execute: `git tag -a "moai_cp/$(TZ=Asia/Seoul date +%Y%m%d_%H%M%S)" -m "Message"`
+- Execute: `git tag -a "modu_cp/$(TZ=Asia/Seoul date +%Y%m%d_%H%M%S)" -m "Message"`
 - Use Korean time for consistent checkpoint naming across timezones
 - Create annotated tags (not lightweight) for changesets
 
@@ -239,7 +239,7 @@ IMPACT: Mismatched workflows reduce productivity and increase errors
 
 TRUST Principle Compliance [HARD]:
 
-- Ensure all Git tasks follow TRUST principles from moai-core-dev-guide
+- Ensure all Git tasks follow TRUST principles from modu-core-dev-guide
 - Maintain transparency, reliability, and safety
 - Enable user control over critical operations
 
@@ -398,7 +398,7 @@ Benefits of PR-based workflow (when using feature_branch):
 Philosophy: "Systematic collaboration, fully automated with GitHub Flow"
 
 Mode Activation [HARD]:
-- Manually enable via `.moai/config/config.yaml` configuration
+- Manually enable via `.modu/config/config.yaml` configuration
 - Set `git_strategy.team.enabled` to `true` to activate Team Mode
 - No automatic mode switching; explicit configuration required
 
@@ -407,7 +407,7 @@ IMPACT: Automatic switching causes confusion and unexpected merge requirements
 
 Configuration Requirements [HARD]:
 
-File Location: `.moai/config/config.yaml`
+File Location: `.modu/config/config.yaml`
 Configuration Structure:
 - Section: `git_strategy.team`
 - Property: `enabled` (boolean)
@@ -648,7 +648,7 @@ Checkpoint Operations:
 
 Create Checkpoint:
 
-- Execute: `git tag -a "moai_cp/[timestamp]" -m "[descriptive message]"`
+- Execute: `git tag -a "modu_cp/[timestamp]" -m "[descriptive message]"`
 - Use annotated tags for changesets (enable metadata)
 - Include descriptive message for recovery context
 
@@ -657,7 +657,7 @@ IMPACT: Lightweight tags lack metadata; harder to understand checkpoint purpose
 
 List Checkpoints:
 
-- Execute: `git tag -l "moai_cp/*" | tail -10`
+- Execute: `git tag -l "modu_cp/*" | tail -10`
 - Display last 10 checkpoints for recent recovery options
 - Show timestamps in consistent format
 
@@ -674,7 +674,7 @@ IMPACT: Soft resets leave staging area inconsistent
 
 Commit Message Strategy [CONFIGURATION-DRIVEN]:
 
-- Read git_commit_messages from .moai/config/sections/language.yaml
+- Read git_commit_messages from .modu/config/sections/language.yaml
 - Apply DDD phase indicators (ANALYZE, PRESERVE, IMPROVE)
 - Include SPEC ID for traceability
 - If git_commit_messages == "en": Use English commit messages
@@ -688,12 +688,12 @@ Commit Creation Process [HARD]:
 
 Step 1: Read Configuration
 
-- Access: `.moai/config/sections/language.yaml`
+- Access: `.modu/config/sections/language.yaml`
 - Retrieve: `language.conversation_language` setting
 
 Step 2: Select Message Template
 
-- Read git_commit_messages from .moai/config/sections/language.yaml
+- Read git_commit_messages from .modu/config/sections/language.yaml
 - Apply DDD phase structure (ANALYZE/PRESERVE/IMPROVE)
 - Include SPEC ID reference
 - Select language template based on git_commit_messages setting
@@ -751,7 +751,7 @@ Personal Mode Branch Operations [HARD]:
 
 Configuration:
 
-- Read base branch from `.moai/config/config.yaml`
+- Read base branch from `.modu/config/config.yaml`
 - Configure branch creation patterns per workflow strategy
 - Validate configuration before operations
 
@@ -791,7 +791,7 @@ Branch Creation:
 
 Mode Selection Process [HARD]:
 
-- Read configuration from `.moai/config/config.yaml`
+- Read configuration from `.modu/config/config.yaml`
 - Parse personal and team mode enabled flags
 - Respect manual mode selection without automatic switching
 - Validate configuration consistency before branch operations
@@ -824,7 +824,7 @@ Standard Sync Process [HARD]:
 
 Step 1: Checkpoint Creation
 
-- Execute: `git tag -a "moai_cp/[timestamp]" -m "[message]"`
+- Execute: `git tag -a "modu_cp/[timestamp]" -m "[message]"`
 - Create annotated tag with descriptive message
 - Record state before remote operations
 
@@ -933,7 +933,7 @@ Backup Strategies:
 - Create checkpoints before risky operations
 - Enable recovery to stable states
 
-## MoAI Workflow Integration
+## Modu Workflow Integration
 
 ### DDD Step-by-Step Automatic Commit
 
@@ -1093,7 +1093,7 @@ This signature applies to all Git operations:
 
 Signature breakdown:
 
-- ` https://adk.mo.ai.kr` - Official MoAI-ADK homepage link
+- ` https://adk.mo.ai.kr` - Official Modu-ADK homepage link
 - `Co-Authored-By: Claude <noreply@anthropic.com>` - Claude AI collaborator attribution
 
 Implementation Example (HEREDOC):
@@ -1143,13 +1143,13 @@ IMPACT: Proper context handoff prevents commits on blocked quality gates and mai
 
 ## Auto-Branch Configuration Handling [HARD]
 
-This section defines how manager-git handles the `auto_branch` configuration setting from `.moai/config/sections/git-strategy.yaml`.
+This section defines how manager-git handles the `auto_branch` configuration setting from `.modu/config/sections/git-strategy.yaml`.
 
 ### Configuration Reading
 
 Before any branch operation, read the auto_branch setting:
 
-1. Locate configuration file: `.moai/config/sections/git-strategy.yaml`
+1. Locate configuration file: `.modu/config/sections/git-strategy.yaml`
 2. Parse the `git_strategy.automation.auto_branch` value
 3. Determine branch creation behavior based on setting
 

@@ -46,7 +46,7 @@ def get_project_dir() -> Path:
 
 
 def load_quality_config() -> dict[str, Any]:
-    """Load quality configuration from .moai/config/sections/quality.yaml.
+    """Load quality configuration from .modu/config/sections/quality.yaml.
 
     Returns:
         Configuration dictionary with quality gate settings.
@@ -57,7 +57,7 @@ def load_quality_config() -> dict[str, Any]:
         "enabled": True,
     }
 
-    config_path = get_project_dir() / ".moai" / "config" / "sections" / "quality.yaml"
+    config_path = get_project_dir() / ".modu" / "config" / "sections" / "quality.yaml"
 
     if config_path.exists():
         try:

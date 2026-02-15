@@ -287,11 +287,11 @@ except ImportError:
         merging them to provide complete configuration data.
 
         Priority (highest to lowest):
-        1. Section files (.moai/config/sections/*.yaml)
-        2. Main config file (.moai/config/config.yaml)
+        1. Section files (.modu/config/sections/*.yaml)
+        2. Main config file (.modu/config/config.yaml)
         """
         project_root = find_project_root()
-        config_dir = project_root / ".moai" / "config"
+        config_dir = project_root / ".modu" / "config"
 
         # Start with main config file
         main_config_path = config_dir / "config.yaml"
@@ -336,12 +336,12 @@ except ImportError:
         """Get SPEC progress information - FIXED to use YAML frontmatter parsing"""
         # FIX #3: Use absolute path from find_project_root() to ensure current project only
         project_root = find_project_root()
-        specs_dir = project_root / ".moai" / "specs"
+        specs_dir = project_root / ".modu" / "specs"
 
         if not specs_dir.exists():
             return {"completed": 0, "total": 0, "percentage": 0}
         try:
-            # Only scan SPEC folders in THIS project's .moai/specs/ directory
+            # Only scan SPEC folders in THIS project's .modu/specs/ directory
             spec_folders = [d for d in specs_dir.iterdir() if d.is_dir() and d.name.startswith("SPEC-")]
             total = len(spec_folders)
 
@@ -383,7 +383,7 @@ def should_show_setup_messages() -> bool:
     """Determine whether to show setup completion messages (cached version).
 
     Logic:
-    1. Read .moai/config/config.yaml (using cache)
+    1. Read .modu/config/config.yaml (using cache)
     2. Check session.suppress_setup_messages flag
     3. If suppress_setup_messages is False, always show messages
     4. If suppress_setup_messages is True:
@@ -458,8 +458,8 @@ def get_git_info() -> dict[str, Any]:
     # FIX #1 and #4: Check if git is initialized first
     if not check_git_initialized():
         return {
-            "branch": "Git not initialized → Run 'moai-adk init' to set up Git repository",
-            "last_commit": "Git not initialized → Run 'moai-adk init' to set up Git repository",
+            "branch": "Git not initialized → Run 'modu-adk init' to set up Git repository",
+            "last_commit": "Git not initialized → Run 'modu-adk init' to set up Git repository",
             "commit_time": "",
             "changes": 0,
             "git_initialized": False,
@@ -667,12 +667,12 @@ def check_version_update() -> tuple[str, bool]:
 
         # Get installed version (fast, ~6ms)
         try:
-            installed_version = importlib.metadata.version("moai-adk")
+            installed_version = importlib.metadata.version("modu-adk")
         except importlib.metadata.PackageNotFoundError:
             return "(latest)", False
 
         # Try to load cached PyPI version from Phase 1
-        version_cache_file = find_project_root() / ".moai" / "cache" / "version-check.json"
+        version_cache_file = find_project_root() / ".modu" / "cache" / "version-check.json"
         latest_version = None
 
         if version_cache_file.exists():
@@ -710,7 +710,7 @@ def get_test_info() -> dict[str, Any]:
     Running pytest is too slow (5+ seconds), so we skip it and return unknown status.
     Users can run tests manually with: pytest --cov
 
-    To check test status, use: /moai:test-status (future feature)
+    To check test status, use: /modu:test-status (future feature)
     """
     # Skip pytest execution - it's too slow for SessionStart
     return {"coverage": "unknown", "status": "❓"}
@@ -720,7 +720,7 @@ def get_spec_progress() -> dict[str, Any]:
     """Get SPEC progress information (cached version)
 
     Uses ConfigCache to avoid repeated filesystem scans.
-    Cache is valid for 5 minutes or until .moai/specs/ is modified.
+    Cache is valid for 5 minutes or until .modu/specs/ is modified.
 
     Returns:
         Dict with keys: completed, total, percentage
@@ -765,13 +765,13 @@ def format_project_metadata() -> str:
     Returns:
         Formatted project metadata string with version and Git info
     """
-    moai_version = "unknown"
+    modu_version = "unknown"
     config = get_cached_config()
     if config:
-        moai_version = config.get("moai", {}).get("version", "unknown")
+        modu_version = config.get("modu", {}).get("version", "unknown")
 
     version_status, _has_update = check_version_update()
-    return f"📦 Version: {moai_version} {version_status}"
+    return f"📦 Version: {modu_version} {version_status}"
 
 
 def get_language_info(config: dict) -> dict:
@@ -814,7 +814,7 @@ def load_user_personalization() -> dict:
     """
     try:
         # Import the centralized language configuration resolver
-        from src.moai_adk.core.language_config_resolver import get_resolver
+        from src.modu_adk.core.language_config_resolver import get_resolver
 
         # Get resolver instance and resolve configuration
         resolver = get_resolver(str(find_project_root()))
@@ -841,7 +841,7 @@ def load_user_personalization() -> dict:
         template_vars = resolver.export_template_variables(config)
 
         # Store resolved configuration for session-wide access
-        personalization_cache_file = find_project_root() / ".moai" / "cache" / "personalization.json"
+        personalization_cache_file = find_project_root() / ".modu" / "cache" / "personalization.json"
         try:
             personalization_cache_file.parent.mkdir(parents=True, exist_ok=True)
 
@@ -870,8 +870,8 @@ def load_user_personalization() -> dict:
         config = get_cached_config()
 
         # Environment variables take priority
-        user_name = os.getenv("MOAI_USER_NAME")
-        conversation_lang = os.getenv("MOAI_CONVERSATION_LANG")
+        user_name = os.getenv("MODU_USER_NAME")
+        conversation_lang = os.getenv("MODU_CONVERSATION_LANG")
 
         # Fallback to config file if environment variables not set
         if user_name is None and config:
@@ -885,7 +885,7 @@ def load_user_personalization() -> dict:
 
         # Get language name
         # System provides 4 languages: ko, en, ja, zh
-        # Language names are defined in .moai/config/sections/language.yaml
+        # Language names are defined in .modu/config/sections/language.yaml
         lang_name_map = {
             "ko": "Korean",
             "en": "English",
@@ -913,7 +913,7 @@ def load_user_personalization() -> dict:
         }
 
         # Store for session-wide access
-        personalization_cache_file = find_project_root() / ".moai" / "cache" / "personalization.json"
+        personalization_cache_file = find_project_root() / ".modu" / "cache" / "personalization.json"
         try:
             personalization_cache_file.parent.mkdir(parents=True, exist_ok=True)
             personalization_cache_file.write_text(
@@ -942,20 +942,20 @@ def format_session_output() -> str:
     # Load user personalization settings
     personalization = load_user_personalization()
 
-    # Get MoAI version from CLI (works with uv tool installations)
+    # Get Modu version from CLI (works with uv tool installations)
     try:
-        result = subprocess.run(["moai", "--version"], capture_output=True, text=True, check=True, timeout=5)
-        # Extract version number from output (e.g., "MoAI version X.Y.Z" or "X.Y.Z")
+        result = subprocess.run(["modu", "--version"], capture_output=True, text=True, check=True, timeout=5)
+        # Extract version number from output (e.g., "Modu version X.Y.Z" or "X.Y.Z")
         version_match = re.search(r"(\d+\.\d+\.\d+)", result.stdout)
         if version_match:
-            moai_version = version_match.group(1)
+            modu_version = version_match.group(1)
         else:
-            moai_version = "unknown"
+            modu_version = "unknown"
     except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
         # Fallback to config version if CLI fails
-        moai_version = "unknown"
+        modu_version = "unknown"
         if config:
-            moai_version = config.get("moai", {}).get("version", "unknown")
+            modu_version = config.get("modu", {}).get("version", "unknown")
 
     # Get language info
     lang_info = get_language_info(config)
@@ -968,8 +968,8 @@ def format_session_output() -> str:
 
     # Format output with each item on separate line (reordered per user request)
     output = [
-        "🚀 MoAI-ADK Session Started",
-        f"   📦 Version: {moai_version} {version_status}",
+        "🚀 Modu-ADK Session Started",
+        f"   📦 Version: {modu_version} {version_status}",
         f"   🔄 Changes: {git_info['changes']}",
         f"   🌿 Branch: {git_info['branch']}",
         # FIX #2: Add Git Strategy information
@@ -984,12 +984,12 @@ def format_session_output() -> str:
 
     if personalization.get("needs_setup", False):
         # Show setup guidance (based on conversation_language)
-        # Guide user to generate project documentation with /moai project
+        # Guide user to generate project documentation with /modu project
         setup_messages = {
-            "ko": "   👋 환영합니다! '/moai project' 명령어로 프로젝트 문서를 생성해주세요",
-            "ja": "   👋 ようこそ！'/moai project' コマンドでプロジェクトドキュメントを生成してください",
-            "zh": "   👋 欢迎！请运行 '/moai project' 命令生成项目文档",
-            "en": "   👋 Welcome! Please run '/moai project' to generate project documentation",
+            "ko": "   👋 환영합니다! '/modu project' 명령어로 프로젝트 문서를 생성해주세요",
+            "ja": "   👋 ようこそ！'/modu project' コマンドでプロジェクトドキュメントを生成してください",
+            "zh": "   👋 欢迎！请运行 '/modu project' 命令生成项目文档",
+            "en": "   👋 Welcome! Please run '/modu project' to generate project documentation",
         }
         output.append(setup_messages.get(conv_lang, setup_messages["en"]))
     elif personalization["has_personalization"]:

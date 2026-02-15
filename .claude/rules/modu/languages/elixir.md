@@ -69,7 +69,7 @@ DynamicSupervisor.start_child(MyApp.WorkerSupervisor, {Worker, args})
 - Profile with `:observer.start()`
 - Use connection pooling with DBConnection
 
-## MoAI Integration
+## Modu Integration
 
-- Use Skill("moai-lang-elixir") for detailed patterns
+- Use Skill("modu-lang-elixir") for detailed patterns
 - Follow TRUST 5 quality gates

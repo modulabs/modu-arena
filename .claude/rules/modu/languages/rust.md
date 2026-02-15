@@ -22,7 +22,7 @@ Version: Rust 1.92+
 - Use tokio for async runtime
 - Minimize unsafe blocks
 
-## MoAI Integration
+## Modu Integration
 
-- Use Skill("moai-lang-rust") for detailed patterns
+- Use Skill("modu-lang-rust") for detailed patterns
 - Follow TRUST 5 quality gates

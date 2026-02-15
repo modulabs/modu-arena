@@ -17,7 +17,7 @@ try:
     import yaml
 except ImportError as e:
     raise ImportError(
-        "PyYAML is required for MoAI-ADK hooks. "
+        "PyYAML is required for Modu-ADK hooks. "
         "Install with: pip install pyyaml\n"
         f"Or use: uv run --with pyyaml <hook_script>\n"
         f"Original error: {e}"
@@ -44,15 +44,15 @@ except ImportError:
 
 
 # Cache directory for version check results
-CACHE_DIR_NAME = ".moai/cache"
+CACHE_DIR_NAME = ".modu/cache"
 
 
 def find_project_root(start_path: str | Path = ".") -> Path:
-    """Find MoAI-ADK project root by searching upward for project markers.
+    """Find Modu-ADK project root by searching upward for project markers.
 
     This is a wrapper around path_utils.find_project_root() for backward compatibility.
     The canonical implementation in path_utils provides:
-    - Environment variable support (MOAI_PROJECT_ROOT, CLAUDE_PROJECT_DIR)
+    - Environment variable support (MODU_PROJECT_ROOT, CLAUDE_PROJECT_DIR)
     - Caching for performance
     - Multiple project marker detection
 
@@ -81,8 +81,8 @@ def find_project_root(start_path: str | Path = ".") -> Path:
     max_depth = 10  # Prevent infinite loop
 
     for _ in range(max_depth):
-        # Check for .moai/config/config.yaml (primary indicator)
-        if (current / ".moai" / "config" / "config.yaml").exists():
+        # Check for .modu/config/config.yaml (primary indicator)
+        if (current / ".modu" / "config" / "config.yaml").exists():
             return current
 
         # Check for CLAUDE.md (secondary indicator)
@@ -323,7 +323,7 @@ def get_git_info(cwd: str) -> dict[str, Any]:
 def count_specs(cwd: str) -> dict[str, int]:
     """SPEC File count and progress calculation
 
-    Browse the .moai/specs/ directory to find the number of SPEC Files and
+    Browse the .modu/specs/ directory to find the number of SPEC Files and
     Counts the number of SPECs with status: completed.
 
     Args:
@@ -335,7 +335,7 @@ def count_specs(cwd: str) -> dict[str, int]:
         - total: total number of SPECs (int)
         - percentage: completion percentage (int, 0~100)
 
-        All 0 if .moai/specs/ directory does not exist
+        All 0 if .modu/specs/ directory does not exist
 
     Examples:
         >>> count_specs("/path/to/project")
@@ -344,10 +344,10 @@ def count_specs(cwd: str) -> dict[str, int]:
         {'completed': 0, 'total': 0, 'percentage': 0}
 
     Notes:
-        - SPEC File Location: .moai/specs/SPEC-{ID}/spec.md
+        - SPEC File Location: .modu/specs/SPEC-{ID}/spec.md
         - Completion condition: Include "status: completed" in YAML front matter
         - If parsing fails, the SPEC is considered incomplete.
-        - Automatically finds project root to locate .moai/specs/
+        - Automatically finds project root to locate .modu/specs/
 
     DDD History:
         - ANALYZE: 5 items scenario test (0/0, 2/5, 5/5, no directory, parsing error)
@@ -357,7 +357,7 @@ def count_specs(cwd: str) -> dict[str, int]:
     """
     # Find project root to ensure we read specs from correct location
     project_root = find_project_root(cwd)
-    specs_dir = project_root / ".moai" / "specs"
+    specs_dir = project_root / ".modu" / "specs"
 
     if not specs_dir.exists():
         return {"completed": 0, "total": 0, "percentage": 0}
@@ -407,13 +407,13 @@ def get_project_language(cwd: str) -> str:
         Language string in lower-case.
 
     Notes:
-        - Reads ``.moai/config/config.yaml`` first for a quick answer.
+        - Reads ``.modu/config/config.yaml`` first for a quick answer.
         - Falls back to ``detect_language`` if configuration is missing.
-        - Automatically finds project root to locate .moai/config/config.yaml
+        - Automatically finds project root to locate .modu/config/config.yaml
     """
     # Find project root to ensure we read config from correct location
     project_root = find_project_root(cwd)
-    config_path = project_root / ".moai" / "config" / "config.yaml"
+    config_path = project_root / ".modu" / "config" / "config.yaml"
     if config_path.exists():
         try:
             config = yaml.safe_load(config_path.read_text(encoding="utf-8", errors="replace")) or {}
@@ -429,20 +429,20 @@ def get_project_language(cwd: str) -> str:
 
 
 def _validate_project_structure(cwd: str) -> bool:
-    """Validate that project has required MoAI-ADK structure
+    """Validate that project has required Modu-ADK structure
 
     Args:
         cwd: Project root directory path
 
     Returns:
-        bool: True if .moai/config/config.yaml exists, False otherwise
+        bool: True if .modu/config/config.yaml exists, False otherwise
     """
     project_root = find_project_root(cwd)
-    return (project_root / ".moai" / "config" / "config.yaml").exists()
+    return (project_root / ".modu" / "config" / "config.yaml").exists()
 
 
 def get_version_check_config(cwd: str) -> dict[str, Any]:
-    """Read version check configuration from .moai/config/config.yaml
+    """Read version check configuration from .modu/config/config.yaml
 
     Returns version check settings with sensible defaults.
     Supports frequency-based cache TTL configuration.
@@ -475,22 +475,22 @@ def get_version_check_config(cwd: str) -> dict[str, Any]:
 
     # Find project root to ensure we read config from correct location
     project_root = find_project_root(cwd)
-    config_path = project_root / ".moai" / "config" / "config.yaml"
+    config_path = project_root / ".modu" / "config" / "config.yaml"
     if not config_path.exists():
         return defaults
 
     try:
         config = yaml.safe_load(config_path.read_text(encoding="utf-8", errors="replace")) or {}
 
-        # Extract moai.version_check section
-        moai_config = config.get("moai", {})
-        version_check_config = moai_config.get("version_check", {})
+        # Extract modu.version_check section
+        modu_config = config.get("modu", {})
+        version_check_config = modu_config.get("version_check", {})
 
         # Read enabled flag (default: True)
         enabled = version_check_config.get("enabled", defaults["enabled"])
 
         # Read frequency (default: "daily")
-        frequency = moai_config.get("update_check_frequency", defaults["frequency"])
+        frequency = modu_config.get("update_check_frequency", defaults["frequency"])
 
         # Validate frequency
         if frequency not in ttl_by_frequency:
@@ -597,7 +597,7 @@ def is_major_version_change(current: str, latest: str) -> bool:
 
 
 def get_package_version_info(cwd: str = ".") -> dict[str, Any]:
-    """Check MoAI-ADK current and latest version with caching and offline support.
+    """Check Modu-ADK current and latest version with caching and offline support.
 
     ⭐ CRITICAL GUARANTEE: This function ALWAYS returns the current installed version.
     Network failures, cache issues, and timeouts NEVER result in "unknown" version.
@@ -655,7 +655,7 @@ def get_package_version_info(cwd: str = ".") -> dict[str, Any]:
         version_cache_class = None
 
     # 1. Find project root (ensure cache is always in correct location)
-    # This prevents creating .moai/cache in wrong locations when hooks run
+    # This prevents creating .modu/cache in wrong locations when hooks run
     # from subdirectories like .claude/hooks/alfred/
     project_root = find_project_root(cwd)
 
@@ -666,7 +666,7 @@ def get_package_version_info(cwd: str = ".") -> dict[str, Any]:
     # 2. Get current installed version first (needed for cache validation)
     current_version = "unknown"
     try:
-        current_version = version("moai-adk")
+        current_version = version("modu-adk")
     except PackageNotFoundError:
         current_version = "dev"
         # Dev mode - skip cache and return immediately
@@ -715,7 +715,7 @@ def get_package_version_info(cwd: str = ".") -> dict[str, Any]:
     pypi_data = None
     try:
         with timeout_handler(1):
-            url = "https://pypi.org/pypi/moai-adk/json"
+            url = "https://pypi.org/pypi/modu-adk/json"
             headers = {"Accept": "application/json"}
             req = urllib.request.Request(url, headers=headers)
             with urllib.request.urlopen(req, timeout=0.8) as response:
@@ -728,7 +728,7 @@ def get_package_version_info(cwd: str = ".") -> dict[str, Any]:
                     release_url = project_urls.get("Changelog", "")
                     if not release_url:
                         # Fallback to GitHub releases URL pattern
-                        release_url = f"https://github.com/modu-ai/moai-adk/releases/tag/v{result['latest']}"
+                        release_url = f"https://github.com/modu-ai/modu-adk/releases/tag/v{result['latest']}"
                     result["release_notes_url"] = release_url
                 except (KeyError, AttributeError, TypeError):
                     result["release_notes_url"] = None
@@ -755,7 +755,7 @@ def get_package_version_info(cwd: str = ".") -> dict[str, Any]:
 
             if latest_parts > current_parts:
                 result["update_available"] = True
-                result["upgrade_command"] = "uv tool upgrade moai-adk"
+                result["upgrade_command"] = "uv tool upgrade modu-adk"
 
                 # Detect major version change
                 result["is_major_update"] = is_major_version_change(current_str, latest_str)

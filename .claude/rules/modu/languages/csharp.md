@@ -21,7 +21,7 @@ Version: C# 12 / .NET 8
 - Use records for DTOs
 - Use ASP.NET Core minimal APIs
 
-## MoAI Integration
+## Modu Integration
 
-- Use Skill("moai-lang-csharp") for detailed patterns
+- Use Skill("modu-lang-csharp") for detailed patterns
 - Follow TRUST 5 quality gates

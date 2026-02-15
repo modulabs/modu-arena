@@ -11,7 +11,7 @@ description: |
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__github__create-or-update-file, mcp__github__push-files, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: inherit
 permissionMode: default
-skills: moai-foundation-claude, moai-workflow-project, moai-workflow-jit-docs, moai-platform-vercel, moai-platform-railway
+skills: modu-foundation-claude, modu-workflow-project, modu-workflow-jit-docs, modu-platform-vercel, modu-platform-railway
 ---
 
 # DevOps Expert - Deployment & Infrastructure Specialist
@@ -111,21 +111,21 @@ Example: Korean user receives Korean explanations of infrastructure decisions an
 
 [HARD] Automatic Core Skills (from YAML frontmatter Line 7)
 
-- moai-workflow-project – Project configuration and deployment workflows
+- modu-workflow-project – Project configuration and deployment workflows
   WHY: Workflow knowledge enables proper project structure and deployment orchestration
   IMPACT: Missing workflow patterns produces inconsistent deployment configurations
 
-- moai-platform-vercel – Vercel edge deployment patterns for Next.js and React applications
+- modu-platform-vercel – Vercel edge deployment patterns for Next.js and React applications
   WHY: Platform-specific patterns ensure optimal deployment for frontend frameworks
   IMPACT: Without patterns, deployments may lack performance optimizations
 
-- moai-platform-railway – Railway container deployment patterns for full-stack applications
+- modu-platform-railway – Railway container deployment patterns for full-stack applications
   WHY: Container deployment patterns ensure proven infrastructure architectures
   IMPACT: Without patterns, deployments may lack resilience or scalability features
 
 [SOFT] Conditional Skills (auto-loaded by Alfred when needed)
 
-- moai-foundation-core – TRUST 5 framework for infrastructure compliance
+- modu-foundation-core – TRUST 5 framework for infrastructure compliance
   WHY: TRUST 5 ensures infrastructure meets quality standards
   IMPACT: Missing framework awareness produces non-compliant configurations
 
@@ -197,7 +197,7 @@ Provide platform selection using AskUserQuestion with these options:
 1. Parse SPEC metadata for deployment platform
 2. Scan project (railway.json, vercel.json, Dockerfile, k8s/)
 3. Use AskUserQuestion if ambiguous
-4. Use Skills: moai-platform-vercel, moai-platform-railway (from YAML frontmatter) provide platform-specific deployment patterns
+4. Use Skills: modu-platform-vercel, modu-platform-railway (from YAML frontmatter) provide platform-specific deployment patterns
 
 ### Step 3: Design Deployment Architecture
 
@@ -677,14 +677,14 @@ Infrastructure Security Research:
 
 Skills (from YAML frontmatter):
 
-- moai-workflow-project – Project configuration and deployment workflows
-- moai-workflow-jit-docs – Documentation generation and synchronization
-- moai-platform-vercel – Vercel edge deployment for Next.js/React applications
-- moai-platform-railway – Railway container deployment for full-stack applications
+- modu-workflow-project – Project configuration and deployment workflows
+- modu-workflow-jit-docs – Documentation generation and synchronization
+- modu-platform-vercel – Vercel edge deployment for Next.js/React applications
+- modu-platform-railway – Railway container deployment for full-stack applications
 
 Conditional Skills (loaded by Alfred when needed):
 
-- moai-foundation-core – TRUST 5 framework for infrastructure compliance
+- modu-foundation-core – TRUST 5 framework for infrastructure compliance
 
 Research Resources:
 

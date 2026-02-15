@@ -1,9 +1,9 @@
-# MoAI Rank - robots.txt
+# Modu Rank - robots.txt
 User-agent: *
 Allow: /
 
 # Sitemaps
-Sitemap: https://rank.moai.dev/sitemap.xml
+Sitemap: https://rank.modu-arena.com/sitemap.xml
 
 # Disallow API routes from indexing
 Disallow: /api/

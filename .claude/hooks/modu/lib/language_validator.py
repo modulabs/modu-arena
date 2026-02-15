@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Language Configuration Validator for MoAI-ADK
+"""Language Configuration Validator for Modu-ADK
 
 Validates language configuration settings and ensures proper functionality.
 Provides detailed diagnostics for language-related issues.
@@ -65,14 +65,14 @@ def load_config() -> Dict[str, Any]:
     """Load configuration from section YAML files with fallbacks.
 
     Priority:
-    1. Section files (.moai/config/sections/*.yaml)
+    1. Section files (.modu/config/sections/*.yaml)
     2. Main config.yaml
     3. Legacy config.json
 
     Returns:
         Configuration dictionary or dict with 'error' key if not found
     """
-    config_dir = Path(".moai/config")
+    config_dir = Path(".modu/config")
     sections_dir = config_dir / "sections"
 
     config: dict[str, Any] = {}
@@ -228,9 +228,9 @@ def validate_output_style_compatibility() -> Dict[str, Any]:
             result["language_support_present"] = any(keyword in content for keyword in language_keywords)
             # Check for config reading (supports both YAML sections and legacy JSON)
             result["config_reading_present"] = (
-                ".moai/config/sections" in content
-                or ".moai/config/config.yaml" in content
-                or ".moai/config/config.json" in content
+                ".modu/config/sections" in content
+                or ".modu/config/config.yaml" in content
+                or ".modu/config/config.json" in content
             )
 
             if not result["language_support_present"]:

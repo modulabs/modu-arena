@@ -1,17 +1,17 @@
 ---
 name: manager-project
 description: |
-  Project setup specialist. Use PROACTIVELY for initialization, .moai configuration, scaffolding, and new project creation.
+  Project setup specialist. Use PROACTIVELY for initialization, .modu configuration, scaffolding, and new project creation.
   MUST INVOKE when ANY of these keywords appear in user request:
   --ultrathink flag: Activate Sequential Thinking MCP for deep analysis of project structure, configuration strategies, and scaffolding approaches.
-  EN: project setup, initialization, .moai, project configuration, scaffold, new project
-  KO: 프로젝트설정, 초기화, .moai, 프로젝트구성, 스캐폴드, 새프로젝트
-  JA: プロジェクトセットアップ, 初期化, .moai, プロジェクト構成, スキャフォールド
-  ZH: 项目设置, 初始化, .moai, 项目配置, 脚手架
+  EN: project setup, initialization, .modu, project configuration, scaffold, new project
+  KO: 프로젝트설정, 초기화, .modu, 프로젝트구성, 스캐폴드, 새프로젝트
+  JA: プロジェクトセットアップ, 初期化, .modu, プロジェクト構成, スキャフォールド
+  ZH: 项目设置, 初始化, .modu, 项目配置, 脚手架
 tools: Read, Write, Edit, MultiEdit, Grep, Glob, Bash, TodoWrite, Task, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 model: inherit
 permissionMode: default
-skills: moai-foundation-claude, moai-workflow-project, moai-workflow-templates, moai-workflow-worktree
+skills: modu-foundation-claude, modu-workflow-project, modu-workflow-templates, modu-workflow-worktree
 ---
 
 # Project Manager - Project Manager Agent
@@ -78,7 +78,7 @@ For complete execution guidelines and mandatory rules, refer to @CLAUDE.md.
 
 ## Primary Mission
 
-Initialize MoAI project structure and configuration metadata.
+Initialize Modu project structure and configuration metadata.
 
 ## Agent Persona (professional developer job)
 
@@ -119,7 +119,7 @@ Language Guidelines:
 Example:
 
 - You receive (Korean): "Initialize a new project"
-- Skills automatically loaded: moai-workflow-project, moai-workflow-templates (from YAML frontmatter)
+- Skills automatically loaded: modu-workflow-project, modu-workflow-templates (from YAML frontmatter)
 - You generate product/structure/tech.md documents in user's language
 - config.json contains English keys with localized values
 
@@ -127,14 +127,14 @@ Example:
 
 Automatic Core Skills (from YAML frontmatter Line 7)
 
-- moai-foundation-core – TRUST 5 framework, EARS pattern for specification documentation
-- moai-foundation-claude – Claude Code standards, agent/skill/command authoring patterns
-- moai-workflow-project – Project initialization workflows, language detection, config management
-- moai-workflow-templates – Template comparison and optimization after updates
+- modu-foundation-core – TRUST 5 framework, EARS pattern for specification documentation
+- modu-foundation-claude – Claude Code standards, agent/skill/command authoring patterns
+- modu-workflow-project – Project initialization workflows, language detection, config management
+- modu-workflow-templates – Template comparison and optimization after updates
 
 Conditional Skills (auto-loaded by Alfred when needed)
 
-- Language-specific skills are provided by moai-workflow-project (already in frontmatter)
+- Language-specific skills are provided by modu-workflow-project (already in frontmatter)
 - Domain-specific knowledge is deferred to appropriate expert agents when needed
 
 ### Expert Traits
@@ -176,7 +176,7 @@ project-manager is called from the `/modu project` command
 
 **Language Configuration Instructions:**
 
-- Read existing language configuration from `.moai/config.json`
+- Read existing language configuration from `.modu/config.json`
 - If language pre-configured: Use existing setting, skip selection process
 - If language missing: Initiate language detection and selection workflow
 - Apply selected language to all subsequent interactions and document generation
@@ -187,7 +187,7 @@ project-manager is called from the `/modu project` command
 
 **Initialization Mode Instructions:**
 
-- Verify `.moai/config.json` for existing language settings
+- Verify `.modu/config.json` for existing language settings
 - Apply language detection if configuration missing
 - Use existing language when properly configured
 - Delegate documentation generation to appropriate skills
@@ -195,7 +195,7 @@ project-manager is called from the `/modu project` command
 
 **Settings Modification Instructions:**
 
-- Read current configuration state from `.moai/config.json`
+- Read current configuration state from `.modu/config.json`
 - Apply skill-based configuration updates without direct file manipulation
 - Validate changes before applying to system
 - Return completion status and verification results to command layer
@@ -204,7 +204,7 @@ project-manager is called from the `/modu project` command
 **Language Change Instructions:**
 
 - Execute language preference update through skill delegation
-- Handle `.moai/config.json` updates through appropriate skill
+- Handle `.modu/config.json` updates through appropriate skill
 - Validate new language configuration and apply to system
 - Report completion status and required restart procedures
 - Preserve existing project data during language transition
@@ -288,7 +288,7 @@ For initialization modes only, evaluate project complexity through systematic an
 
 4. Load Project Documentation Workflow (for fresh install modes only):
 
-- Use moai-workflow-project (from YAML frontmatter) for documentation workflows
+- Use modu-workflow-project (from YAML frontmatter) for documentation workflows
 - The Skill provides:
 - Project Type Selection framework (5 types: Web App, Mobile App, CLI Tool, Library, Data Science)
 - Type-specific writing guides for product.md, structure.md, tech.md
@@ -296,9 +296,9 @@ For initialization modes only, evaluate project complexity through systematic an
 - Quick generator workflow to guide interactive documentation creation
 - Use the Skill's examples and guidelines throughout the interview
 
-5. Project status analysis (for fresh install modes only): `.moai/project/*.md`, README, read source structure
+5. Project status analysis (for fresh install modes only): `.modu/project/*.md`, README, read source structure
 
-6. Project Type Selection (guided by moai-workflow-project Skill):
+6. Project Type Selection (guided by modu-workflow-project Skill):
 
 - Ask user to identify project type using AskUserQuestion
 - Options: Web Application, Mobile Application, CLI Tool, Shared Library, Data Science/ML
@@ -309,7 +309,7 @@ For initialization modes only, evaluate project complexity through systematic an
 8. User Interview:
 
 - Gather information with question tree tailored to project type
-- Use type-specific focuses from moai-project-documentation Skill:
+- Use type-specific focuses from modu-project-documentation Skill:
 - Web App: User personas, adoption metrics, real-time features
 - Mobile App: User retention, app store metrics, offline capability
 - CLI Tool: Performance, integration, ecosystem adoption
@@ -326,13 +326,13 @@ For initialization modes only, evaluate project complexity through systematic an
 
 10. File Creation Restrictions [HARD]
 
-- Maintain file creation scope to `.moai/project/` directory only, excluding `.claude/memory/` and `.claude/commands/alfred/*.json` paths
+- Maintain file creation scope to `.modu/project/` directory only, excluding `.claude/memory/` and `.claude/commands/alfred/*.json` paths
 - WHY: Prevents system file conflicts and maintains clean project structure
 - IMPACT: Ensures clean separation between project documentation and system-level configurations
 
 11. Memory Synchronization Integration [HARD]
 
-- Leverage CLAUDE.md's existing `@.moai/project/*` import mechanism and append language metadata for context retention
+- Leverage CLAUDE.md's existing `@.modu/project/*` import mechanism and append language metadata for context retention
 - WHY: Ensures project context persists across sessions and language configuration is preserved
 - IMPACT: Enables seamless workflow continuation and accurate language-specific documentation retrieval
 
@@ -359,9 +359,9 @@ Execution Phases:
 
 Created Documents:
 
-- .moai/project/product.md (Korean)
-- .moai/project/structure.md (Korean)
-- .moai/project/tech.md (Korean)
+- .modu/project/product.md (Korean)
+- .modu/project/structure.md (Korean)
+- .modu/project/tech.md (Korean)
 
 Project Overview:
 
@@ -397,21 +397,21 @@ Agent responses use XML structure for downstream system integration:
       <action>product.md, structure.md, tech.md generation</action>
     </phase>
     <phase name="configuration_update" status="completed|pending">
-      <action>Updates to .moai/config.json and system settings</action>
+      <action>Updates to .modu/config.json and system settings</action>
     </phase>
   </execution_phases>
 
   <deliverables>
-    <document path=".moai/project/product.md" language="ko|en|ja|zh" status="created|updated|preserved">
+    <document path=".modu/project/product.md" language="ko|en|ja|zh" status="created|updated|preserved">
       <sections>Product vision and business objectives</sections>
     </document>
-    <document path=".moai/project/structure.md" language="ko|en|ja|zh" status="created|updated|preserved">
+    <document path=".modu/project/structure.md" language="ko|en|ja|zh" status="created|updated|preserved">
       <sections>Architecture and system design</sections>
     </document>
-    <document path=".moai/project/tech.md" language="ko|en|ja|zh" status="created|updated|preserved">
+    <document path=".modu/project/tech.md" language="ko|en|ja|zh" status="created|updated|preserved">
       <sections>Technology stack and tooling</sections>
     </document>
-    <configuration path=".moai/config.json" status="updated|unchanged">
+    <configuration path=".modu/config.json" status="updated|unchanged">
       <keys_modified>List of modified configuration keys</keys_modified>
     </configuration>
   </deliverables>
@@ -441,8 +441,8 @@ Agent responses use XML structure for downstream system integration:
 
 ## Deliverables and Delivery
 
-- Updated `.moai/project/{product,structure,tech}.md` (in the selected language)
-- Updated `.moai/config.json` (language already set, only settings modified via Skill delegation)
+- Updated `.modu/project/{product,structure,tech}.md` (in the selected language)
+- Updated `.modu/config.json` (language already set, only settings modified via Skill delegation)
 - Project overview summary (team size, technology stack, constraints) in selected language
 - Individual/team mode settings confirmation results
 - For legacy projects, organized with "Legacy Context" TODO/DEBT items
@@ -450,8 +450,8 @@ Agent responses use XML structure for downstream system integration:
 
 **Path Clarity [HARD]**
 
-- Use `.moai/project/` (singular directory) exclusively for all project documentation files
-- Reference `.moai/projects/` (plural) does not exist and should not be created
+- Use `.modu/project/` (singular directory) exclusively for all project documentation files
+- Reference `.modu/projects/` (plural) does not exist and should not be created
 - WHY: Maintains consistent naming convention and prevents accidental file organization errors
 - IMPACT: Ensures correct file placement and prevents developer confusion
 
@@ -459,7 +459,7 @@ Agent responses use XML structure for downstream system integration:
 
 **File Modification Scope [HARD]**
 
-- Ensure all file modifications remain exclusively within the `.moai/project` directory
+- Ensure all file modifications remain exclusively within the `.modu/project` directory
 - WHY: Maintains project isolation and prevents unintended modifications to system or configuration files
 - IMPACT: Protects project structure integrity and prevents configuration corruption
 
@@ -471,12 +471,12 @@ Agent responses use XML structure for downstream system integration:
 
 **Existing Document Handling [HARD]**
 
-- Implement pre-check verification for `.moai/project/product.md` before any create/overwrite operations (Issue #162)
+- Implement pre-check verification for `.modu/project/product.md` before any create/overwrite operations (Issue #162)
 - WHY: Prevents accidental loss of user edits and preserves existing project context
 - IMPACT: Enables safe updates without data loss
 - IMPLEMENTATION: Present user with three options via `AskUserQuestion`:
   - Merge: Combine new information with existing content while preserving user edits
-  - Overwrite: Replace with fresh interview after creating backup in `.moai/project/.history/`
+  - Overwrite: Replace with fresh interview after creating backup in `.modu/project/.history/`
   - Keep: Cancel operation and retain existing files unchanged
 
 ## Failure handling and recovery
@@ -679,7 +679,7 @@ IF user selects "Start Over" or Context7 research unavailable:
 - Short term/long term goals
 - Enter short-term (3 months), medium-term (6-12 months), and long-term (12 months+).
 - Legacy To-be Question: “Which areas of existing functionality must be maintained?”/ “Which modules are subject to disposal?”.
-- MoAI ADK adoption priority
+- Modu ADK adoption priority
 - Question: “What areas would you like to apply Alfred workflows to immediately?”
   Options: SPEC overhaul, DDD driven development, document/code synchronization, tag traceability, TRUST gate.
 - Follow-up: Description of expected benefits and risk factors for the selected area.
@@ -859,7 +859,7 @@ Build & Deployment Workflow:
 
 - Options: Test-First (DDD), Readable (code style), Unified (design patterns), Secured (security scanning), Trackable (SPEC linking)
 - Document TRUST 5 adoption status for each principle
-- WHY: Establishes quality and reliability standards aligned with MoAI framework
+- WHY: Establishes quality and reliability standards aligned with Modu framework
 - IMPACT: Enables systematic quality improvement and team alignment
 
 5. Collect operation and monitoring configuration [SOFT]:
@@ -943,13 +943,13 @@ IF complexity_tier == "COMPLEX" and user approved Plan Mode:
 
 - After completing all questions, use the `AskUserQuestion` tool to check "Are there any additional notes you would like to leave?" (Options: "None", "Add a note to the product document", "Add a note to the structural document", "Add a note to the technical document").
 - When a user selects a specific document, a “User Note” item is recorded in the HISTORY section of the document.
-- Organize the summary of the interview results and the written document path (`.moai/project/{product,structure,tech}.md`) in a table format at the top of the final response.
+- Organize the summary of the interview results and the written document path (`.modu/project/{product,structure,tech}.md`) in a table format at the top of the final response.
 
 ## Document Quality Checklist
 
 - [ ] Are all required sections of each document included?
 - [ ] Is information consistency between the three documents guaranteed?
-- [ ] Does the content comply with the TRUST principles (moai-core-dev-guide)?
+- [ ] Does the content comply with the TRUST principles (modu-core-dev-guide)?
 - [ ] Has the future development direction been clearly presented?
 
 ---

@@ -1,11 +1,11 @@
-# SPEC-RANK-001: MoAI Token Rank Service
+# SPEC-RANK-001: Modu Token Rank Service
 
 ## Metadata
 
 | Field | Value |
 |-------|-------|
 | SPEC ID | SPEC-RANK-001 |
-| Title | MoAI Token Rank Leaderboard Service |
+| Title | Modu Token Rank Leaderboard Service |
 | Version | 1.0.0 |
 | Status | Completed |
 | Created | 2026-01-11 |
@@ -16,11 +16,11 @@
 
 ## 1. Executive Summary
 
-MoAI Token Rank는 MoAI-ADK 사용자들의 Claude Code 토큰 사용량을 수집하고,
+Modu Token Rank는 Modu-ADK 사용자들의 Claude Code 토큰 사용량을 수집하고,
 복합 점수 기반 랭킹을 제공하는 서비스입니다.
 
 ### Goals
-1. MoAI 프로젝트(.moai 폴더 존재)에서의 토큰 사용량 자동 수집
+1. Modu 프로젝트(.modu 폴더 존재)에서의 토큰 사용량 자동 수집
 2. 복합 점수 기반 공정한 랭킹 시스템 (토큰량 40%, 효율성 25%, 세션 수 20%, 일관성 15%)
 3. GitHub OAuth 인증을 통한 사용자 식별
 4. 실시간 리더보드 및 개인 통계 대시보드
@@ -37,17 +37,17 @@ MoAI Token Rank는 MoAI-ADK 사용자들의 Claude Code 토큰 사용량을 수�
 ### 2.1 Functional Requirements
 
 #### FR-001: Token Collection Hook
-**When** a Claude Code session ends in a MoAI project (containing .moai folder),
+**When** a Claude Code session ends in a Modu project (containing .modu folder),
 **the system shall** automatically collect token usage data (input, output, cache tokens) and submit to the rank.mo.ai.kr API.
 
 **Acceptance Criteria:**
 - [ ] Session end hook executes within 5 seconds
-- [ ] Only MoAI projects (.moai folder exists) trigger collection
+- [ ] Only Modu projects (.modu folder exists) trigger collection
 - [ ] HMAC-signed request with timestamp prevents replay attacks
 - [ ] Failed submissions are queued for retry (max 3 attempts)
 
 #### FR-002: User Registration
-**When** a user runs `moai-adk rank register`,
+**When** a user runs `modu-adk rank register`,
 **the system shall** open a browser for GitHub OAuth authentication and generate a unique API key.
 
 **Acceptance Criteria:**
@@ -88,7 +88,7 @@ MoAI Token Rank는 MoAI-ADK 사용자들의 Claude Code 토큰 사용량을 수�
 - [ ] Rankings recalculated after each score update
 
 #### FR-006: CLI Status Commands
-**When** a user runs `moai-adk rank status`,
+**When** a user runs `modu-adk rank status`,
 **the system shall** display current rank, total tokens, and recent session summary.
 
 **Acceptance Criteria:**
@@ -134,12 +134,12 @@ MoAI Token Rank는 MoAI-ADK 사용자들의 Claude Code 토큰 사용량을 수�
 | Auth | NextAuth.js v5 + GitHub OAuth |
 | Rate Limiting | Upstash Redis |
 | Hosting | Vercel (rank.mo.ai.kr) |
-| CLI | Python (moai-adk package) |
+| CLI | Python (modu-adk package) |
 
 ### 3.2 Repository Structure
 
 ```
-moai-rank/                      # ~/MoAI/moai-rank
+modu-rank/                      # ~/Modu/modu-rank
 ├── apps/
 │   └── web/                    # Next.js 16 application
 │       ├── src/
@@ -150,7 +150,7 @@ moai-rank/                      # ~/MoAI/moai-rank
 │       └── package.json
 ├── packages/
 │   └── shared/                 # Shared types/schemas
-├── .moai/
+├── .modu/
 │   └── specs/                  # SPEC documents
 ├── pnpm-workspace.yaml
 ├── turbo.json
@@ -223,7 +223,7 @@ See design document for full schema. Key tables:
 - [ ] Responsive design
 
 ### Phase 4: CLI Integration (Week 4)
-- [ ] moai-adk rank commands (in MoAI-ADK repo)
+- [ ] modu-adk rank commands (in Modu-ADK repo)
 - [ ] Secure storage integration
 - [ ] Session collection hook
 - [ ] Status and leaderboard CLI views

@@ -1,6 +1,6 @@
 # Coding Standards
 
-MoAI-specific coding standards. General coding conventions are not included as Claude already knows them.
+Modu-specific coding standards. General coding conventions are not included as Claude already knows them.
 
 ## Language Policy
 
@@ -10,7 +10,7 @@ All instruction documents must be in English:
 - Slash commands (.claude/commands/**/*.md)
 - Skill definitions (.claude/skills/**/*.md)
 - Hook scripts (.claude/hooks/**/*.py)
-- Configuration files (.moai/config/**/*.yaml)
+- Configuration files (.modu/config/**/*.yaml)
 
 User-facing documentation may use multiple languages:
 - README.md, CHANGELOG.md

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Announcement translator for multi-language companyAnnouncements support.
 
-This module loads language-specific announcements from .moai/announcements/{lang}.json
+This module loads language-specific announcements from .modu/announcements/{lang}.json
 based on the conversation_language setting in language.yaml.
 
 Supported languages: ko, en, ja, zh
@@ -39,7 +39,7 @@ def get_language_from_config(project_path: Path | str) -> str:
         Language code (ko, en, ja, zh). Defaults to 'en' if not found.
     """
     project_path = Path(project_path)
-    language_file = project_path / ".moai" / "config" / "sections" / "language.yaml"
+    language_file = project_path / ".modu" / "config" / "sections" / "language.yaml"
 
     if not language_file.exists():
         return DEFAULT_LANGUAGE
@@ -69,10 +69,10 @@ def get_announcements_path(project_path: Path | str) -> Path:
         project_path: Path to the project root directory
 
     Returns:
-        Path to .moai/announcements directory
+        Path to .modu/announcements directory
     """
     project_path = Path(project_path)
-    return project_path / ".moai" / "announcements"
+    return project_path / ".modu" / "announcements"
 
 
 def load_announcements_from_file(announcements_file: Path) -> list[str]:
@@ -134,21 +134,21 @@ def get_default_announcements() -> list[str]:
         List of default announcement strings in English
     """
     return [
-        "🗿 MoAI-ADK: SPEC-First DDD with 48 Skills and Context7 integration",
-        "⚡ /moai:alfred: One-stop Plan→Run→Sync automation with intelligent routing",
-        "🌳 moai-worktree: Parallel SPEC development - work on multiple features simultaneously",
+        "🗿 Modu-ADK: SPEC-First DDD with 48 Skills and Context7 integration",
+        "⚡ /modu:alfred: One-stop Plan→Run→Sync automation with intelligent routing",
+        "🌳 modu-worktree: Parallel SPEC development - work on multiple features simultaneously",
         "🤖 20 Agents: 8 Expert + 8 Manager + 4 Builder for specialized tasks",
-        "📋 Workflow: /moai:1-plan (SPEC) → /moai:2-run (DDD) → /moai:3-sync (Docs)",
+        "📋 Workflow: /modu:1-plan (SPEC) → /modu:2-run (DDD) → /modu:3-sync (Docs)",
         "✅ Quality: TRUST 5 + ≥85% coverage + Ralph Engine (LSP + AST-grep)",
-        "📚 Tip: moai update --templates-only syncs latest skills and agents",
-        "🏆 moai rank: Track your Claude token usage on rank.mo.ai.kr",
+        "📚 Tip: modu update --templates-only syncs latest skills and agents",
+        "🏆 modu rank: Track your Claude token usage on rank.mo.ai.kr",
     ]
 
 
 def update_settings_announcements(project_path: Path | str) -> bool:
     """Update companyAnnouncements in settings.local.json based on language config.
 
-    This function is called during 'moai update' to refresh announcements
+    This function is called during 'modu update' to refresh announcements
     according to the current language setting.
 
     Args:

@@ -1,6 +1,6 @@
-# MoAI-ADK Hooks Library
+# Modu-ADK Hooks Library
 
-Shared utilities for Claude Code hooks in MoAI-ADK.
+Shared utilities for Claude Code hooks in Modu-ADK.
 
 ## Module Overview
 
@@ -47,13 +47,13 @@ HooksBaseError (base)
 ### Path Management (`path_utils.py`)
 
 ```python
-from lib.path_utils import find_project_root, get_safe_moai_path
+from lib.path_utils import find_project_root, get_safe_modu_path
 
 # Find project root (with caching)
 root = find_project_root()
 
-# Get safe path within .moai/
-cache_path = get_safe_moai_path("cache/version.json")
+# Get safe path within .modu/
+cache_path = get_safe_modu_path("cache/version.json")
 ```
 
 ### Configuration (`config_manager.py`)
@@ -101,10 +101,10 @@ formatted = format_duration(125.5)  # "2.1m"
 ## Configuration Files
 
 ### Main Config
-Location: `.moai/config/config.yaml`
+Location: `.modu/config/config.yaml`
 
 ### Section Files
-Location: `.moai/config/sections/`
+Location: `.modu/config/sections/`
 - `user.yaml` - User name
 - `language.yaml` - Language preferences
 - `project.yaml` - Project metadata
@@ -202,10 +202,10 @@ from lib.path_utils import find_project_root
 
 # ✅ CORRECT: Cross-platform
 root = find_project_root()
-config_file = root / ".moai" / "config" / "config.yaml"
+config_file = root / ".modu" / "config" / "config.yaml"
 
 # ❌ WRONG: Platform-specific
-config_file = f"{root}/.moai/config/config.yaml"
+config_file = f"{root}/.modu/config/config.yaml"
 ```
 
 ## Version

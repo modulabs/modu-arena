@@ -1,6 +1,6 @@
 # Modu-Arena - Deployment Guide
 
-This guide covers deploying MoAI Token Rank to Vercel with Neon PostgreSQL and Clerk authentication.
+This guide covers deploying Modu Token Rank to Vercel with Neon PostgreSQL and Clerk authentication.
 
 ## Prerequisites
 

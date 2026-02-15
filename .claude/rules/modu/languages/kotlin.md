@@ -20,7 +20,7 @@ Version: Kotlin 2.0+
 - Use data classes for DTOs
 - Use sealed classes for state
 
-## MoAI Integration
+## Modu Integration
 
-- Use Skill("moai-lang-kotlin") for detailed patterns
+- Use Skill("modu-lang-kotlin") for detailed patterns
 - Follow TRUST 5 quality gates
