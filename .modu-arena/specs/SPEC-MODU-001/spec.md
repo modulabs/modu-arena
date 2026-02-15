@@ -7,7 +7,7 @@
 | SPEC ID | SPEC-MODU-001 |
 | Title | Modu Rank to Modu-Arena Migration |
 | Version | 1.0.0 |
-| Status | Planned |
+| Status | In Progress |
 | Created | 2026-02-10 |
 | Author | ModuLabs Team |
 | Domain | Full-Stack Migration |
@@ -296,10 +296,11 @@ CREATE TABLE tool_types (
 -- Seed initial tools
 INSERT INTO tool_types (id, name, display_name, icon_url, color, sort_order) VALUES
   ('claude-code', 'Claude Code', 'Claude Code', '/icons/claude.svg', '#CC785C', 1),
-  ('opencode', 'OpenCode', 'OpenCode', '/icons/opencode.svg', '#6366F1', 2),
-  ('gemini', 'Gemini', 'Gemini Code', '/icons/gemini.svg', '#4285F4', 3),
-  ('codex', 'Codex', 'OpenAI Codex', '/icons/codex.svg', '#10A37F', 4),
-  ('crush', 'Crush', 'Crush AI', '/icons/crush.svg', '#EC4899', 5);
+  ('claude-desktop', 'Claude Desktop', 'Claude Desktop', '/icons/claude.svg', '#D4956A', 2),
+  ('opencode', 'OpenCode', 'OpenCode', '/icons/opencode.svg', '#6366F1', 3),
+  ('gemini', 'Gemini', 'Gemini Code', '/icons/gemini.svg', '#4285F4', 4),
+  ('codex', 'Codex', 'OpenAI Codex', '/icons/codex.svg', '#10A37F', 5),
+  ('crush', 'Crush', 'Crush AI', '/icons/crush.svg', '#EC4899', 6);
 
 -- Sessions table (tracking tool usage)
 CREATE TABLE sessions (
@@ -570,6 +571,17 @@ Each tool adapter may have different authentication mechanisms:
 
 The platform shall normalize these to a unified API key format for the Modu API.
 
+### 4.4 Daemon-Based Periodic Sync (Added 2026-02-15)
+
+A launchd daemon runs every 2 minutes to collect token usage from tools that store local data:
+- **Claude Desktop**: Parses JSONL conversation logs from `~/Library/Application Support/Claude/`
+- **OpenCode**: Queries SQLite database at `~/.local/share/opencode/opencode.db`
+
+The daemon batches submissions (50 per batch, 35s delay, max 3 batches/run) and stops on HTTP 429.
+Deduplication is handled server-side via session hash. State persisted in `~/.modu-arena-daemon.json`.
+
+Tools without local data stores (Claude Code, Gemini, Codex, Crush) rely solely on session-end hooks.
+
 ### 4.2 Project Privacy
 
 - Project paths hashed before storage (SHA-256 with user salt)
@@ -588,21 +600,21 @@ The platform shall normalize these to a unified API key format for the Modu API.
 
 ## 5. Migration Strategy
 
-### 5.1 Phase 1: Branding Update (Primary Goal)
-- [ ] Update all UI text: moai → modu-arena
-- [ ] Update API key prefix: `moai_rank_` → `modu_arena_`
-- [ ] Update domain names and URLs
-- [ ] Update package.json names
-- [ ] Update documentation
-- [ ] Environment variable renaming
+### 5.1 Phase 1: Branding Update (Primary Goal) — COMPLETED
+- [x] Update all UI text: moai → modu-arena
+- [x] Update API key prefix: `moai_rank_` → `modu_arena_`
+- [x] Update domain names and URLs
+- [x] Update package.json names
+- [x] Update documentation
+- [x] Environment variable renaming
 
-### 5.2 Phase 2: Tool Type Extension (Primary Goal)
-- [ ] Add tool_type column to sessions table
-- [ ] Add tool_type column to token_usage table
-- [ ] Create tool_types registry table
-- [ ] Update session submission API
-- [ ] Update CLI to send tool_type
-- [ ] Add tool filtering to dashboard
+### 5.2 Phase 2: Tool Type Extension (Primary Goal) — COMPLETED
+- [x] Add tool_type column to sessions table
+- [x] Add tool_type column to token_usage table
+- [x] Create tool_types registry table
+- [x] Update session submission API
+- [x] Update CLI to send tool_type
+- [x] Add tool filtering to dashboard
 
 ### 5.3 Phase 3: Project Evaluation (Primary Goal)
 - [ ] Create project_evaluations table

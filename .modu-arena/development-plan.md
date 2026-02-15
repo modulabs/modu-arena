@@ -14,22 +14,24 @@ Source of truth:
 - If requirements need changes: edit the SPEC first, then update the plan + acceptance.
 - If implementation is next: follow the plan milestones in order.
 
-### Current Focus: Claude Code Slash Commands (/modu)
+### Current Focus: Universal Daemon Sync (2-min interval)
 
-The center of this repo's agent tooling is **creating and evolving Claude Code custom slash commands**.
+All AI coding tools sync token usage to the backend every 2 minutes via a launchd daemon, published as `@suncreation/modu-arena` on npm.
 
-Primary commands live here:
+**CLI package**: `packages/cli/` → npm `@suncreation/modu-arena` (v0.3.2)
+
+**Completed milestones (Feb 2026):**
+- moai → modu-arena rename (v0.3.0)
+- Multi-tool daemon sync: Claude Desktop (JSONL), OpenCode (SQLite) + session-end hooks
+- Batching, rate-limit protection, recent-only OpenCode filter
+- Backend token limits raised (500M input, 100M output, 1B cache)
+- Production deployed to `backend.vibemakers.kr:23010`
+
+**Slash commands** (secondary focus):
 
 - `.claude/commands/modu.md` (entry: `/modu`)
 - `.claude/commands/modu/*.md` (subcommands: `/modu:plan`, `/modu:run`, ...)
-
-Compatibility mirrors (for tools that prefer a top-level commands layout):
-
-- `commands/modu.md`
-- `commands/modu/*.md`
-
-Primary project evaluation command:
-
+- `commands/modu.md` / `commands/modu/*.md` (compatibility mirrors)
 - `/modu:submit` (local validation + README-only remote evaluation)
 
 Acceptance criteria and edge cases (duplicates, storage semantics, pass threshold) are defined in:

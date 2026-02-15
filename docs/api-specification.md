@@ -1,8 +1,8 @@
 # Modu-Arena API Specification
 
-> **Version**: 1.0.0
+> **Version**: 1.1.0
 > **Base URL**: `http://localhost:8989`
-> **Last Updated**: 2026-02-11
+> **Last Updated**: 2026-02-15
 
 ---
 
@@ -681,6 +681,7 @@ All errors follow a consistent format:
 | Slug | Display Name | Description |
 |---|---|---|
 | `claude-code` | Claude Code | Anthropic's Claude Code CLI |
+| `claude-desktop` | Claude Desktop | Anthropic's Claude Desktop app |
 | `opencode` | OpenCode | OpenCode CLI |
 | `gemini` | Gemini CLI | Google's Gemini CLI |
 | `codex` | Codex CLI | OpenAI's Codex CLI |
@@ -783,6 +784,63 @@ function computeSessionHash(
 
 - Used for deduplication (duplicate sessions have same hash).
 - `userSalt` is a per-user random value generated at user creation.
+
+---
+
+## 9. Daemon Sync Architecture
+
+### 9.1 Overview
+
+The CLI includes a **launchd daemon** (macOS) that runs every **2 minutes**, collecting token usage from all supported AI coding tools and syncing to the backend. This complements session-end hooks for tools that support them.
+
+### 9.2 Data Collection Strategy
+
+| Tool | Session-End Hook | Periodic Daemon (2 min) | Data Source |
+|------|-----------------|------------------------|-------------|
+| Claude Code | `session-end.sh` → `_modu-hook.js` | No local data store | Hook only |
+| Claude Desktop | N/A (no hook support) | JSONL log parsing | `~/Library/Application Support/Claude/*.jsonl` |
+| OpenCode | `session-end.sh` → `_modu-hook.js` | SQLite query | `~/.local/share/opencode/opencode.db` |
+| Gemini/Codex/Crush | `session-end.sh` → `_modu-hook.js` | No local data store | Hook only |
+
+### 9.3 Daemon State
+
+The daemon persists state in `~/.modu-arena-daemon.json`:
+
+```json
+{
+  "syncedHashes": ["sha256hex1", "sha256hex2"],
+  "lastSync": "2026-02-15T14:03:00.000Z"
+}
+```
+
+- `syncedHashes`: Set of session hashes already sent (dedup).
+- `lastSync`: ISO timestamp of last successful sync (used to filter recent OpenCode sessions via `WHERE time_updated >= lastSync`).
+
+### 9.4 Batching & Rate Limit Protection
+
+To avoid overwhelming the backend (100 req/min limit), the daemon uses batching:
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `BATCH_SIZE` | 50 | Sessions per batch request |
+| `BATCH_DELAY_MS` | 35,000 | Delay between batches |
+| `MAX_BATCHES_PER_RUN` | 3 | Maximum batches per daemon run |
+
+If the backend returns `HTTP 429`, the daemon stops immediately and retries on next run.
+
+### 9.5 Token Validation Limits (Server-Side)
+
+The backend validates token counts on both single and batch endpoints:
+
+| Limit | Value | Description |
+|-------|-------|-------------|
+| `MAX_INPUT_TOKENS` | 500,000,000 | Max input tokens per session |
+| `MAX_OUTPUT_TOKENS` | 100,000,000 | Max output tokens per session |
+| `MAX_CACHE_TOKENS` | 1,000,000,000 | Max cache tokens per session |
+
+### 9.6 Deduplication
+
+Sessions are deduplicated via `serverHash = SHA256(userId + userSalt + inputTokens + outputTokens + cacheCreationTokens + cacheReadTokens + modelName + endedAt)`. The same session sent via both hook and daemon produces the same hash and is silently rejected as a duplicate.
 
 ---
 

@@ -45,6 +45,7 @@ Registry of supported AI coding tools.
 
 **Supported Tools:**
 - `claude-code` - Anthropic Claude Code
+- `claude-desktop` - Anthropic Claude Desktop
 - `opencode` - OpenCode AI
 - `gemini` - Google Gemini Code
 - `codex` - OpenAI Codex
@@ -201,5 +202,5 @@ This schema is designed as a fresh installation. For existing Modu-Arena data:
 
 ---
 
-**Last Updated**: 2026-02-10
-**Schema Version**: 1.0.0
+**Last Updated**: 2026-02-15
+**Schema Version**: 1.1.0
