@@ -1,4 +1,4 @@
-# Modu-Arena - Claude Code Agent Leaderboard
+# Modu-Arena - AI Coding Agent Leaderboard
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.1-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat-square&logo=typescript)
@@ -6,7 +6,7 @@
 ![Clerk](https://img.shields.io/badge/Auth-Clerk-6C47FF?style=flat-square)
 ![License](https://img.shields.io/badge/License-Copyleft-green?style=flat-square)
 
-A competitive leaderboard platform for tracking Claude Code token usage. Track your AI coding sessions, compete with the community, and discover your own coding style through Agentic Coding Analytics.
+A competitive leaderboard platform for tracking AI coding tool token usage across Claude Code, Claude Desktop, OpenCode, Gemini CLI, Codex CLI, and Crush. Track your sessions, compete with the community, and discover your coding style through Agentic Coding Analytics.
 
 [English](README.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | [中文](README.zh.md)
 
@@ -24,7 +24,7 @@ npx @suncreation/modu-arena install --api-key <your-api-key>
 ```
 
 This will:
-1. Set up token usage tracking for your AI coding tools (Claude Code, OpenCode, Gemini CLI, Codex CLI, Crush)
+1. Set up token usage tracking for your AI coding tools (Claude Code, Claude Desktop, OpenCode, Gemini CLI, Codex CLI, Crush)
 2. Store your API key securely
 3. Begin automatic session tracking
 
@@ -55,6 +55,9 @@ npx @suncreation/modu-arena <command> [options]
 Commands:
   install    Install and configure token tracking
   submit     Submit current project for AI evaluation
+  rank       Show your current ranking
+  status     Check daemon and API connection status
+  uninstall  Remove token tracking configuration
 ```
 
 ### install - Set Up Token Tracking
@@ -369,9 +372,14 @@ CRON_SECRET="your-secure-random-string"
 erDiagram
     users ||--o{ sessions : has
     users ||--o{ token_usage : has
-    users ||--o{ daily_aggregates : has
+    users ||--o{ daily_user_stats : has
     users ||--o{ rankings : has
+    users ||--o{ project_evaluations : has
+    users ||--o| user_stats : has
     users ||--o{ security_audit_log : logs
+    tool_types ||--o{ sessions : identifies
+    tool_types ||--o{ token_usage : identifies
+    sessions ||--o{ token_usage : has
 
     users {
         uuid id PK
@@ -387,10 +395,22 @@ erDiagram
         timestamp updated_at
     }
 
+    tool_types {
+        varchar id PK
+        varchar name
+        varchar display_name
+        text icon_url
+        varchar color
+        boolean is_active
+        integer sort_order
+        timestamp created_at
+    }
+
     sessions {
         uuid id PK
         uuid user_id FK
-        varchar server_session_hash UK
+        varchar tool_type_id FK
+        varchar session_hash UK
         varchar anonymous_project_id
         timestamp started_at
         timestamp ended_at
@@ -399,7 +419,6 @@ erDiagram
         integer turn_count
         jsonb tool_usage
         jsonb code_metrics
-        jsonb model_usage_details
         timestamp created_at
     }
 
@@ -407,23 +426,56 @@ erDiagram
         uuid id PK
         uuid session_id FK
         uuid user_id FK
+        varchar tool_type_id FK
         bigint input_tokens
         bigint output_tokens
         bigint cache_creation_tokens
         bigint cache_read_tokens
+        bigint total_tokens
         timestamp recorded_at
     }
 
-    daily_aggregates {
+    project_evaluations {
         uuid id PK
         uuid user_id FK
-        date date
+        varchar project_path_hash
+        varchar project_name
+        integer total_score
+        integer rubric_functionality
+        integer rubric_practicality
+        varchar llm_model
+        varchar llm_provider
+        boolean passed
+        text feedback
+        timestamp evaluated_at
+    }
+
+    user_stats {
+        uuid user_id PK_FK
         bigint total_input_tokens
         bigint total_output_tokens
         bigint total_cache_tokens
+        bigint total_all_tokens
+        jsonb tokens_by_tool
+        integer total_sessions
+        jsonb sessions_by_tool
+        integer successful_projects_count
+        integer total_evaluations
+        timestamp last_activity_at
+        timestamp updated_at
+    }
+
+    daily_user_stats {
+        uuid id PK
+        uuid user_id FK
+        date stat_date
+        bigint input_tokens
+        bigint output_tokens
+        bigint cache_tokens
+        bigint total_tokens
         integer session_count
-        decimal avg_efficiency
-        decimal composite_score
+        jsonb by_tool
+        timestamp created_at
     }
 
     rankings {
@@ -452,14 +504,17 @@ erDiagram
 
 ### Table Overview
 
-| Table                | Description                               |
-| -------------------- | ----------------------------------------- |
-| `users`              | User accounts linked to GitHub via Clerk  |
-| `sessions`           | Claude Code session records with metadata |
-| `token_usage`        | Detailed token consumption per session    |
-| `daily_aggregates`   | Pre-calculated daily statistics           |
-| `rankings`           | Calculated rankings for each period       |
-| `security_audit_log` | Security event audit trail                |
+| Table                  | Description                                     |
+| ---------------------- | ----------------------------------------------- |
+| `users`                | User accounts linked to GitHub via Clerk        |
+| `tool_types`           | Registry of supported AI coding tools           |
+| `sessions`             | AI coding tool session records with metadata    |
+| `token_usage`          | Normalized token consumption per session        |
+| `project_evaluations`  | LLM-based project evaluation results            |
+| `user_stats`           | Aggregated user statistics for dashboard        |
+| `daily_user_stats`     | Daily aggregates for historical charts          |
+| `rankings`             | Calculated rankings for each period             |
+| `security_audit_log`   | Security event audit trail                      |
 
 ## API Reference
 
@@ -521,16 +576,31 @@ Request body:
 
 ```json
 {
-  "sessionHash": "<64-character hash>",
-  "endedAt": "2025-01-11T12:00:00.000Z",
-  "inputTokens": 50000,
-  "outputTokens": 10000,
-  "cacheCreationTokens": 5000,
-  "cacheReadTokens": 20000,
+  "toolType": "claude-code",
+  "sessionId": "sess_abc123",
+  "startedAt": "2026-02-11T09:00:00.000Z",
+  "endedAt": "2026-02-11T09:30:00.000Z",
+  "inputTokens": 15000,
+  "outputTokens": 8000,
+  "cacheCreationTokens": 2000,
+  "cacheReadTokens": 5000,
   "modelName": "claude-sonnet-4-20250514",
   "anonymousProjectId": "proj_abc123"
 }
 ```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `toolType` | string | Yes | One of: `claude-code`, `claude-desktop`, `opencode`, `gemini`, `codex`, `crush` |
+| `sessionId` | string | Yes | Unique session identifier (replaces legacy `sessionHash`) |
+| `startedAt` | string | No | ISO 8601 session start time |
+| `endedAt` | string | Yes | ISO 8601 session end time |
+| `inputTokens` | number | Yes | Input prompt tokens |
+| `outputTokens` | number | Yes | Output response tokens |
+| `cacheCreationTokens` | number | No | Cache write tokens (default: 0) |
+| `cacheReadTokens` | number | No | Cache read tokens (default: 0) |
+| `modelName` | string | No | AI model used |
+| `anonymousProjectId` | string | No | Anonymous project identifier |
 
 Response:
 
@@ -960,7 +1030,7 @@ This project is licensed under the **Copyleft License (COPYLEFT-3.0)** - see the
 
 ## 🙏 Made with ❤️ by Modu-Arena Team
 
-**Last Updated:** 2026-01-12
-**Modu-Arena**: Modu-Arena stands for "AI for Everyone (Modu-ui AI)".
+**Last Updated:** 2026-02-15
+**Modu-Arena**: A product by MODULABS (모두의연구소).
 
 > **"Infinite Possibilism - AI for Everyone"**

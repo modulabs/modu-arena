@@ -18,7 +18,7 @@ Source of truth:
 
 All AI coding tools sync token usage to the backend every 2 minutes via a launchd daemon, published as `@suncreation/modu-arena` on npm.
 
-**CLI package**: `packages/cli/` → npm `@suncreation/modu-arena` (v0.3.2)
+**CLI package**: `packages/cli/` → npm `@suncreation/modu-arena` (v0.3.3)
 
 **Completed milestones (Feb 2026):**
 - moai → modu-arena rename (v0.3.0)
