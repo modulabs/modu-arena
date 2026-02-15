@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
       .orderBy(sql`${projectEvaluations.evaluatedAt} DESC`)
       .limit(1);
     const cumulativeBefore = Number(last[0]?.cumulative ?? 0);
-    const cumulativeScoreAfter = cumulativeBefore + finalScore;
+    const cumulativeScoreAfter = passed ? cumulativeBefore + finalScore : cumulativeBefore;
 
     const inserted = await db
       .insert(projectEvaluations)
