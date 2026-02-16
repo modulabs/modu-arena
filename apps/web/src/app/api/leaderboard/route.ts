@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
         ? await db
             .select({
               userId: projectEvaluations.userId,
-              finalScoreSum: sql<number>`COALESCE(SUM(${projectEvaluations.finalScore}), 0)`,
+              finalScoreSum: sql<number>`COALESCE(SUM(CASE WHEN ${projectEvaluations.passed} = true THEN ${projectEvaluations.finalScore} ELSE 0 END), 0)`,
             })
             .from(projectEvaluations)
             .where(sql`${projectEvaluations.userId} IN ${userIds}`)
