@@ -1,5 +1,5 @@
 ---
-description: Evaluate current project (local run) + README-only remote scoring
+description: Evaluate current project (agent-based local scoring) + README-only remote scoring
 argument-hint: [project-path]
 allowed-tools: Bash, Read, Grep, Glob
 ---
@@ -10,56 +10,69 @@ Goal: submit a project for evaluation using README.md as the source of truth.
 
 Hard rules:
 
-- Read `.modu-arena/development-plan.md` first.
-- Local evaluation MUST run using README `## Local Validation` -> `bash title="test"` (if present):
-  - If test succeeds: localScore=5
-  - If test fails or missing: localScore=0
+- Read `.modu-arena/development-plan.md` first (if it exists).
+- Local evaluation is performed by YOU (the agent) — read the README and score it 0-5.
 - Remote evaluation MUST use README content only (do NOT send code; avoid sending fileStructure).
 
-Behavior:
+## Local Scoring (Agent-Based)
+
+Before submitting, you MUST evaluate the README yourself and assign a `localScore` (0-5).
+
+Scoring rubric:
+
+| Score | Criteria |
+|-------|----------|
+| 5 | Excellent: clear project purpose, technical depth, architecture/design explained, setup instructions, usage examples, well-structured |
+| 4 | Good: covers most aspects but missing minor details (e.g., no architecture diagram, sparse examples) |
+| 3 | Adequate: describes what the project does and basic setup, but lacks depth or structure |
+| 2 | Minimal: very brief, missing key sections (no setup, no usage, or no technical details) |
+| 1 | Poor: exists but provides almost no useful information |
+| 0 | Missing or empty README |
+
+Also write a 1-sentence `localEvaluationSummary` explaining your score.
+
+## Behavior
 
 1. Determine project path:
    - If an argument is provided, use it.
    - Otherwise, use the current working directory.
-2. Read `<project>/README.md` and use its contents as `description` (truncate to 5000 chars).
-3. Compute `projectName` from the directory name.
-4. Compute `projectPathHash = sha256(<absolute project path>)`.
-5. Load API key and server URL:
+2. Read `<project>/README.md` and use its contents as `description` (truncate to 50000 chars).
+3. Score the README using the rubric above → `localScore` (0-5) and `localEvaluationSummary`.
+4. Compute `projectName` from the directory name.
+5. Compute `projectPathHash = sha256(<absolute project path>)`.
+6. Load API key and server URL:
    - From `~/.modu-arena.json` (apiKey + optional serverUrl), or
    - From `MODU_ARENA_API_URL` env var override.
-6. Call `POST /api/v1/evaluate` with API key + HMAC auth.
-   - Body MUST include: projectName, description, projectPathHash, localScore.
-7. Print the evaluation fields and end with `state: ulw`.
+7. Call `POST /api/v1/evaluate` with API key + HMAC auth.
+   - Body MUST include: projectName, description, projectPathHash, localScore, localEvaluationSummary.
+8. Print the evaluation fields and end with `state: ulw`.
 
 ## Execution
 
-Run this using the Bash tool. It reads the local README, runs local validation (if present), then sends a README-only payload to the server.
+Run this using the Bash tool. Pass `LOCAL_SCORE` and `LOCAL_EVAL_SUMMARY` as environment variables from your agent scoring above.
+
+Set these env vars before running the bash block:
+- `LOCAL_SCORE` — integer 0-5 from your rubric evaluation
+- `LOCAL_EVAL_SUMMARY` — your 1-sentence justification
 
 ```bash
 set -euo pipefail
 
-RUN_MODE=0
 PROJECT_PATH=""
 if [ -n "${ARGUMENTS:-}" ]; then
-  if [ "${ARGUMENTS%% *}" = "--run" ]; then
-    RUN_MODE=1
-    PROJECT_PATH="${ARGUMENTS#--run}"
-    PROJECT_PATH="${PROJECT_PATH# }"
-  else
-    PROJECT_PATH="$ARGUMENTS"
-  fi
+  PROJECT_PATH="$ARGUMENTS"
 fi
 if [ -z "$PROJECT_PATH" ]; then PROJECT_PATH="$PWD"; fi
 
-node - "$PROJECT_PATH" "$RUN_MODE" <<'NODE'
+node - "$PROJECT_PATH" "${LOCAL_SCORE:-0}" "${LOCAL_EVAL_SUMMARY:-Agent did not provide local evaluation.}" <<'NODE'
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const crypto = require('node:crypto');
-const { execSync } = require('node:child_process');
 
 const projectPathArg = process.argv[2];
-const runMode = process.argv[3] === '1';
+const localScore = Math.max(0, Math.min(5, parseInt(process.argv[3], 10) || 0));
+const localEvaluationSummary = process.argv[4] || '';
 const projectPath = path.resolve(projectPathArg || process.cwd());
 const projectName = path.basename(projectPath);
 const readmePath = path.join(projectPath, 'README.md');
@@ -75,50 +88,9 @@ if (!readmeRaw.trim()) {
   process.exit(1);
 }
 
-const MAX_DESC = 5000;
+const MAX_DESC = 50000;
 const SUFFIX = '\n... (truncated)';
 const description = readmeRaw.length > MAX_DESC ? readmeRaw.slice(0, MAX_DESC - SUFFIX.length) + SUFFIX : readmeRaw;
-
-function extractLocalValidationTestCommand(text) {
-  const idx = text.toLowerCase().indexOf('## local validation');
-  if (idx < 0) return null;
-  const section = text.slice(idx);
-  const m = section.match(/```bash[^\n]*title\s*=\s*['\"]test['\"][^\n]*\n([\s\S]*?)\n```/i);
-  if (!m) return null;
-  const cmd = (m[1] || '').trim();
-  return cmd ? cmd : null;
-}
-
-let localScore = 0;
-const testCmd = extractLocalValidationTestCommand(readmeRaw);
-let localEvaluationSummary = '';
-if (!runMode) {
-  console.log('Planned /modu:submit');
-  console.log('projectPath:', projectPath);
-  console.log('projectName:', projectName);
-  console.log('readmePath:', readmePath);
-  console.log('localValidationTest:', testCmd ? testCmd : '(missing)');
-  console.log('');
-  console.log('To proceed and run the local test command, re-run:');
-  console.log('  /modu:submit --run ' + projectPath);
-  console.log('');
-  console.log('state: ulw');
-  process.exit(0);
-}
-
-if (testCmd) {
-  const start = Date.now();
-  try {
-    execSync(testCmd, { cwd: projectPath, stdio: 'ignore', timeout: 120000, windowsHide: true });
-    localScore = 5;
-    localEvaluationSummary = `Ran README Local Validation test: PASS (localScore=5) in ${Date.now() - start}ms.`;
-  } catch {
-    localScore = 0;
-    localEvaluationSummary = `Ran README Local Validation test: FAIL (localScore=0) in ${Date.now() - start}ms.`;
-  }
-} else {
-  localEvaluationSummary = 'No README Local Validation test block found (localScore=0).';
-}
 
 const projectPathHash = crypto.createHash('sha256').update(projectPath).digest('hex');
 
@@ -128,7 +100,7 @@ if (fs.existsSync(configPath)) {
   try {
     config = JSON.parse(fs.readFileSync(configPath, 'utf8')) || {};
   } catch {
-    config = {};
+    // ignore
   }
 }
 
@@ -144,6 +116,11 @@ const url = `${String(baseUrl).replace(/\/$/, '')}/api/v1/evaluate`;
 const ts = String(Math.floor(Date.now() / 1000));
 const body = JSON.stringify({ projectName, description, projectPathHash, localScore, localEvaluationSummary });
 const sig = crypto.createHmac('sha256', apiKey).update(`${ts}:${body}`).digest('hex');
+
+console.log(`Submitting project: ${projectName}`);
+console.log(`Local score: ${localScore}/5 — ${localEvaluationSummary}`);
+console.log(`README length: ${readmeRaw.length} chars (sending ${description.length} chars)`);
+console.log('');
 
 (async () => {
   const res = await fetch(url, {

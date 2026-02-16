@@ -16,7 +16,7 @@ import {
  */
 const EvaluateProjectSchema = z.object({
   projectName: z.string().min(1).max(255),
-  description: z.string().min(10).max(5000),
+  description: z.string().min(10).max(50000),
   fileStructure: z.record(z.string(), z.array(z.string())).optional(),
   projectPathHash: z.string().length(64).optional(),
   localScore: z.number().int().min(0).max(5).optional().default(0),
