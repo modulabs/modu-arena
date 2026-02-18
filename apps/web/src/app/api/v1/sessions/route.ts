@@ -33,8 +33,8 @@ import { userKeys, leaderboardPattern } from '@/cache/keys';
 const MAX_INPUT_TOKENS = 500_000_000;
 const MAX_OUTPUT_TOKENS = 100_000_000;
 const MAX_CACHE_TOKENS = 1_000_000_000;
-// Minimum time between sessions (1 minute)
-const MIN_SESSION_INTERVAL_MS = 60000;
+// Minimum time between sessions (1 second) - allows batch submissions from CLI daemons
+const MIN_SESSION_INTERVAL_MS = 1000;
 // Anomaly detection threshold (10x average)
 const ANOMALY_THRESHOLD_MULTIPLIER = 10;
 
