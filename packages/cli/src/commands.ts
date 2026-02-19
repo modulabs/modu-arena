@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { execSync } from 'node:child_process';
 import { getAllAdapters, type InstallResult } from './adapters.js';
-import { getRank, registerUser, loginUser, submitEvaluation } from './api.js';
+import { getRank, loginUser, submitEvaluation, sendVerificationCode, verifyCode, verifyCodeAndSignup } from './api.js';
 import { loadConfig, saveConfig, requireConfig } from './config.js';
 import { API_BASE_URL, TOOL_DISPLAY_NAMES, type ToolType } from './constants.js';
 import { installDaemon, uninstallDaemon, getDaemonStatus } from './daemon.js';
@@ -70,29 +70,74 @@ function promptPassword(question: string): Promise<string> {
 export async function registerCommand(): Promise<void> {
   console.log('\n📝 Modu-Arena — Register\n');
 
+  const email = await prompt('  Email: ');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    console.error('  Error: Valid email address is required.\n');
+    process.exit(1);
+  }
+
+  console.log('\n  Sending verification code...');
+  const existing = loadConfig();
+  const sendResult = await sendVerificationCode(email, existing?.serverUrl);
+  if (sendResult.error) {
+    console.error(`\n  Error: ${sendResult.error}\n`);
+    process.exit(1);
+  }
+  console.log('  ✓ Verification code sent! Check your email.\n');
+
+  let verifiedCode = '';
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const code = await prompt('  Verification code (6 digits): ');
+    if (!code || !/^\d{6}$/.test(code)) {
+      console.error('  Error: Please enter a 6-digit code.');
+      if (attempt < 3) {
+        console.log(`  (${3 - attempt} attempt(s) remaining)\n`);
+        continue;
+      }
+      console.error('\n  Too many failed attempts. Please try again.\n');
+      process.exit(1);
+    }
+
+    const verifyResult = await verifyCode(email, code, existing?.serverUrl);
+    if (verifyResult.error) {
+      console.error(`  ✗ ${verifyResult.error}`);
+      if (attempt < 3) {
+        console.log(`  (${3 - attempt} attempt(s) remaining)\n`);
+        continue;
+      }
+      console.error('\n  Too many failed attempts. Please try again.\n');
+      process.exit(1);
+    }
+
+    verifiedCode = code;
+    console.log('  ✓ Email verified!\n');
+    break;
+  }
+
+  if (!verifiedCode) {
+    process.exit(1);
+  }
+
   const username = await prompt('  Username (3-50 chars): ');
   if (!username || username.length < 3 || username.length > 50) {
-    console.error('Error: Username must be between 3 and 50 characters.\n');
+    console.error('  Error: Username must be between 3 and 50 characters.\n');
     process.exit(1);
   }
 
   const password = await promptPassword('  Password (min 8 chars): ');
   if (!password || password.length < 8) {
-    console.error('Error: Password must be at least 8 characters.\n');
+    console.error('  Error: Password must be at least 8 characters.\n');
     process.exit(1);
   }
 
-  const displayName = await prompt('  Display name (optional, press Enter to skip): ');
-
   console.log('\n  Registering...');
 
-  const existing = loadConfig();
-  const result = await registerUser(
-    { username, password, displayName: displayName || undefined },
+  const result = await verifyCodeAndSignup(
+    { email, code: verifiedCode, username, password },
     existing?.serverUrl,
   );
 
-  if (result.error) {
+  if (!result.success || result.error) {
     console.error(`\n  Error: ${result.error}\n`);
     process.exit(1);
   }
@@ -104,7 +149,7 @@ export async function registerCommand(): Promise<void> {
 
   saveConfig({ apiKey: result.apiKey, serverUrl: existing?.serverUrl });
   console.log('\n  ✓ Registration successful!');
-  console.log(`  ✓ API key saved to ~/.modu-arena.json`);
+  console.log('  ✓ API key saved to ~/.modu-arena.json');
   console.log(`\n  Username: ${result.user?.username}`);
   console.log(`  API Key:  ${result.apiKey.slice(0, 20)}...${result.apiKey.slice(-4)}`);
   console.log('\n  ⚠ Save your API key — it will not be shown again.\n');

@@ -184,6 +184,69 @@ export async function loginUser(
   return (await res.json()) as AuthResponse;
 }
 
+// ─── Email Verification ───────────────────────────────────────────────────
+
+export async function sendVerificationCode(
+  email: string,
+  serverUrl?: string,
+): Promise<{ success?: boolean; error?: string }> {
+  const body = JSON.stringify({ email });
+  const url = `${serverUrl || API_BASE_URL}/api/auth/send-code`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
+
+  const data = (await res.json()) as { success?: boolean; error?: string };
+  if (!res.ok) {
+    return { error: typeof data.error === 'string' ? data.error : `HTTP ${res.status}` };
+  }
+  return data;
+}
+
+export async function verifyCode(
+  email: string,
+  code: string,
+  serverUrl?: string,
+): Promise<{ verified?: boolean; error?: string }> {
+  const body = JSON.stringify({ email, code, action: 'verify' });
+  const url = `${serverUrl || API_BASE_URL}/api/auth/verify-code`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
+
+  const data = (await res.json()) as { verified?: boolean; error?: string };
+  if (!res.ok) {
+    return { error: typeof data.error === 'string' ? data.error : `HTTP ${res.status}` };
+  }
+  return data;
+}
+
+export async function verifyCodeAndSignup(
+  payload: { email: string; code: string; username: string; password: string },
+  serverUrl?: string,
+): Promise<AuthResponse> {
+  const body = JSON.stringify({ ...payload, action: 'signup' });
+  const url = `${serverUrl || API_BASE_URL}/api/auth/verify-code`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  });
+
+  const data = (await res.json()) as { user?: AuthResponse['user']; apiKey?: string; error?: string };
+  if (!res.ok) {
+    return { success: false, error: typeof data.error === 'string' ? data.error : `HTTP ${res.status}` };
+  }
+  return { success: true, user: data.user, apiKey: data.apiKey };
+}
+
 // ─── Evaluate ─────────────────────────────────────────────────────────────
 
 export interface EvaluatePayload {

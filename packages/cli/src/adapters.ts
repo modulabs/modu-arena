@@ -59,7 +59,8 @@ function generateHookJs(apiKey: string, toolType: string, prefix: string, fields
       : `    ${f.key}: process.env["${f.env}"] || "${f.fallback}"`
   );
 
-  return `#!/usr/bin/env node
+  const shebang = '#!/usr/bin/env node';
+  return `${shebang}
 "use strict";
 var crypto = require("crypto");
 
@@ -99,7 +100,8 @@ fetch(SERVER + "/api/v1/sessions", {
  * then sum all unique requests.
  */
 function generateClaudeCodeHookJs(apiKey: string): string {
-  return `#!/usr/bin/env node
+  const shebang = '#!/usr/bin/env node';
+  return `${shebang}
 "use strict";
 var crypto = require("crypto");
 var fs = require("fs");
@@ -123,8 +125,126 @@ function readStdin() {
     });
 }
 
+// --- 2. Parse transcript JSONL for token & model stats ---
+function parseTranscript(transcriptPath) {
+    var result = {
+        modelName: "unknown",
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheCreationTokens: 0,
+        cacheReadTokens: 0,
+        startedAt: "",
+        endedAt: ""
+    };
+
+    if (!transcriptPath) return result;
+
+    // Resolve ~ to home dir
+    if (transcriptPath.startsWith("~")) {
+        transcriptPath = path.join(
+            process.env.HOME || process.env.USERPROFILE || "",
+            transcriptPath.slice(1)
+        );
+    }
+
+    var content;
+    try { content = fs.readFileSync(transcriptPath, "utf8"); }
+    catch (_) { return result; }
+
+    var lines = content.split("\\n").filter(Boolean);
+    var seenRequests = {};
+
+    for (var i = 0; i < lines.length; i++) {
+        var entry;
+        try { entry = JSON.parse(lines[i]); }
+        catch (_) { continue; }
+
+        // Capture timestamps
+        if (entry.timestamp && !result.startedAt) {
+            result.startedAt = entry.timestamp;
+        }
+        if (entry.timestamp) {
+            result.endedAt = entry.timestamp;
+        }
+
+        // Extract model & usage from assistant messages
+        if (entry.type === "assistant" && entry.message && entry.message.usage) {
+            var msg = entry.message;
+            if (msg.model && result.modelName === "unknown") {
+                result.modelName = msg.model;
+            }
+            // Last entry per requestId wins (streaming dedup)
+            seenRequests[entry.requestId || ("idx_" + i)] = msg.usage;
+        }
+    }
+
+    // Aggregate usage across all unique requests
+    var reqIds = Object.keys(seenRequests);
+    for (var j = 0; j < reqIds.length; j++) {
+        var u = seenRequests[reqIds[j]];
+        result.inputTokens += (u.input_tokens || 0);
+        result.outputTokens += (u.output_tokens || 0);
+        result.cacheCreationTokens += (u.cache_creation_input_tokens || 0);
+        result.cacheReadTokens += (u.cache_read_input_tokens || 0);
+    }
+
+    return result;
+}
+
+// --- 3. Main ---
+readStdin().then(function (hookInput) {
+    var sessionId = hookInput.session_id || "";
+    var transcriptPath = hookInput.transcript_path || "";
+
+    if (!sessionId) {
+        process.stderr.write("[modu-arena] no session_id in stdin, skipping\\n");
+        process.exit(0);
+    }
+
+    var stats = parseTranscript(transcriptPath);
+
+    var body = JSON.stringify({
+        toolType: "claude-code",
+        sessionId: sessionId,
+        startedAt: stats.startedAt || "",
+        endedAt: stats.endedAt || new Date().toISOString(),
+        inputTokens: stats.inputTokens,
+        outputTokens: stats.outputTokens,
+        modelName: stats.modelName,
+        cacheCreationTokens: stats.cacheCreationTokens,
+        cacheReadTokens: stats.cacheReadTokens
+    });
+
+    var ts  = Math.floor(Date.now() / 1000).toString();
+    var sig = crypto.createHmac("sha256", API_KEY).update(ts + ":" + body).digest("hex");
+
+    return fetch(SERVER + "/api/v1/sessions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY,
+            "X-Timestamp": ts,
+            "X-Signature": sig
+        },
+        body: body
+    }).then(function (r) {
+        if (r.ok) {
+            process.stderr.write("[modu-arena] session reported OK\\n");
+        } else {
+            r.text().then(function (t) {
+                process.stderr.write("[modu-arena] " + r.status + " " + t + "\\n");
+            });
+        }
+    });
+}).catch(function (e) {
+    process.stderr.write("[modu-arena] hook error: " + e.message + "\\n");
+});
+`;
+}
+
 function generateGeminiHookJs(apiKey: string): string {
-  return `#!/usr/bin/env node
+  const shebang = '#!/usr/bin/env node';
+  return `${shebang}
 "use strict";
 var crypto = require("crypto");
 var fs = require("fs");
@@ -215,123 +335,6 @@ readStdin().then(function (hookInput) {
         outputTokens: stats.outputTokens,
         modelName: stats.modelName,
         cacheCreationTokens: 0,
-        cacheReadTokens: stats.cacheReadTokens
-    });
-
-    var ts  = Math.floor(Date.now() / 1000).toString();
-    var sig = crypto.createHmac("sha256", API_KEY).update(ts + ":" + body).digest("hex");
-
-    return fetch(SERVER + "/api/v1/sessions", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-API-Key": API_KEY,
-            "X-Timestamp": ts,
-            "X-Signature": sig
-        },
-        body: body
-    }).then(function (r) {
-        if (r.ok) {
-            process.stderr.write("[modu-arena] session reported OK\\n");
-        } else {
-            r.text().then(function (t) {
-                process.stderr.write("[modu-arena] " + r.status + " " + t + "\\n");
-            });
-        }
-    });
-}).catch(function (e) {
-    process.stderr.write("[modu-arena] hook error: " + e.message + "\\n");
-});
-`;
-}
-
-// --- 2. Parse transcript JSONL for token & model stats ---
-function parseTranscript(transcriptPath) {
-    var result = {
-        modelName: "unknown",
-        inputTokens: 0,
-        outputTokens: 0,
-        cacheCreationTokens: 0,
-        cacheReadTokens: 0,
-        startedAt: "",
-        endedAt: ""
-    };
-
-    if (!transcriptPath) return result;
-
-    // Resolve ~ to home dir
-    if (transcriptPath.startsWith("~")) {
-        transcriptPath = path.join(
-            process.env.HOME || process.env.USERPROFILE || "",
-            transcriptPath.slice(1)
-        );
-    }
-
-    var content;
-    try { content = fs.readFileSync(transcriptPath, "utf8"); }
-    catch (_) { return result; }
-
-    var lines = content.split("\\n").filter(Boolean);
-    var seenRequests = {};
-
-    for (var i = 0; i < lines.length; i++) {
-        var entry;
-        try { entry = JSON.parse(lines[i]); }
-        catch (_) { continue; }
-
-        // Capture timestamps
-        if (entry.timestamp && !result.startedAt) {
-            result.startedAt = entry.timestamp;
-        }
-        if (entry.timestamp) {
-            result.endedAt = entry.timestamp;
-        }
-
-        // Extract model & usage from assistant messages
-        if (entry.type === "assistant" && entry.message && entry.message.usage) {
-            var msg = entry.message;
-            if (msg.model && result.modelName === "unknown") {
-                result.modelName = msg.model;
-            }
-            // Last entry per requestId wins (streaming dedup)
-            seenRequests[entry.requestId || ("idx_" + i)] = msg.usage;
-        }
-    }
-
-    // Aggregate usage across all unique requests
-    var reqIds = Object.keys(seenRequests);
-    for (var j = 0; j < reqIds.length; j++) {
-        var u = seenRequests[reqIds[j]];
-        result.inputTokens += (u.input_tokens || 0);
-        result.outputTokens += (u.output_tokens || 0);
-        result.cacheCreationTokens += (u.cache_creation_input_tokens || 0);
-        result.cacheReadTokens += (u.cache_read_input_tokens || 0);
-    }
-
-    return result;
-}
-
-// --- 3. Main ---
-readStdin().then(function (hookInput) {
-    var sessionId = hookInput.session_id || "";
-    var transcriptPath = hookInput.transcript_path || "";
-
-    if (!sessionId) {
-        process.stderr.write("[modu-arena] no session_id in stdin, skipping\\n");
-        process.exit(0);
-    }
-
-    var stats = parseTranscript(transcriptPath);
-
-    var body = JSON.stringify({
-        toolType: "claude-code",
-        sessionId: sessionId,
-        startedAt: stats.startedAt || "",
-        endedAt: stats.endedAt || new Date().toISOString(),
-        inputTokens: stats.inputTokens,
-        outputTokens: stats.outputTokens,
-        modelName: stats.modelName,
-        cacheCreationTokens: stats.cacheCreationTokens,
         cacheReadTokens: stats.cacheReadTokens
     });
 
