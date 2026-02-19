@@ -57,7 +57,7 @@
     },
     "packages/cli": {
       "name": "@suncreation/modu-arena",
-      "version": "0.2.3",
+      "version": "0.3.5",
       "bin": {
         "modu-arena": "dist/index.js",
       },

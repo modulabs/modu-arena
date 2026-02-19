@@ -44,7 +44,7 @@ export const users = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     username: varchar('username', { length: 255 }).unique().notNull(),
-    passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+    passwordHash: varchar('password_hash', { length: 255 }),
     githubId: varchar('github_id', { length: 255 }).unique(),
     githubUsername: varchar('github_username', { length: 255 }),
     githubAvatarUrl: text('github_avatar_url'),
@@ -258,6 +258,26 @@ export const dailyUserStats = pgTable(
 );
 
 // ============================================================================
+// Email Verifications table
+// Stores OTP codes for passwordless email authentication
+// ============================================================================
+export const emailVerifications = pgTable(
+  'email_verifications',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    email: varchar('email', { length: 255 }).notNull(),
+    code: varchar('code', { length: 6 }).notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    used: boolean('used').default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => [
+    index('email_verifications_email_idx').on(table.email),
+    index('email_verifications_expires_at_idx').on(table.expiresAt),
+  ]
+);
+
+// ============================================================================
 // Security Audit Log table
 // Tracks security-related events (retained from original)
 // ============================================================================
@@ -304,6 +324,9 @@ export type NewUserStats = typeof userStats.$inferInsert;
 
 export type DailyUserStats = typeof dailyUserStats.$inferSelect;
 export type NewDailyUserStats = typeof dailyUserStats.$inferInsert;
+
+export type EmailVerification = typeof emailVerifications.$inferSelect;
+export type NewEmailVerification = typeof emailVerifications.$inferInsert;
 
 export type SecurityAuditLog = typeof securityAuditLog.$inferSelect;
 export type NewSecurityAuditLog = typeof securityAuditLog.$inferInsert;

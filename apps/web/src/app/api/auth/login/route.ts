@@ -34,6 +34,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!user.passwordHash) {
+      return NextResponse.json(
+        { error: 'This account uses email verification. Please sign in with your email.' },
+        { status: 400 }
+      );
+    }
+
     const isValid = verifyPassword(password, user.passwordHash);
     if (!isValid) {
       return NextResponse.json(
