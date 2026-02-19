@@ -1,0 +1,115 @@
+digraph SystemArchitecture {
+  // Global settings
+  graph [
+    rankdir=TB
+    fontname="Helvetica Neue"
+    fontsize=12
+    bgcolor="white"
+    pad=0.5
+    nodesep=0.6
+    ranksep=0.8
+    compound=true
+    label=""
+    labelloc=t
+  ]
+  node [
+    fontname="Helvetica Neue"
+    fontsize=11
+    style=filled
+    shape=box
+    penwidth=1.2
+  ]
+  edge [
+    fontname="Helvetica Neue"
+    fontsize=9
+    color="#64748b"
+    penwidth=1.2
+  ]
+
+  // ── Client Layer ──────────────────────────────
+  subgraph cluster_client {
+    label="Client Layer"
+    style="rounded,dashed"
+    color="#94a3b8"
+    fontcolor="#475569"
+    fontsize=13
+    bgcolor="#f8fafc"
+
+    CLI [label="AI Coding CLI\n(Claude Code, OpenCode,\nGemini, Codex, Crush)" fillcolor="#dbeafe" color="#3b82f6" fontcolor="#1e3a5f"]
+    WEB [label="Web Dashboard\n(Browser)" fillcolor="#dbeafe" color="#3b82f6" fontcolor="#1e3a5f"]
+  }
+
+  // ── Infrastructure Layer ──────────────────────
+  subgraph cluster_infra {
+    label="Infrastructure"
+    style="rounded,dashed"
+    color="#94a3b8"
+    fontcolor="#475569"
+    fontsize=13
+    bgcolor="#fefce8"
+
+    CADDY [label="Caddy\nReverse Proxy\n(:8989 / :23010)" fillcolor="#fef08a" color="#ca8a04" fontcolor="#713f12" shape=component]
+  }
+
+  // ── Application Layer ─────────────────────────
+  subgraph cluster_app {
+    label="Application Layer"
+    style="rounded,dashed"
+    color="#94a3b8"
+    fontcolor="#475569"
+    fontsize=13
+    bgcolor="#f0fdf4"
+
+    NEXTJS [label="Next.js 16\n(PM2, :3000)" fillcolor="#bbf7d0" color="#16a34a" fontcolor="#14532d" shape=box3d]
+    AUTH [label="Custom JWT Auth\n(Email OTP + Password)" fillcolor="#dcfce7" color="#22c55e" fontcolor="#14532d"]
+    RATE [label="Rate Limiter\n(In-Memory)" fillcolor="#dcfce7" color="#22c55e" fontcolor="#14532d"]
+    API_ROUTES [label="API Routes\n(/api/v1, /api/auth)" fillcolor="#dcfce7" color="#22c55e" fontcolor="#14532d"]
+  }
+
+  // ── Data Layer ────────────────────────────────
+  subgraph cluster_data {
+    label="Data Layer"
+    style="rounded,dashed"
+    color="#94a3b8"
+    fontcolor="#475569"
+    fontsize=13
+    bgcolor="#fdf2f8"
+
+    PG [label="PostgreSQL\n(Docker Container)" fillcolor="#fbcfe8" color="#db2777" fontcolor="#831843" shape=cylinder]
+    DRIZZLE [label="Drizzle ORM" fillcolor="#fce7f3" color="#ec4899" fontcolor="#831843"]
+  }
+
+  // ── External Services ─────────────────────────
+  subgraph cluster_external {
+    label="External Services"
+    style="rounded,dashed"
+    color="#94a3b8"
+    fontcolor="#475569"
+    fontsize=13
+    bgcolor="#faf5ff"
+
+    GMAIL [label="Gmail REST API\n(OTP Email)" fillcolor="#e9d5ff" color="#9333ea" fontcolor="#581c87"]
+    GITHUB [label="GitHub\n(Repository)" fillcolor="#e9d5ff" color="#9333ea" fontcolor="#581c87"]
+  }
+
+  // ── Edges ─────────────────────────────────────
+  // Client → Caddy
+  CLI -> CADDY [label="HMAC Auth\n(X-API-Key)" color="#3b82f6" fontcolor="#3b82f6"]
+  WEB -> CADDY [label="HTTPS" color="#3b82f6" fontcolor="#3b82f6"]
+
+  // Caddy → Next.js
+  CADDY -> NEXTJS [label="Proxy → :3000" color="#ca8a04" fontcolor="#ca8a04" penwidth=1.5]
+
+  // Next.js internals
+  NEXTJS -> API_ROUTES [style=invis weight=10]
+  API_ROUTES -> AUTH [color="#16a34a"]
+  API_ROUTES -> RATE [color="#16a34a"]
+
+  // App → Data
+  API_ROUTES -> DRIZZLE [label="Queries" color="#ec4899" fontcolor="#ec4899"]
+  DRIZZLE -> PG [color="#db2777" penwidth=1.5]
+
+  // App → External
+  AUTH -> GMAIL [label="Send OTP" color="#9333ea" fontcolor="#9333ea" style=dashed]
+
+}

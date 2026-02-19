@@ -2,8 +2,8 @@
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.1-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat-square&logo=typescript)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-336791?style=flat-square&logo=postgresql)
-![Clerk](https://img.shields.io/badge/Auth-Clerk-6C47FF?style=flat-square)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Docker-336791?style=flat-square&logo=postgresql)
+![Auth](https://img.shields.io/badge/Auth-Custom_JWT-orange?style=flat-square)
 ![License](https://img.shields.io/badge/License-Copyleft-green?style=flat-square)
 
 Claude Code トークン使用量を追跡する競争型リーダーボードプラットフォームです。AI コーディングセッションを追跡し、コミュニティと競い、Agentic Coding Analytics を通じて独自のコーディングスタイルを発見しましょう。
@@ -383,42 +383,7 @@ apps/web/
 
 ### システムアーキテクチャ
 
-```mermaid
-graph TB
-    subgraph "クライアントレイヤー"
-        CLI[Claude Code CLI]
-        WEB[ウェブダッシュボード]
-    end
-
-    subgraph "アプリケーションレイヤー"
-        API[Next.js API ルート]
-        AUTH[Clerk 認証]
-        RATE[レート制限]
-    end
-
-    subgraph "データレイヤー"
-        NEON[(Neon PostgreSQL)]
-        REDIS[(Upstash Redis)]
-    end
-
-    subgraph "インフラ"
-        VERCEL[Vercel Edge]
-        CRON[Vercel Cron]
-    end
-
-    CLI -->|HMAC 認証| API
-    WEB -->|Clerk セッション| API
-    API --> AUTH
-    API --> RATE
-    API --> CACHE{キャッシュレイヤー}
-    CACHE -->|Cache Miss| NEON
-    CACHE -->|Cache Hit| RATE
-    RATE --> REDIS
-    CACHE --> REDIS
-    CRON -->|日次ランク計算| API
-    CRON -->|"データクリーンアップ (2AM)"| NEON
-    VERCEL --> API
-```
+![システムアーキテクチャ](docs/system-architecture.png)
 
 ## 技術スタック
 
@@ -426,16 +391,17 @@ graph TB
 | -------------- | ----------------- | --------------------------------- |
 | フレームワーク | Next.js 16        | フルスタック React フレームワーク |
 | 言語           | TypeScript 5      | 型安全な開発                      |
-| データベース   | Neon (PostgreSQL) | サーバーレス PostgreSQL           |
+| データベース   | PostgreSQL        | Docker コンテナデータベース       |
 | ORM            | Drizzle ORM       | 型安全なデータベースクエリ        |
-| キャッシュ     | Upstash Redis     | 分散キャッシングとレート制限      |
-| 認証           | Clerk             | GitHub OAuth 認証                 |
+| 認証           | Custom JWT        | メール OTP 登録 + パスワードログイン |
+| プロキシ       | Caddy             | HTTPS リバースプロキシ            |
+| プロセス       | PM2               | Node.js プロセスマネージャー      |
+| メール         | Gmail REST API    | OTP 認証メール                    |
 | UI             | Tailwind CSS 4    | スタイリング                      |
 | コンポーネント | Radix UI          | アクセシビリティ UI プリミティブ  |
 | チャート       | Recharts          | データ可視化                      |
 | i18n           | next-intl         | 国際化                            |
 | 検証           | Zod               | ランタイム型検証                  |
-| 分析           | Vercel Analytics  | 使用量分析                        |
 
 ## 始め方
 
@@ -443,9 +409,9 @@ graph TB
 
 - **Node.js** 20.x 以上
 - **Bun** 1.x（推奨）または npm/yarn
-- **PostgreSQL**（または Neon アカウント）
-- 認証のための **Clerk** アカウント
-- Redis 用の **Upstash** アカウント（オプションだが推奨）
+- **PostgreSQL**（Docker コンテナまたはスタンドアロン）
+- 本番環境用 **Caddy** HTTPS リバースプロキシ
+- 本番環境用 **PM2** Node.js プロセスマネージャー
 
 ### インストール
 
@@ -496,38 +462,33 @@ bun run dev
 
 | 変数                                | 説明                   | 例                                               |
 | ----------------------------------- | ---------------------- | ------------------------------------------------ |
-| `DATABASE_URL`                      | Neon PostgreSQL 接続   | `postgresql://user:pass@host/db?sslmode=require` |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk 公開キー         | `pk_test_xxx`                                    |
-| `CLERK_SECRET_KEY`                  | Clerk シークレットキー | `sk_test_xxx`                                    |
+| `DATABASE_URL`                      | PostgreSQL 接続文字列   | `postgresql://user:pass@localhost:5432/dbname`    |
+| `JWT_SECRET`                        | JWT 署名シークレット    | `your-secure-random-string`                       |
 
 ### オプション変数
 
 | 変数                | 説明                                         | デフォルト                 |
 | ------------------- | -------------------------------------------- | -------------------------- |
-| `KV_REST_API_URL`   | Upstash Redis URL（キャッシング/レート制限） | インメモリーフォールバック |
-| `KV_REST_API_TOKEN` | Upstash Redis トークン                       | インメモリーフォールバック |
-| `CRON_SECRET`       | Cron ジョブ認証シークレット                  | 本番環境で必須             |
-
-### 代替変数名
-
-Upstash Redis は以下の変数名もサポートしています：
-
-- `UPSTASH_REDIS_REST_URL` (`KV_REST_API_URL` の代替)
-- `UPSTASH_REDIS_REST_TOKEN` (`KV_REST_API_TOKEN` の代替)
+| `GMAIL_CLIENT_ID`      | Gmail OAuth2 クライアント ID         | OTP メール送信に必須       |
+| `GMAIL_CLIENT_SECRET`  | Gmail OAuth2 クライアントシークレット | OTP メール送信に必須       |
+| `GMAIL_REFRESH_TOKEN`  | Gmail OAuth2 リフレッシュトークン     | OTP メール送信に必須       |
+| `GMAIL_USER`           | Gmail 送信元メールアドレス            | OTP メール送信に必須       |
+| `CRON_SECRET`          | Cron ジョブ認証シークレット           | 本番環境で必須             |
 
 ### .env.local 例
 
 ```env
 # データベース（必須）
-DATABASE_URL="postgresql://neondb_owner:xxx@ep-xxx.aws.neon.tech/neondb?sslmode=require"
+DATABASE_URL="postgresql://modu:password@localhost:5432/modu_rank"
 
-# Clerk 認証（必須）
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_xxx"
-CLERK_SECRET_KEY="sk_test_xxx"
+# JWT 認証（必須）
+JWT_SECRET="your-secure-random-string"
 
-# Upstash Redis（オプション - 分散レート制限用）
-KV_REST_API_URL="https://xxx.upstash.io"
-KV_REST_API_TOKEN="xxx"
+# Gmail OAuth2（メール OTP に必須）
+GMAIL_CLIENT_ID="your-client-id"
+GMAIL_CLIENT_SECRET="your-client-secret"
+GMAIL_REFRESH_TOKEN="your-refresh-token"
+GMAIL_USER="your-email@gmail.com"
 
 # Cron 認証（本番環境で必須）
 CRON_SECRET="your-secure-random-string"
@@ -541,28 +502,59 @@ CRON_SECRET="your-secure-random-string"
 erDiagram
     users ||--o{ sessions : has
     users ||--o{ token_usage : has
-    users ||--o{ daily_aggregates : has
+    users ||--o{ daily_user_stats : has
     users ||--o{ rankings : has
+    users ||--o{ project_evaluations : has
+    users ||--o| user_stats : has
     users ||--o{ security_audit_log : logs
+    users ||--o{ email_verifications : verifies
+    tool_types ||--o{ sessions : identifies
+    tool_types ||--o{ token_usage : identifies
+    sessions ||--o{ token_usage : has
 
     users {
         uuid id PK
-        varchar clerk_id UK
+        varchar username UK
+        varchar password_hash
         varchar github_id UK
         varchar github_username
         text github_avatar_url
+        varchar display_name
+        varchar email
         varchar api_key_hash
         varchar api_key_prefix
         varchar user_salt
         boolean privacy_mode
+        integer successful_projects_count
         timestamp created_at
         timestamp updated_at
+    }
+
+    email_verifications {
+        uuid id PK
+        varchar email
+        varchar code
+        timestamp expires_at
+        boolean used
+        timestamp created_at
+    }
+
+    tool_types {
+        varchar id PK
+        varchar name
+        varchar display_name
+        text icon_url
+        varchar color
+        boolean is_active
+        integer sort_order
+        timestamp created_at
     }
 
     sessions {
         uuid id PK
         uuid user_id FK
-        varchar server_session_hash UK
+        varchar tool_type_id FK
+        varchar session_hash UK
         varchar anonymous_project_id
         timestamp started_at
         timestamp ended_at
@@ -571,7 +563,6 @@ erDiagram
         integer turn_count
         jsonb tool_usage
         jsonb code_metrics
-        jsonb model_usage_details
         timestamp created_at
     }
 
@@ -579,6 +570,7 @@ erDiagram
         uuid id PK
         uuid session_id FK
         uuid user_id FK
+        varchar tool_type_id FK
         bigint input_tokens
         bigint output_tokens
         bigint cache_creation_tokens
@@ -586,16 +578,49 @@ erDiagram
         timestamp recorded_at
     }
 
-    daily_aggregates {
+    project_evaluations {
         uuid id PK
         uuid user_id FK
-        date date
+        varchar project_path_hash
+        varchar project_name
+        integer local_score
+        integer backend_score
+        integer penalty_score
+        integer final_score
+        integer cumulative_score_after
+        varchar llm_model
+        varchar llm_provider
+        boolean passed
+        text feedback
+        timestamp evaluated_at
+    }
+
+    user_stats {
+        uuid user_id PK_FK
         bigint total_input_tokens
         bigint total_output_tokens
         bigint total_cache_tokens
+        bigint total_all_tokens
+        jsonb tokens_by_tool
+        integer total_sessions
+        jsonb sessions_by_tool
+        integer successful_projects_count
+        integer total_evaluations
+        timestamp last_activity_at
+        timestamp updated_at
+    }
+
+    daily_user_stats {
+        uuid id PK
+        uuid user_id FK
+        date stat_date
+        bigint input_tokens
+        bigint output_tokens
+        bigint cache_tokens
+        bigint total_tokens
         integer session_count
-        decimal avg_efficiency
-        decimal composite_score
+        jsonb by_tool
+        timestamp created_at
     }
 
     rankings {
@@ -626,10 +651,14 @@ erDiagram
 
 | テーブル             | 説明                                               |
 | -------------------- | -------------------------------------------------- |
-| `users`              | Clerk 経由で GitHub と連携されたユーザーアカウント |
-| `sessions`           | メタデータを含む Claude Code セッション記録        |
+| `users`              | メール/パスワード認証ベースのユーザーアカウント    |
+| `email_verifications`| サインアップ時のメール認証用OTPコード              |
+| `tool_types`         | 対応するAIコーディングツールのレジストリ           |
+| `sessions`           | メタデータを含むAIコーディングツールセッション記録 |
 | `token_usage`        | セッション別の詳細トークン消費量                   |
-| `daily_aggregates`   | 事前計算された日次統計                             |
+| `project_evaluations`| LLMベースのプロジェクト評価結果                    |
+| `user_stats`         | ダッシュボード用の集計ユーザー統計                 |
+| `daily_user_stats`   | 履歴チャート用の日次集計                           |
 | `rankings`           | 各期間別の計算されたランク                         |
 | `security_audit_log` | セキュリティイベント監査トレイル                   |
 
@@ -879,64 +908,37 @@ bun run db:studio
 
 ## デプロイ
 
-### Vercel デプロイ
+### 本番デプロイ
 
-1. **リポジトリ接続**
-   - Vercel にリポジトリをインポート
-   - `apps/web` ディレクトリをルートとして選択
+1. **サーバーセットアップ**
+   - Docker コンテナで PostgreSQL を実行
+   - Caddy を HTTPS リバースプロキシとして構成
+   - PM2 で Node.js プロセスを管理
 
-2. **環境変数構成**
-   - Vercel ダッシュボードですべての必須環境変数を追加
-   - Neon データベース接続（Vercel Integration 利用可能）
-   - Upstash Redis 接続（Vercel Integration 利用可能）
+2. **SCP 経由でデプロイ**
 
-3. **ビルド設定構成**
+   ```bash
+   # ファイルをサーバーにコピー
+   scp -r apps/web/ user@server:/path/to/modu-arena/apps/web/
 
+   # サーバーで: ビルドして再起動
+   cd /path/to/modu-arena/apps/web
+   npx next build
+   pm2 restart modu-arena-web
    ```
-   Root Directory: apps/web
-   Build Command: next build
-   Output Directory: .next
-   ```
 
-4. **Cron ジョブ**
+3. **Cron ジョブ**
 
-`vercel.json` で自動化タスクを構成します：
+   crontab または PM2 cron で自動化タスクを構成します：
 
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron/calculate-rankings",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/cleanup-data",
-      "schedule": "0 2 * * *"
-    }
-  ]
-}
-```
-
-- **ランク計算 (0 0 \* \* \*)**: 毎日午前 0 時（UTC）ですべてのランクを再計算
-- **データクリーンアップ (0 2 \* \* \*)**: 毎日午前 2 時（UTC）に古いデータをクリーンアップ
-
-### リージョン構成
-
-デフォルトでは、アジアでの最適パフォーマンスのためにソウルリージョン（`icn1`）にデプロイされます：
-
-```json
-{
-  "regions": ["icn1"]
-}
-```
-
-デプロイリージョンを変更するには、`vercel.json` を修正してください。
+   - **ランキング計算**: 毎日 UTC 深夜 — `GET /api/cron/calculate-rankings`
+   - **データクリーンアップ**: 毎日 UTC 午前 2 時 — `GET /api/cron/cleanup-data`
 
 ## セキュリティ
 
 ### 認証
 
-- **ウェブダッシュボード**: Clerk OAuth（GitHub のみ）
+- **ウェブダッシュボード**: Custom JWT（メール OTP 登録 + パスワードログイン）
 - **CLI API**: API キー + HMAC-SHA256 署名
 
 ### API セキュリティ機能
@@ -977,7 +979,7 @@ bun run db:studio
 
 ### キャッシュ戦略
 
-Upstash Redis を活用した分散キャッシングで API 応答時間を最適化します。
+サーバーサイドキャッシングで API 応答時間を最適化します。
 
 #### キャッシュ TTL 設定
 
@@ -1057,15 +1059,11 @@ while (true) {
 
 #### 接続プーリング
 
-Vercel の Neon Serverless Driver を使用して接続プーリングを実装します：
+Drizzle ORM を使用して PostgreSQL 接続プーリングを実装します：
 
 ```typescript
-// 通常クエリ: 直接接続
+// Database connection with Drizzle ORM
 export const db = drizzle(pool, { schema });
-
-// バッチ処理: 接続プーラー
-export const getPooledDb = () =>
-  drizzle(neon(process.env.DATABASE_URL!), { schema });
 ```
 
 ### パフォーマンス監視

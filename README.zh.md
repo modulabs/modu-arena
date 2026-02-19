@@ -2,8 +2,8 @@
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.1-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat-square&logo=typescript)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-336791?style=flat-square&logo=postgresql)
-![Clerk](https://img.shields.io/badge/Auth-Clerk-6C47FF?style=flat-square)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Docker-336791?style=flat-square&logo=postgresql)
+![Auth](https://img.shields.io/badge/Auth-Custom_JWT-orange?style=flat-square)
 ![License](https://img.shields.io/badge/License-Copyleft-green?style=flat-square)
 
 追踪 Claude Code 令牌使用量的竞争型排行榜平台。追踪您的 AI 编码会话，与社区竞争，通过代理编码分析发现您独特的编码风格。
@@ -383,59 +383,25 @@ apps/web/
 
 ### 系统架构
 
-```mermaid
-graph TB
-    subgraph "客户端层"
-        CLI[Claude Code CLI]
-        WEB[网页仪表板]
-    end
-
-    subgraph "应用层"
-        API[Next.js API 路由]
-        AUTH[Clerk 认证]
-        RATE[速率限制器]
-    end
-
-    subgraph "数据层"
-        NEON[(Neon PostgreSQL)]
-        REDIS[(Upstash Redis)]
-    end
-
-    subgraph "基础设施"
-        VERCEL[Vercel Edge]
-        CRON[Vercel Cron]
-    end
-
-    CLI -->|HMAC 认证| API
-    WEB -->|Clerk 会话| API
-    API --> AUTH
-    API --> RATE
-    API --> CACHE{缓存层}
-    CACHE -->|Cache Miss| NEON
-    CACHE -->|Cache Hit| RATE
-    RATE --> REDIS
-    CACHE --> REDIS
-    CRON -->|每日排名计算| API
-    CRON -->|"数据清理 (2AM)"| NEON
-    VERCEL --> API
-```
+![系统架构](docs/system-architecture.png)
 
 ## 技术栈
 
-| 类别   | 技术              | 目的                 |
-| ------ | ----------------- | -------------------- |
-| 框架   | Next.js 16        | 全栈 React 框架      |
-| 语言   | TypeScript 5      | 类型安全开发         |
-| 数据库 | Neon (PostgreSQL) | 无服务器 PostgreSQL  |
-| ORM    | Drizzle ORM       | 类型安全数据库查询   |
-| 缓存   | Upstash Redis     | 分布式缓存和速率限制 |
-| 认证   | Clerk             | GitHub OAuth 认证    |
-| UI     | Tailwind CSS 4    | 样式                 |
-| 组件   | Radix UI          | 无障碍 UI 原语       |
-| 图表   | Recharts          | 数据可视化           |
+| 类别   | 技术              | 目的                       |
+| ------ | ----------------- | -------------------------- |
+| 框架   | Next.js 16        | 全栈 React 框架            |
+| 语言   | TypeScript 5      | 类型安全开发               |
+| 数据库 | PostgreSQL        | Docker 容器数据库          |
+| ORM    | Drizzle ORM       | 类型安全数据库查询         |
+| 认证   | Custom JWT        | 邮箱 OTP 注册 + 密码登录   |
+| 代理   | Caddy             | HTTPS 反向代理             |
+| 进程   | PM2               | Node.js 进程管理器         |
+| 邮件   | Gmail REST API    | OTP 验证邮件               |
+| UI     | Tailwind CSS 4    | 样式                       |
+| 组件   | Radix UI          | 无障碍 UI 原语             |
+| 图表   | Recharts          | 数据可视化                 |
 | i18n   | next-intl         | 国际化               |
 | 验证   | Zod               | 运行时类型验证       |
-| 分析   | Vercel Analytics  | 使用量分析           |
 
 ## 开始使用
 
@@ -443,9 +409,9 @@ graph TB
 
 - **Node.js** 20.x 或更高版本
 - **Bun** 1.x（推荐）或 npm/yarn
-- **PostgreSQL**（或 Neon 账户）
-- 用于认证的 **Clerk** 账户
-- 用于 Redis 的 **Upstash** 账户（可选但推荐）
+- **PostgreSQL**（Docker 容器或独立安装）
+- 生产环境用 **Caddy** HTTPS 反向代理
+- 生产环境用 **PM2** Node.js 进程管理器
 
 ### 安装
 
@@ -496,38 +462,33 @@ bun run dev
 
 | 变量                                | 说明                 | 示例                                             |
 | ----------------------------------- | -------------------- | ------------------------------------------------ |
-| `DATABASE_URL`                      | Neon PostgreSQL 连接 | `postgresql://user:pass@host/db?sslmode=require` |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk 公开密钥       | `pk_test_xxx`                                    |
-| `CLERK_SECRET_KEY`                  | Clerk 私密密钥       | `sk_test_xxx`                                    |
+| `DATABASE_URL`                      | PostgreSQL 连接字符串 | `postgresql://user:pass@localhost:5432/dbname`    |
+| `JWT_SECRET`                        | JWT 签名密钥          | `your-secure-random-string`                       |
 
 ### 可选变量
 
 | 变量                | 说明                               | 默认值       |
 | ------------------- | ---------------------------------- | ------------ |
-| `KV_REST_API_URL`   | Upstash Redis URL（缓存/速率限制） | 内存回退     |
-| `KV_REST_API_TOKEN` | Upstash Redis 令牌                 | 内存回退     |
-| `CRON_SECRET`       | Cron 任务认证密钥                  | 生产环境必需 |
-
-### 替代变量名
-
-Upstash Redis 也支持以下变量名：
-
-- `UPSTASH_REDIS_REST_URL`（`KV_REST_API_URL` 的替代）
-- `UPSTASH_REDIS_REST_TOKEN`（`KV_REST_API_TOKEN` 的替代）
+| `GMAIL_CLIENT_ID`      | Gmail OAuth2 客户端 ID     | OTP 邮件发送必需 |
+| `GMAIL_CLIENT_SECRET`  | Gmail OAuth2 客户端密钥    | OTP 邮件发送必需 |
+| `GMAIL_REFRESH_TOKEN`  | Gmail OAuth2 刷新令牌      | OTP 邮件发送必需 |
+| `GMAIL_USER`           | Gmail 发件人邮箱地址       | OTP 邮件发送必需 |
+| `CRON_SECRET`          | Cron 作业认证密钥          | 生产环境必需     |
 
 ### .env.local 示例
 
 ```env
 # 数据库（必需）
-DATABASE_URL="postgresql://neondb_owner:xxx@ep-xxx.aws.neon.tech/neondb?sslmode=require"
+DATABASE_URL="postgresql://modu:password@localhost:5432/modu_rank"
 
-# Clerk 认证（必需）
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_xxx"
-CLERK_SECRET_KEY="sk_test_xxx"
+# JWT 认证（必需）
+JWT_SECRET="your-secure-random-string"
 
-# Upstash Redis（可选 - 用于分布式速率限制）
-KV_REST_API_URL="https://xxx.upstash.io"
-KV_REST_API_TOKEN="xxx"
+# Gmail OAuth2（邮箱 OTP 必需）
+GMAIL_CLIENT_ID="your-client-id"
+GMAIL_CLIENT_SECRET="your-client-secret"
+GMAIL_REFRESH_TOKEN="your-refresh-token"
+GMAIL_USER="your-email@gmail.com"
 
 # Cron 认证（生产环境必需）
 CRON_SECRET="your-secure-random-string"
@@ -541,28 +502,59 @@ CRON_SECRET="your-secure-random-string"
 erDiagram
     users ||--o{ sessions : has
     users ||--o{ token_usage : has
-    users ||--o{ daily_aggregates : has
+    users ||--o{ daily_user_stats : has
     users ||--o{ rankings : has
+    users ||--o{ project_evaluations : has
+    users ||--o| user_stats : has
     users ||--o{ security_audit_log : logs
+    users ||--o{ email_verifications : verifies
+    tool_types ||--o{ sessions : identifies
+    tool_types ||--o{ token_usage : identifies
+    sessions ||--o{ token_usage : has
 
     users {
         uuid id PK
-        varchar clerk_id UK
+        varchar username UK
+        varchar password_hash
         varchar github_id UK
         varchar github_username
         text github_avatar_url
+        varchar display_name
+        varchar email
         varchar api_key_hash
         varchar api_key_prefix
         varchar user_salt
         boolean privacy_mode
+        integer successful_projects_count
         timestamp created_at
         timestamp updated_at
+    }
+
+    email_verifications {
+        uuid id PK
+        varchar email
+        varchar code
+        timestamp expires_at
+        boolean used
+        timestamp created_at
+    }
+
+    tool_types {
+        varchar id PK
+        varchar name
+        varchar display_name
+        text icon_url
+        varchar color
+        boolean is_active
+        integer sort_order
+        timestamp created_at
     }
 
     sessions {
         uuid id PK
         uuid user_id FK
-        varchar server_session_hash UK
+        varchar tool_type_id FK
+        varchar session_hash UK
         varchar anonymous_project_id
         timestamp started_at
         timestamp ended_at
@@ -571,7 +563,6 @@ erDiagram
         integer turn_count
         jsonb tool_usage
         jsonb code_metrics
-        jsonb model_usage_details
         timestamp created_at
     }
 
@@ -579,6 +570,7 @@ erDiagram
         uuid id PK
         uuid session_id FK
         uuid user_id FK
+        varchar tool_type_id FK
         bigint input_tokens
         bigint output_tokens
         bigint cache_creation_tokens
@@ -586,16 +578,49 @@ erDiagram
         timestamp recorded_at
     }
 
-    daily_aggregates {
+    project_evaluations {
         uuid id PK
         uuid user_id FK
-        date date
+        varchar project_path_hash
+        varchar project_name
+        integer local_score
+        integer backend_score
+        integer penalty_score
+        integer final_score
+        integer cumulative_score_after
+        varchar llm_model
+        varchar llm_provider
+        boolean passed
+        text feedback
+        timestamp evaluated_at
+    }
+
+    user_stats {
+        uuid user_id PK_FK
         bigint total_input_tokens
         bigint total_output_tokens
         bigint total_cache_tokens
+        bigint total_all_tokens
+        jsonb tokens_by_tool
+        integer total_sessions
+        jsonb sessions_by_tool
+        integer successful_projects_count
+        integer total_evaluations
+        timestamp last_activity_at
+        timestamp updated_at
+    }
+
+    daily_user_stats {
+        uuid id PK
+        uuid user_id FK
+        date stat_date
+        bigint input_tokens
+        bigint output_tokens
+        bigint cache_tokens
+        bigint total_tokens
         integer session_count
-        decimal avg_efficiency
-        decimal composite_score
+        jsonb by_tool
+        timestamp created_at
     }
 
     rankings {
@@ -624,14 +649,18 @@ erDiagram
 
 ### 表概述
 
-| 表                   | 说明                                |
-| -------------------- | ----------------------------------- |
-| `users`              | 通过 Clerk 与 GitHub 关联的用户账户 |
-| `sessions`           | 包含元数据的 Claude Code 会话记录   |
-| `token_usage`        | 每个会话的详细令牌消耗量            |
-| `daily_aggregates`   | 预先计算的每日统计                  |
-| `rankings`           | 每个期间的计算排名                  |
-| `security_audit_log` | 安全事件审计跟踪                    |
+| 表                    | 说明                           |
+| --------------------- | ------------------------------ |
+| `users`               | 基于邮箱/密码认证的用户账户   |
+| `email_verifications` | 注册时邮箱验证用OTP验证码     |
+| `tool_types`          | 支持的AI编程工具注册表        |
+| `sessions`            | 包含元数据的AI编程工具会话记录 |
+| `token_usage`         | 每个会话的详细令牌消耗量      |
+| `project_evaluations` | 基于LLM的项目评估结果         |
+| `user_stats`          | 仪表板用汇总用户统计          |
+| `daily_user_stats`    | 历史图表用每日汇总            |
+| `rankings`            | 每个期间的计算排名            |
+| `security_audit_log`  | 安全事件审计跟踪              |
 
 ## API 参考
 
@@ -879,64 +908,37 @@ Drizzle Studio 在 [https://local.drizzle.studio](https://local.drizzle.studio) 
 
 ## 部署
 
-### Vercel 部署
+### 生产部署
 
-1. **连接仓库**
-   - 将仓库导入到 Vercel
-   - 选择 `apps/web` 目录作为根目录
+1. **服务器设置**
+   - Docker 容器中运行 PostgreSQL
+   - Caddy 配置为 HTTPS 反向代理
+   - PM2 管理 Node.js 进程
 
-2. **配置环境变量**
-   - 在 Vercel 仪表板中添加所有必需的环境变量
-   - 连接 Neon 数据库（可使用 Vercel Integration）
-   - 连接 Upstash Redis（可使用 Vercel Integration）
+2. **通过 SCP 部署**
 
-3. **配置构建设置**
+   ```bash
+   # 将文件复制到服务器
+   scp -r apps/web/ user@server:/path/to/modu-arena/apps/web/
 
+   # 在服务器上: 构建并重启
+   cd /path/to/modu-arena/apps/web
+   npx next build
+   pm2 restart modu-arena-web
    ```
-   Root Directory: apps/web
-   Build Command: next build
-   Output Directory: .next
-   ```
 
-4. **Cron 任务**
+3. **定时任务**
 
-在 `vercel.json` 中配置自动化任务：
+   通过 crontab 或 PM2 cron 配置自动化任务：
 
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron/calculate-rankings",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/cleanup-data",
-      "schedule": "0 2 * * *"
-    }
-  ]
-}
-```
-
-- **排名计算 (0 0 \* \* \*)**: 每天午夜 UTC 重新计算所有排名
-- **数据清理 (0 2 \* \* \*)**: 每天凌晨 2 点 UTC 清理旧数据
-
-### 区域配置
-
-默认情况下，部署到首尔区域（`icn1`）以在亚洲获得最佳性能：
-
-```json
-{
-  "regions": ["icn1"]
-}
-```
-
-要更改部署区域，请修改 `vercel.json`。
+   - **排名计算**: 每天 UTC 午夜 — `GET /api/cron/calculate-rankings`
+   - **数据清理**: 每天 UTC 凌晨 2 点 — `GET /api/cron/cleanup-data`
 
 ## 安全
 
 ### 认证
 
-- **网页仪表板**: Clerk OAuth（仅 GitHub）
+- **网页仪表板**: Custom JWT（邮箱 OTP 注册 + 密码登录）
 - **CLI API**: API 密钥 + HMAC-SHA256 签名
 
 ### API 安全功能
@@ -977,7 +979,7 @@ Drizzle Studio 在 [https://local.drizzle.studio](https://local.drizzle.studio) 
 
 ### 缓存策略
 
-使用 Upstash Redis 的分布式缓存优化 API 响应时间。
+使用服务器端缓存优化 API 响应时间。
 
 #### 缓存 TTL 设置
 
@@ -1057,15 +1059,11 @@ while (true) {
 
 #### 连接池
 
-使用 Vercel 的 Neon Serverless Driver 实现连接池：
+使用 Drizzle ORM 实现 PostgreSQL 连接池：
 
 ```typescript
-// 普通查询：直接连接
+// Database connection with Drizzle ORM
 export const db = drizzle(pool, { schema });
-
-// 批处理：连接池
-export const getPooledDb = () =>
-  drizzle(neon(process.env.DATABASE_URL!), { schema });
 ```
 
 ### 性能监控

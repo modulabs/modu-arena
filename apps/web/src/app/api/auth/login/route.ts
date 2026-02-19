@@ -1,50 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, users } from '@/db';
-import { eq } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 import { verifyPassword, createSessionToken, generateApiKey } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { username, password, source } = body as {
-      username?: string;
+    const { email, password, source } = body as {
+      email?: string;
       password?: string;
       source?: string;
     };
 
-    if (!username || !password) {
+    if (!email || !password) {
       return NextResponse.json(
-        { error: 'Username and password are required' },
+        { error: 'Email and password are required' },
         { status: 400 }
       );
     }
 
+    const normalizedEmail = email.toLowerCase();
     const result = await db
       .select()
       .from(users)
-      .where(eq(users.username, username))
+      .where(or(eq(users.email, normalizedEmail), eq(users.username, normalizedEmail)))
       .limit(1);
 
     const user = result[0];
-    if (!user) {
+    if (!user || !user.passwordHash) {
       return NextResponse.json(
-        { error: 'Invalid username or password' },
+        { error: 'Invalid email or password' },
         { status: 401 }
-      );
-    }
-
-    if (!user.passwordHash) {
-      return NextResponse.json(
-        { error: 'This account uses email verification. Please sign in with your email.' },
-        { status: 400 }
       );
     }
 
     const isValid = verifyPassword(password, user.passwordHash);
     if (!isValid) {
       return NextResponse.json(
-        { error: 'Invalid username or password' },
+        { error: 'Invalid email or password' },
         { status: 401 }
       );
     }

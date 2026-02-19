@@ -2,8 +2,8 @@
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.1-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat-square&logo=typescript)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-336791?style=flat-square&logo=postgresql)
-![Clerk](https://img.shields.io/badge/Auth-Clerk-6C47FF?style=flat-square)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Docker-336791?style=flat-square&logo=postgresql)
+![Auth](https://img.shields.io/badge/Auth-Custom_JWT-orange?style=flat-square)
 ![License](https://img.shields.io/badge/License-Copyleft-green?style=flat-square)
 
 A competitive leaderboard platform for tracking AI coding tool token usage across Claude Code, Claude Desktop, OpenCode, Gemini CLI, Codex CLI, and Crush. Track your sessions, compete with the community, and discover your coding style through Agentic Coding Analytics.
@@ -214,42 +214,7 @@ apps/web/
 
 ### System Architecture
 
-```mermaid
-graph TB
-    subgraph "Client Layer"
-        CLI[Claude Code CLI]
-        WEB[Web Dashboard]
-    end
-
-    subgraph "Application Layer"
-        API[Next.js API Routes]
-        AUTH[Clerk Authentication]
-        RATE[Rate Limiter]
-    end
-
-    subgraph "Data Layer"
-        NEON[(Neon PostgreSQL)]
-        REDIS[(Upstash Redis)]
-    end
-
-    subgraph "Infrastructure"
-        VERCEL[Vercel Edge]
-        CRON[Vercel Cron]
-    end
-
-    CLI -->|HMAC Authentication| API
-    WEB -->|Clerk Session| API
-    API --> AUTH
-    API --> RATE
-    API --> CACHE{Cache Layer}
-    CACHE -->|Cache Miss| NEON
-    CACHE -->|Cache Hit| RATE
-    RATE --> REDIS
-    CACHE --> REDIS
-    CRON -->|Daily Ranking Calculation| API
-    CRON -->|"Data Cleanup (2AM)"| NEON
-    VERCEL --> API
-```
+![System Architecture](docs/system-architecture.png)
 
 ## Tech Stack
 
@@ -257,16 +222,17 @@ graph TB
 | ---------- | ----------------- | -------------------------------- |
 | Framework  | Next.js 16        | Full-stack React framework       |
 | Language   | TypeScript 5      | Type-safe development            |
-| Database   | Neon (PostgreSQL) | Serverless PostgreSQL            |
+| Database   | PostgreSQL        | Docker container database        |
 | ORM        | Drizzle ORM       | Type-safe database queries       |
-| Cache      | Upstash Redis     | Distributed caching & rate limit |
-| Auth       | Clerk             | GitHub OAuth authentication      |
+| Auth       | Custom JWT        | Email OTP signup + password login |
+| Proxy      | Caddy             | HTTPS reverse proxy              |
+| Process    | PM2               | Node.js process manager          |
+| Email      | Gmail REST API    | OTP verification emails          |
 | UI         | Tailwind CSS 4    | Styling                          |
 | Components | Radix UI          | Accessible UI primitives         |
 | Charts     | Recharts          | Data visualization               |
 | i18n       | next-intl         | Internationalization             |
 | Validation | Zod               | Runtime type validation          |
-| Analytics  | Vercel Analytics  | Usage analytics                  |
 
 ## Getting Started
 
@@ -274,9 +240,9 @@ graph TB
 
 - **Node.js** 20.x or higher
 - **Bun** 1.x (recommended) or npm/yarn
-- **PostgreSQL** (or Neon account)
-- **Clerk** account for authentication
-- **Upstash** account for Redis (optional but recommended)
+- **PostgreSQL** (Docker container or standalone)
+- **Caddy** for HTTPS reverse proxy (production)
+- **PM2** for Node.js process management (production)
 
 ### Installation
 
@@ -327,38 +293,33 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 | Variable                            | Description                | Example                                          |
 | ----------------------------------- | -------------------------- | ------------------------------------------------ |
-| `DATABASE_URL`                      | Neon PostgreSQL connection | `postgresql://user:pass@host/db?sslmode=require` |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk public key           | `pk_test_xxx`                                    |
-| `CLERK_SECRET_KEY`                  | Clerk secret key           | `sk_test_xxx`                                    |
+| `DATABASE_URL`                      | PostgreSQL connection string | `postgresql://user:pass@localhost:5432/dbname` |
+| `JWT_SECRET`                        | JWT signing secret           | `your-secure-random-string`                    |
 
 ### Optional Variables
 
 | Variable            | Description                            | Default                |
 | ------------------- | -------------------------------------- | ---------------------- |
-| `KV_REST_API_URL`   | Upstash Redis URL (caching/rate limit) | In-memory fallback     |
-| `KV_REST_API_TOKEN` | Upstash Redis token                    | In-memory fallback     |
-| `CRON_SECRET`       | Cron job authentication secret         | Required in production |
-
-### Alternative Variable Names
-
-Upstash Redis also supports these variable names:
-
-- `UPSTASH_REDIS_REST_URL` (alternative to `KV_REST_API_URL`)
-- `UPSTASH_REDIS_REST_TOKEN` (alternative to `KV_REST_API_TOKEN`)
+| `GMAIL_CLIENT_ID`      | Gmail OAuth2 client ID         | Required for OTP emails  |
+| `GMAIL_CLIENT_SECRET`  | Gmail OAuth2 client secret     | Required for OTP emails  |
+| `GMAIL_REFRESH_TOKEN`  | Gmail OAuth2 refresh token     | Required for OTP emails  |
+| `GMAIL_USER`           | Gmail sender email address     | Required for OTP emails  |
+| `CRON_SECRET`          | Cron job authentication secret | Required in production   |
 
 ### .env.local Example
 
 ```env
 # Database (required)
-DATABASE_URL="postgresql://neondb_owner:xxx@ep-xxx.aws.neon.tech/neondb?sslmode=require"
+DATABASE_URL="postgresql://modu:password@localhost:5432/modu_rank"
 
-# Clerk Authentication (required)
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_xxx"
-CLERK_SECRET_KEY="sk_test_xxx"
+# JWT Authentication (required)
+JWT_SECRET="your-secure-random-string"
 
-# Upstash Redis (optional - for distributed rate limiting)
-KV_REST_API_URL="https://xxx.upstash.io"
-KV_REST_API_TOKEN="xxx"
+# Gmail OAuth2 (required for email OTP)
+GMAIL_CLIENT_ID="your-client-id"
+GMAIL_CLIENT_SECRET="your-client-secret"
+GMAIL_REFRESH_TOKEN="your-refresh-token"
+GMAIL_USER="your-email@gmail.com"
 
 # Cron Authentication (required in production)
 CRON_SECRET="your-secure-random-string"
@@ -377,22 +338,36 @@ erDiagram
     users ||--o{ project_evaluations : has
     users ||--o| user_stats : has
     users ||--o{ security_audit_log : logs
+    users ||--o{ email_verifications : verifies
     tool_types ||--o{ sessions : identifies
     tool_types ||--o{ token_usage : identifies
     sessions ||--o{ token_usage : has
 
     users {
         uuid id PK
-        varchar clerk_id UK
+        varchar username UK
+        varchar password_hash
         varchar github_id UK
         varchar github_username
         text github_avatar_url
+        varchar display_name
+        varchar email
         varchar api_key_hash
         varchar api_key_prefix
         varchar user_salt
         boolean privacy_mode
+        integer successful_projects_count
         timestamp created_at
         timestamp updated_at
+    }
+
+    email_verifications {
+        uuid id PK
+        varchar email
+        varchar code
+        timestamp expires_at
+        boolean used
+        timestamp created_at
     }
 
     tool_types {
@@ -431,7 +406,6 @@ erDiagram
         bigint output_tokens
         bigint cache_creation_tokens
         bigint cache_read_tokens
-        bigint total_tokens
         timestamp recorded_at
     }
 
@@ -440,9 +414,11 @@ erDiagram
         uuid user_id FK
         varchar project_path_hash
         varchar project_name
-        integer total_score
-        integer rubric_functionality
-        integer rubric_practicality
+        integer local_score
+        integer backend_score
+        integer penalty_score
+        integer final_score
+        integer cumulative_score_after
         varchar llm_model
         varchar llm_provider
         boolean passed
@@ -506,7 +482,8 @@ erDiagram
 
 | Table                  | Description                                     |
 | ---------------------- | ----------------------------------------------- |
-| `users`                | User accounts linked to GitHub via Clerk        |
+| `users`                | User accounts with email/password authentication |
+| `email_verifications`  | OTP codes for email verification during signup   |
 | `tool_types`           | Registry of supported AI coding tools           |
 | `sessions`             | AI coding tool session records with metadata    |
 | `token_usage`          | Normalized token consumption per session        |
@@ -777,64 +754,37 @@ Drizzle Studio opens at [https://local.drizzle.studio](https://local.drizzle.stu
 
 ## Deployment
 
-### Vercel Deployment
+### Production Deployment
 
-1. **Connect Repository**
-   - Import repository to Vercel
-   - Select `apps/web` directory as root
+1. **Server Setup**
+   - PostgreSQL running in Docker container
+   - Caddy configured as HTTPS reverse proxy
+   - PM2 managing Node.js processes
 
-2. **Configure Environment Variables**
-   - Add all required environment variables in Vercel dashboard
-   - Connect Neon database (Vercel Integration available)
-   - Connect Upstash Redis (Vercel Integration available)
+2. **Deploy via SCP**
 
-3. **Configure Build Settings**
+   ```bash
+   # Copy files to server
+   scp -r apps/web/ user@server:/path/to/modu-arena/apps/web/
 
+   # On server: build and restart
+   cd /path/to/modu-arena/apps/web
+   npx next build
+   pm2 restart modu-arena-web
    ```
-   Root Directory: apps/web
-   Build Command: next build
-   Output Directory: .next
-   ```
 
-4. **Cron Jobs**
+3. **Cron Jobs**
 
-Configure automated tasks in `vercel.json`:
+   Configure automated tasks via crontab or PM2 cron:
 
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron/calculate-rankings",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/cleanup-data",
-      "schedule": "0 2 * * *"
-    }
-  ]
-}
-```
-
-- **Ranking Calculation (0 0 \* \* \*)**: Recalculate all rankings daily at midnight UTC
-- **Data Cleanup (0 2 \* \* \*)**: Clean up old data daily at 2 AM UTC
-
-### Region Configuration
-
-By default, deployed to Seoul region (`icn1`) for optimal performance in Asia:
-
-```json
-{
-  "regions": ["icn1"]
-}
-```
-
-To change deployment region, modify `vercel.json`.
+   - **Ranking Calculation**: Daily at midnight UTC — `GET /api/cron/calculate-rankings`
+   - **Data Cleanup**: Daily at 2 AM UTC — `GET /api/cron/cleanup-data`
 
 ## Security
 
 ### Authentication
 
-- **Web Dashboard**: Clerk OAuth (GitHub only)
+- **Web Dashboard**: Custom JWT (email OTP signup + password login)
 - **CLI API**: API Key + HMAC-SHA256 signature
 
 ### API Security Features
@@ -875,7 +825,7 @@ Events tracked by audit logs:
 
 ### Caching Strategy
 
-Optimize API response times with distributed caching using Upstash Redis.
+Optimize API response times with server-side caching.
 
 #### Cache TTL Settings
 
@@ -955,15 +905,11 @@ Optimize performance with batch processing for large data insertions/updates:
 
 #### Connection Pooling
 
-Implements connection pooling using Vercel's Neon Serverless Driver:
+Implements connection pooling using Drizzle ORM with PostgreSQL:
 
 ```typescript
-// Normal queries: Direct connection
+// Database connection with Drizzle ORM
 export const db = drizzle(pool, { schema });
-
-// Batch operations: Connection pooler
-export const getPooledDb = () =>
-  drizzle(neon(process.env.DATABASE_URL!), { schema });
 ```
 
 ### Performance Monitoring

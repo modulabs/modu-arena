@@ -2,8 +2,8 @@
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.1-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat-square&logo=typescript)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-336791?style=flat-square&logo=postgresql)
-![Clerk](https://img.shields.io/badge/Auth-Clerk-6C47FF?style=flat-square)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Docker-336791?style=flat-square&logo=postgresql)
+![Auth](https://img.shields.io/badge/Auth-Custom_JWT-orange?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
 Claude Code 토큰 사용량을 추적하는 경쟁형 리더보드 플랫폼입니다. AI 코딩 세션을 추적하고, 커뮤니티와 비교하며, Agentic Coding Analytics를 통해 자신만의 코딩 스타일을 발견하세요.
@@ -412,59 +412,25 @@ apps/web/
 
 ### 시스템 아키텍처
 
-```mermaid
-graph TB
-    subgraph "클라이언트 레이어"
-        CLI[Claude Code CLI]
-        WEB[웹 대시보드]
-    end
-
-    subgraph "애플리케이션 레이어"
-        API[Next.js API 라우트]
-        AUTH[Clerk 인증]
-        RATE[속도 제한기]
-    end
-
-    subgraph "데이터 레이어"
-        NEON[(Neon PostgreSQL)]
-        REDIS[(Upstash Redis)]
-    end
-
-    subgraph "인프라"
-        VERCEL[Vercel Edge]
-        CRON[Vercel Cron]
-    end
-
-    CLI -->|HMAC 인증| API
-    WEB -->|Clerk 세션| API
-    API --> AUTH
-    API --> RATE
-    API --> CACHE{캐시 레이어}
-    CACHE -->|Cache Miss| NEON
-    CACHE -->|Cache Hit| RATE
-    RATE --> REDIS
-    CACHE --> REDIS
-    CRON -->|일간 랭킹 계산| API
-    CRON -->|"데이터 정리(2AM)"| NEON
-    VERCEL --> API
-```
+![시스템 아키텍처](docs/system-architecture.png)
 
 ## 기술 스택
 
-| 카테고리     | 기술              | 용도                        |
-| ------------ | ----------------- | --------------------------- |
-| 프레임워크   | Next.js 16        | 풀스택 React 프레임워크     |
-| 언어         | TypeScript 5      | 타입 안전 개발              |
-| 데이터베이스 | Neon (PostgreSQL) | 서버리스 PostgreSQL         |
-| ORM          | Drizzle ORM       | 타입 안전 데이터베이스 쿼리 |
-| 캐시         | Upstash Redis     | 분산 캐싱 및 속도 제한      |
-| 인증         | Clerk             | GitHub OAuth 인증           |
-| UI           | Tailwind CSS 4    | 스타일링                    |
-| 컴포넌트     | Radix UI          | 접근성 UI 프리미티브        |
-| 차트         | Recharts          | 데이터 시각화               |
+| 카테고리     | 기술              | 용도                           |
+| ------------ | ----------------- | ------------------------------ |
+| 프레임워크   | Next.js 16        | 풀스택 React 프레임워크        |
+| 언어         | TypeScript 5      | 타입 안전 개발                 |
+| 데이터베이스 | PostgreSQL        | Docker 컨테이너 데이터베이스   |
+| ORM          | Drizzle ORM       | 타입 안전 데이터베이스 쿼리    |
+| 인증         | Custom JWT        | 이메일 OTP 가입 + 비밀번호 로그인 |
+| 프록시       | Caddy             | HTTPS 리버스 프록시            |
+| 프로세스     | PM2               | Node.js 프로세스 매니저        |
+| 이메일       | Gmail REST API    | OTP 인증 이메일                |
+| UI           | Tailwind CSS 4    | 스타일링                       |
+| 컴포넌트     | Radix UI          | 접근성 UI 프리미티브           |
+| 차트         | Recharts          | 데이터 시각화                  |
 | 다국어       | next-intl         | 국제화                      |
 | 검증         | Zod               | 런타임 타입 검증            |
-| 분석         | Vercel Analytics  | 사용량 분석                 |
 
 ## 시작하기
 
@@ -472,9 +438,9 @@ graph TB
 
 - **Node.js** 20.x 이상
 - **Bun** 1.x (권장) 또는 npm/yarn
-- **PostgreSQL** (또는 Neon 계정)
-- 인증을 위한 **Clerk** 계정
-- Redis를 위한 **Upstash** 계정 (선택사항이지만 권장)
+- **PostgreSQL** (Docker 컨테이너 또는 독립 실행형)
+- 프로덕션용 **Caddy** HTTPS 리버스 프록시
+- 프로덕션용 **PM2** Node.js 프로세스 매니저
 
 ### 설치
 
@@ -525,38 +491,33 @@ bun run dev
 
 | 변수                                | 설명                        | 예시                                             |
 | ----------------------------------- | --------------------------- | ------------------------------------------------ |
-| `DATABASE_URL`                      | Neon PostgreSQL 연결 문자열 | `postgresql://user:pass@host/db?sslmode=require` |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk 공개 키               | `pk_test_xxx`                                    |
-| `CLERK_SECRET_KEY`                  | Clerk 비밀 키               | `sk_test_xxx`                                    |
+| `DATABASE_URL`                      | PostgreSQL 연결 문자열      | `postgresql://user:pass@localhost:5432/dbname`    |
+| `JWT_SECRET`                        | JWT 서명 시크릿             | `your-secure-random-string`                      |
 
 ### 선택 변수
 
 | 변수                | 설명                               | 기본값            |
 | ------------------- | ---------------------------------- | ----------------- |
-| `KV_REST_API_URL`   | Upstash Redis URL (캐싱/속도 제한) | 인메모리 폴백     |
-| `KV_REST_API_TOKEN` | Upstash Redis 토큰                 | 인메모리 폴백     |
-| `CRON_SECRET`       | 크론 작업 인증 시크릿              | 프로덕션에서 필수 |
-
-### 대체 변수명
-
-Upstash Redis는 다음 변수명도 지원합니다:
-
-- `UPSTASH_REDIS_REST_URL` (`KV_REST_API_URL` 대체)
-- `UPSTASH_REDIS_REST_TOKEN` (`KV_REST_API_TOKEN` 대체)
+| `GMAIL_CLIENT_ID`      | Gmail OAuth2 클라이언트 ID     | OTP 이메일 필수   |
+| `GMAIL_CLIENT_SECRET`  | Gmail OAuth2 클라이언트 시크릿 | OTP 이메일 필수   |
+| `GMAIL_REFRESH_TOKEN`  | Gmail OAuth2 리프레시 토큰     | OTP 이메일 필수   |
+| `GMAIL_USER`           | Gmail 발신 이메일 주소         | OTP 이메일 필수   |
+| `CRON_SECRET`          | 크론 작업 인증 시크릿          | 프로덕션에서 필수 |
 
 ### .env.local 예시
 
 ```env
 # 데이터베이스 (필수)
-DATABASE_URL="postgresql://neondb_owner:xxx@ep-xxx.aws.neon.tech/neondb?sslmode=require"
+DATABASE_URL="postgresql://modu:password@localhost:5432/modu_rank"
 
-# Clerk 인증 (필수)
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_xxx"
-CLERK_SECRET_KEY="sk_test_xxx"
+# JWT 인증 (필수)
+JWT_SECRET="your-secure-random-string"
 
-# Upstash Redis (선택사항 - 분산 속도 제한용)
-KV_REST_API_URL="https://xxx.upstash.io"
-KV_REST_API_TOKEN="xxx"
+# Gmail OAuth2 (이메일 OTP 필수)
+GMAIL_CLIENT_ID="your-client-id"
+GMAIL_CLIENT_SECRET="your-client-secret"
+GMAIL_REFRESH_TOKEN="your-refresh-token"
+GMAIL_USER="your-email@gmail.com"
 
 # 크론 인증 (프로덕션에서 필수)
 CRON_SECRET="your-secure-random-string"
@@ -570,28 +531,59 @@ CRON_SECRET="your-secure-random-string"
 erDiagram
     users ||--o{ sessions : has
     users ||--o{ token_usage : has
-    users ||--o{ daily_aggregates : has
+    users ||--o{ daily_user_stats : has
     users ||--o{ rankings : has
+    users ||--o{ project_evaluations : has
+    users ||--o| user_stats : has
     users ||--o{ security_audit_log : logs
+    users ||--o{ email_verifications : verifies
+    tool_types ||--o{ sessions : identifies
+    tool_types ||--o{ token_usage : identifies
+    sessions ||--o{ token_usage : has
 
     users {
         uuid id PK
-        varchar clerk_id UK
+        varchar username UK
+        varchar password_hash
         varchar github_id UK
         varchar github_username
         text github_avatar_url
+        varchar display_name
+        varchar email
         varchar api_key_hash
         varchar api_key_prefix
         varchar user_salt
         boolean privacy_mode
+        integer successful_projects_count
         timestamp created_at
         timestamp updated_at
+    }
+
+    email_verifications {
+        uuid id PK
+        varchar email
+        varchar code
+        timestamp expires_at
+        boolean used
+        timestamp created_at
+    }
+
+    tool_types {
+        varchar id PK
+        varchar name
+        varchar display_name
+        text icon_url
+        varchar color
+        boolean is_active
+        integer sort_order
+        timestamp created_at
     }
 
     sessions {
         uuid id PK
         uuid user_id FK
-        varchar server_session_hash UK
+        varchar tool_type_id FK
+        varchar session_hash UK
         varchar anonymous_project_id
         timestamp started_at
         timestamp ended_at
@@ -600,7 +592,6 @@ erDiagram
         integer turn_count
         jsonb tool_usage
         jsonb code_metrics
-        jsonb model_usage_details
         timestamp created_at
     }
 
@@ -608,6 +599,7 @@ erDiagram
         uuid id PK
         uuid session_id FK
         uuid user_id FK
+        varchar tool_type_id FK
         bigint input_tokens
         bigint output_tokens
         bigint cache_creation_tokens
@@ -615,16 +607,49 @@ erDiagram
         timestamp recorded_at
     }
 
-    daily_aggregates {
+    project_evaluations {
         uuid id PK
         uuid user_id FK
-        date date
+        varchar project_path_hash
+        varchar project_name
+        integer local_score
+        integer backend_score
+        integer penalty_score
+        integer final_score
+        integer cumulative_score_after
+        varchar llm_model
+        varchar llm_provider
+        boolean passed
+        text feedback
+        timestamp evaluated_at
+    }
+
+    user_stats {
+        uuid user_id PK_FK
         bigint total_input_tokens
         bigint total_output_tokens
         bigint total_cache_tokens
+        bigint total_all_tokens
+        jsonb tokens_by_tool
+        integer total_sessions
+        jsonb sessions_by_tool
+        integer successful_projects_count
+        integer total_evaluations
+        timestamp last_activity_at
+        timestamp updated_at
+    }
+
+    daily_user_stats {
+        uuid id PK
+        uuid user_id FK
+        date stat_date
+        bigint input_tokens
+        bigint output_tokens
+        bigint cache_tokens
+        bigint total_tokens
         integer session_count
-        decimal avg_efficiency
-        decimal composite_score
+        jsonb by_tool
+        timestamp created_at
     }
 
     rankings {
@@ -653,14 +678,18 @@ erDiagram
 
 ### 테이블 개요
 
-| 테이블               | 설명                                      |
-| -------------------- | ----------------------------------------- |
-| `users`              | Clerk를 통해 GitHub와 연결된 사용자 계정  |
-| `sessions`           | 메타데이터가 포함된 Claude Code 세션 기록 |
-| `token_usage`        | 세션별 상세 토큰 소비량                   |
-| `daily_aggregates`   | 사전 계산된 일간 통계                     |
-| `rankings`           | 각 기간별 계산된 랭킹                     |
-| `security_audit_log` | 보안 이벤트 감사 추적                     |
+| 테이블               | 설명                                            |
+| -------------------- | ----------------------------------------------- |
+| `users`              | 이메일/비밀번호 인증 기반 사용자 계정           |
+| `email_verifications`| 회원가입 시 이메일 인증용 OTP 코드              |
+| `tool_types`         | 지원되는 AI 코딩 도구 레지스트리                |
+| `sessions`           | 메타데이터가 포함된 AI 코딩 도구 세션 기록      |
+| `token_usage`        | 세션별 상세 토큰 소비량                         |
+| `project_evaluations`| LLM 기반 프로젝트 평가 결과                     |
+| `user_stats`         | 대시보드용 집계된 사용자 통계                   |
+| `daily_user_stats`   | 히스토리 차트용 일간 집계                       |
+| `rankings`           | 각 기간별 계산된 랭킹                           |
+| `security_audit_log` | 보안 이벤트 감사 추적                           |
 
 ## API 레퍼런스
 
@@ -908,64 +937,37 @@ bun run db:studio
 
 ## 배포
 
-### Vercel 배포
+### 프로덕션 배포
 
-1. **저장소 연결**
-   - Vercel에 저장소 가져오기
-   - 루트로 `apps/web` 디렉토리 선택
+1. **서버 설정**
+   - Docker 컨테이너에서 PostgreSQL 실행
+   - Caddy를 HTTPS 리버스 프록시로 구성
+   - PM2로 Node.js 프로세스 관리
 
-2. **환경 변수 구성**
-   - Vercel 대시보드에서 모든 필수 환경 변수 추가
-   - Neon 데이터베이스 연결 (Vercel Integration 사용 가능)
-   - Upstash Redis 연결 (Vercel Integration 사용 가능)
+2. **SCP를 통한 배포**
 
-3. **빌드 설정 구성**
+   ```bash
+   # 파일을 서버에 복사
+   scp -r apps/web/ user@server:/path/to/modu-arena/apps/web/
 
+   # 서버에서: 빌드 및 재시작
+   cd /path/to/modu-arena/apps/web
+   npx next build
+   pm2 restart modu-arena-web
    ```
-   Root Directory: apps/web
-   Build Command: next build
-   Output Directory: .next
-   ```
 
-4. **크론 작업**
+3. **크론 작업**
 
-`vercel.json`에서 자동화 작업을 구성합니다:
+   crontab 또는 PM2 cron을 통해 자동화 작업을 구성합니다:
 
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron/calculate-rankings",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/cleanup-data",
-      "schedule": "0 2 * * *"
-    }
-  ]
-}
-```
-
-- **랭킹 계산 (0 0 \* \* \*)**: 매일 자정(UTC)에 모든 랭킹 재계산
-- **데이터 정리 (0 2 \* \* \*)**: 매일 새벽 2시(UTC)에 오래된 데이터 정리
-
-### 리전 구성
-
-기본적으로 아시아 지역 최적 성능을 위해 서울 리전(`icn1`)으로 배포됩니다:
-
-```json
-{
-  "regions": ["icn1"]
-}
-```
-
-배포 리전을 변경하려면 `vercel.json`을 수정하세요.
+   - **랭킹 계산**: 매일 자정 (UTC) — `GET /api/cron/calculate-rankings`
+   - **데이터 정리**: 매일 오전 2시 (UTC) — `GET /api/cron/cleanup-data`
 
 ## 보안
 
 ### 인증
 
-- **웹 대시보드**: Clerk OAuth (GitHub만 지원)
+- **웹 대시보드**: Custom JWT (이메일 OTP 가입 + 비밀번호 로그인)
 - **CLI API**: API 키 + HMAC-SHA256 서명
 
 ### API 보안 기능
@@ -1006,7 +1008,7 @@ bun run db:studio
 
 ### 캐싱 전략
 
-Upstash Redis를 활용한 분산 캐싱으로 API 응답 시간을 최적화합니다.
+서버 사이드 캐싱으로 API 응답 시간을 최적화합니다.
 
 #### 캐시 TTL 설정
 
@@ -1086,15 +1088,11 @@ while (true) {
 
 #### 연결 풀링
 
-Vercel의 Neon Serverless Driver를 사용하여 연결 풀링을 구현합니다:
+Drizzle ORM을 사용하여 PostgreSQL 연결 풀링을 구현합니다:
 
 ```typescript
-// 일반 쿼리: 직접 연결
+// Database connection with Drizzle ORM
 export const db = drizzle(pool, { schema });
-
-// 배치 작업: 연결 풀러
-export const getPooledDb = () =>
-  drizzle(neon(process.env.DATABASE_URL!), { schema });
 ```
 
 ### 성능 모니터링

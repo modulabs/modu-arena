@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, users, emailVerifications } from "@/db";
 import { eq, and, gt } from "drizzle-orm";
-import { createSessionToken, generateApiKey } from "@/lib/auth";
+import { hashPassword, createSessionToken, generateApiKey } from "@/lib/auth";
 import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, code, displayName, action } = body as {
+    const { email, code, username, password, action } = body as {
       email?: string;
       code?: string;
-      displayName?: string;
-      action?: "signup" | "signin";
+      username?: string;
+      password?: string;
+      action?: "verify" | "signup";
     };
 
     if (!email || !code || !action) {
@@ -43,46 +44,66 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await db
-      .update(emailVerifications)
-      .set({ used: true })
-      .where(eq(emailVerifications.id, verifications[0].id));
-
-    const existingUsers = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, normalizedEmail))
-      .limit(1);
-
-    const existingUser = existingUsers[0];
+    if (action === "verify") {
+      return NextResponse.json({ verified: true });
+    }
 
     if (action === "signup") {
-      if (existingUser) {
+      if (!username || !password) {
+        return NextResponse.json(
+          { error: "Username and password are required" },
+          { status: 400 }
+        );
+      }
+
+      if (password.length < 8) {
+        return NextResponse.json(
+          { error: "Password must be at least 8 characters" },
+          { status: 400 }
+        );
+      }
+
+      const existingEmail = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, normalizedEmail))
+        .limit(1);
+
+      if (existingEmail.length > 0) {
         return NextResponse.json(
           { error: "An account with this email already exists. Please sign in." },
           { status: 409 }
         );
       }
 
-      const username = normalizedEmail.split("@")[0] ?? normalizedEmail;
-      let uniqueUsername = username;
       const existingUsername = await db
         .select({ id: users.id })
         .from(users)
         .where(eq(users.username, username))
         .limit(1);
+
       if (existingUsername.length > 0) {
-        uniqueUsername = `${username}_${Date.now().toString(36)}`;
+        return NextResponse.json(
+          { error: "This username is already taken" },
+          { status: 409 }
+        );
       }
 
-      const { key: apiKey, hash: apiKeyHash, prefix: apiKeyPrefix } = generateApiKey(uniqueUsername);
+      await db
+        .update(emailVerifications)
+        .set({ used: true })
+        .where(eq(emailVerifications.id, verifications[0].id));
+
+      const passwordHash = hashPassword(password);
+      const { key: apiKey, hash: apiKeyHash, prefix: apiKeyPrefix } = generateApiKey(username);
 
       const [newUser] = await db
         .insert(users)
         .values({
-          username: uniqueUsername,
+          username,
           email: normalizedEmail,
-          displayName: displayName || username,
+          passwordHash,
+          displayName: username,
           apiKeyHash,
           apiKeyPrefix,
         })
@@ -106,35 +127,6 @@ export async function POST(request: NextRequest) {
       });
 
       return NextResponse.json({ user: newUser, apiKey }, { status: 201 });
-    }
-
-    if (action === "signin") {
-      if (!existingUser) {
-        return NextResponse.json(
-          { error: "No account found with this email. Please sign up first." },
-          { status: 404 }
-        );
-      }
-
-      const { token, expiresAt } = await createSessionToken(existingUser.id);
-      const cookieStore = await cookies();
-      cookieStore.set("session", token, {
-        httpOnly: true,
-        secure: process.env.NEXT_PUBLIC_APP_URL?.startsWith("https://") ?? false,
-        sameSite: "lax",
-        path: "/",
-        expires: expiresAt,
-      });
-
-      return NextResponse.json({
-        user: {
-          id: existingUser.id,
-          username: existingUser.username,
-          displayName: existingUser.displayName,
-          email: existingUser.email,
-          apiKeyPrefix: existingUser.apiKeyPrefix,
-        },
-      });
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
