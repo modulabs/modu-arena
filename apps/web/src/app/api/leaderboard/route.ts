@@ -30,6 +30,9 @@ interface UsageEntry {
   username: string;
   avatarUrl: string | null;
   totalTokens: number;
+  inputTokens: number;
+  outputTokens: number;
+  cacheTokens: number;
   weeklyTokens: number;
   sessionCount: number;
   score: number;
@@ -124,6 +127,9 @@ export async function GET(request: NextRequest) {
           username: sql<string>`COALESCE(${users.username}, ${users.githubUsername}, 'Anonymous')`,
           avatarUrl: users.githubAvatarUrl,
           totalTokens: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${rangeStartStr} THEN ${dailyUserStats.totalTokens} ELSE 0 END), 0)`,
+          inputTokens: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${rangeStartStr} THEN ${dailyUserStats.inputTokens} ELSE 0 END), 0)`,
+          outputTokens: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${rangeStartStr} THEN ${dailyUserStats.outputTokens} ELSE 0 END), 0)`,
+          cacheTokens: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${rangeStartStr} THEN ${dailyUserStats.cacheTokens} ELSE 0 END), 0)`,
           weeklyTokens: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${weeklyStartStr} THEN ${dailyUserStats.totalTokens} ELSE 0 END), 0)`,
           sessionCount: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${rangeStartStr} THEN ${dailyUserStats.sessionCount} ELSE 0 END), 0)`,
           lastActivityAt: userStats.lastActivityAt,
@@ -174,6 +180,9 @@ export async function GET(request: NextRequest) {
         username: r.privacyMode ? `User #${offset + idx + 1}` : (r.username ?? 'Unknown'),
         avatarUrl: r.privacyMode ? null : (r.avatarUrl ?? null),
         totalTokens: Number(r.totalTokens),
+        inputTokens: Number(r.inputTokens),
+        outputTokens: Number(r.outputTokens),
+        cacheTokens: Number(r.cacheTokens),
         weeklyTokens: r.privacyMode ? 0 : Number(r.weeklyTokens),
         sessionCount: Number(r.sessionCount),
         score: r.privacyMode ? 0 : (scoreMap.get(r.userId) ?? 0),

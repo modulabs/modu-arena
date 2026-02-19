@@ -15,16 +15,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatNumber, formatCurrency, formatRelativeDate } from '@/lib/utils';
 
-// Claude Sonnet 4 pricing (approximate blended rate)
-// Input: $3/1M, Output: $15/1M, Cache Read: $0.30/1M
-// Assuming ~75% input, ~25% output ratio: ~$6/1M tokens
-const COST_PER_TOKEN = 0.000006; // $6 per 1M tokens
-
 interface UsageEntry {
   userId: string;
   username: string;
   avatarUrl: string | null;
   totalTokens: number;
+  inputTokens: number;
+  outputTokens: number;
+  cacheTokens: number;
   weeklyTokens?: number;
   sessionCount: number;
   score?: number;
@@ -170,7 +168,11 @@ export function UsageTable({ entries, currentUserId }: UsageTableProps) {
                   </TableCell>
                   <TableCell className="hidden text-right 2xl:table-cell">
                     <span className="font-mono text-muted-foreground">
-                      {formatCurrency(entry.totalTokens * COST_PER_TOKEN)}
+                      {formatCurrency(
+                        (entry.inputTokens / 1_000_000) * 3.0 +
+                        (entry.outputTokens / 1_000_000) * 15.0 +
+                        (entry.cacheTokens / 1_000_000) * 0.3
+                      )}
                     </span>
                   </TableCell>
                 </TableRow>

@@ -14,6 +14,9 @@ interface UsageEntry {
   username: string;
   avatarUrl: string | null;
   totalTokens: number;
+  inputTokens: number;
+  outputTokens: number;
+  cacheTokens: number;
   weeklyTokens: number;
   sessionCount: number;
   score: number;
@@ -82,6 +85,9 @@ async function getUsageData(
         username: sql<string>`COALESCE(${users.username}, ${users.githubUsername}, 'Anonymous')`,
         avatarUrl: users.githubAvatarUrl,
         totalTokens: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${startDateStr} THEN ${dailyUserStats.totalTokens} ELSE 0 END), 0)`,
+        inputTokens: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${startDateStr} THEN ${dailyUserStats.inputTokens} ELSE 0 END), 0)`,
+        outputTokens: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${startDateStr} THEN ${dailyUserStats.outputTokens} ELSE 0 END), 0)`,
+        cacheTokens: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${startDateStr} THEN ${dailyUserStats.cacheTokens} ELSE 0 END), 0)`,
         weeklyTokens: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${weeklyStartStr} THEN ${dailyUserStats.totalTokens} ELSE 0 END), 0)`,
         sessionCount: sql<number>`COALESCE(SUM(CASE WHEN ${dailyUserStats.statDate} >= ${startDateStr} THEN ${dailyUserStats.sessionCount} ELSE 0 END), 0)`,
         lastActivityAt: userStats.lastActivityAt,
@@ -132,6 +138,9 @@ async function getUsageData(
       username: r.privacyMode ? `User #${offset + idx + 1}` : (r.username ?? 'Unknown'),
       avatarUrl: r.privacyMode ? null : (r.avatarUrl ?? null),
       totalTokens: Number(r.totalTokens ?? 0),
+      inputTokens: Number(r.inputTokens ?? 0),
+      outputTokens: Number(r.outputTokens ?? 0),
+      cacheTokens: Number(r.cacheTokens ?? 0),
       weeklyTokens: r.privacyMode ? 0 : Number(r.weeklyTokens ?? 0),
       sessionCount: Number(r.sessionCount ?? 0),
       score: r.privacyMode ? 0 : (scoreMap.get(r.userId) ?? 0),

@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { db, sessions, tokenUsage, dailyUserStats } from '@/db';
+import { db, sessions, tokenUsage, dailyUserStats, userStats } from '@/db';
 import { inArray, sql } from 'drizzle-orm';
 import { toolTypes } from '@/db';
 import { successResponse, Errors, corsOptionsResponse } from '@/lib/api-response';
@@ -328,6 +328,73 @@ export async function POST(request: NextRequest) {
           },
         });
     }
+
+    // === Phase 6: Update user_stats aggregate table ===
+    let totalBatchInput = 0;
+    let totalBatchOutput = 0;
+    let totalBatchCache = 0;
+    let maxEndedAt = new Date(0);
+    const toolTokenTotals: Record<string, number> = {};
+    const toolSessionCounts: Record<string, number> = {};
+
+    for (const s of newSessions) {
+      const cache = (s.data.cacheCreationTokens ?? 0) + (s.data.cacheReadTokens ?? 0);
+      const total = s.data.inputTokens + s.data.outputTokens + cache;
+      totalBatchInput += s.data.inputTokens;
+      totalBatchOutput += s.data.outputTokens;
+      totalBatchCache += cache;
+
+      const tool = s.data.toolType;
+      toolTokenTotals[tool] = (toolTokenTotals[tool] ?? 0) + total;
+      toolSessionCounts[tool] = (toolSessionCounts[tool] ?? 0) + 1;
+
+      const endedAt = new Date(s.data.endedAt);
+      if (endedAt > maxEndedAt) maxEndedAt = endedAt;
+    }
+
+    const totalBatchAll = totalBatchInput + totalBatchOutput + totalBatchCache;
+
+    // Build jsonb merge expressions for each tool type
+    const tokensByToolEntries = Object.entries(toolTokenTotals);
+    const sessionsByToolEntries = Object.entries(toolSessionCounts);
+
+    let tokensByToolSql = sql`${userStats.tokensByTool}`;
+    for (const [tool, tokens] of tokensByToolEntries) {
+      tokensByToolSql = sql`${tokensByToolSql} || jsonb_build_object(${tool}::text, COALESCE((${userStats.tokensByTool} ->> ${tool}::text)::bigint, 0) + ${tokens})`;
+    }
+
+    let sessionsByToolSql = sql`${userStats.sessionsByTool}`;
+    for (const [tool, count] of sessionsByToolEntries) {
+      sessionsByToolSql = sql`${sessionsByToolSql} || jsonb_build_object(${tool}::text, COALESCE((${userStats.sessionsByTool} ->> ${tool}::text)::int, 0) + ${count})`;
+    }
+
+    await db
+      .insert(userStats)
+      .values({
+        userId: user.id,
+        totalInputTokens: totalBatchInput,
+        totalOutputTokens: totalBatchOutput,
+        totalCacheTokens: totalBatchCache,
+        totalAllTokens: totalBatchAll,
+        totalSessions: newSessions.length,
+        tokensByTool: toolTokenTotals,
+        sessionsByTool: toolSessionCounts,
+        lastActivityAt: maxEndedAt,
+      })
+      .onConflictDoUpdate({
+        target: [userStats.userId],
+        set: {
+          totalInputTokens: sql`${userStats.totalInputTokens} + ${totalBatchInput}`,
+          totalOutputTokens: sql`${userStats.totalOutputTokens} + ${totalBatchOutput}`,
+          totalCacheTokens: sql`${userStats.totalCacheTokens} + ${totalBatchCache}`,
+          totalAllTokens: sql`${userStats.totalAllTokens} + ${totalBatchAll}`,
+          totalSessions: sql`${userStats.totalSessions} + ${newSessions.length}`,
+          tokensByTool: tokensByToolSql,
+          sessionsByTool: sessionsByToolSql,
+          lastActivityAt: sql`GREATEST(${userStats.lastActivityAt}, ${maxEndedAt})`,
+          updatedAt: new Date(),
+        },
+      });
 
     // Build success results
     for (const s of newSessions) {

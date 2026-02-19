@@ -1,8 +1,9 @@
 import { safeAuth } from '@/lib/safe-auth';
 import { db, users } from '@/db';
 import { eq } from 'drizzle-orm';
-import { successResponse, Errors } from '@/lib/api-response';
+import { successResponse, Errors, rateLimitResponse } from '@/lib/api-response';
 import { decryptApiKey } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/rate-limiter';
 
 export async function GET() {
   try {
@@ -10,6 +11,11 @@ export async function GET() {
 
     if (!userId) {
       return Errors.unauthorized();
+    }
+
+    const rateLimitResult = await checkRateLimit(`me:api-key:${userId}`);
+    if (!rateLimitResult.success) {
+      return rateLimitResponse(rateLimitResult.reset);
     }
 
     const userResult = await db

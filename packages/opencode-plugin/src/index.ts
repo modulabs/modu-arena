@@ -112,6 +112,22 @@ export const ModuArenaPlugin: Plugin = async () => {
 
   return {
     event: async ({ event }) => {
+      if (event.type === "message.updated") {
+        const msg = (event.properties as { info?: { role?: string; sessionID?: string; modelID?: string; providerID?: string } }).info as {
+          role?: string;
+          sessionID?: string;
+          modelID?: string;
+          providerID?: string;
+        } | undefined;
+
+        if (msg?.role === "assistant" && msg.sessionID && msg.modelID) {
+          const existing = sessionAccumulator.get(msg.sessionID);
+          if (existing) {
+            existing.modelName = msg.modelID;
+          }
+        }
+      }
+
       if (event.type === "message.part.updated") {
         const part = event.properties.part as {
           type: string;
