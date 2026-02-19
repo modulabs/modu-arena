@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Trophy, ArrowLeft, Copy, Check } from 'lucide-react';
+import { Trophy, ArrowLeft } from 'lucide-react';
 
-type Step = 'email' | 'verify' | 'credentials' | 'complete';
+type Step = 'email' | 'verify' | 'credentials';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -18,10 +18,8 @@ export default function SignUpPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
-  const [apiKey, setApiKey] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   async function handleSendCode(e: React.FormEvent) {
     e.preventDefault();
@@ -115,24 +113,13 @@ export default function SignUpPage() {
         return;
       }
 
-      if (data.apiKey) {
-        setApiKey(data.apiKey);
-        setStep('complete');
-      } else {
-        router.push('/dashboard');
-        router.refresh();
-      }
+      router.push('/dashboard');
+      router.refresh();
     } catch {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
     }
-  }
-
-  async function handleCopyApiKey() {
-    await navigator.clipboard.writeText(apiKey);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   }
 
   return (
@@ -142,14 +129,11 @@ export default function SignUpPage() {
           <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
             <Trophy className="h-5 w-5 text-primary" />
           </div>
-          <CardTitle className="text-xl">
-            {step === 'complete' ? 'Account Created!' : 'Create an account'}
-          </CardTitle>
+          <CardTitle className="text-xl">Create an account</CardTitle>
           <CardDescription>
             {step === 'email' && 'Enter your email to get started'}
             {step === 'verify' && `Enter the verification code sent to ${email}`}
             {step === 'credentials' && 'Choose a username and password'}
-            {step === 'complete' && 'Save your API key for CLI usage'}
           </CardDescription>
         </CardHeader>
 
@@ -301,41 +285,7 @@ export default function SignUpPage() {
           </form>
         )}
 
-        {step === 'complete' && (
-          <>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Your API Key</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    readOnly
-                    value={apiKey}
-                    className="font-mono text-xs"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={handleCopyApiKey}
-                  >
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  </Button>
-                </div>
-                <p className="text-xs text-destructive font-medium">
-                  Save this key now! It will not be shown again.
-                </p>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button
-                className="w-full"
-                onClick={() => { router.push('/dashboard'); router.refresh(); }}
-              >
-                Go to Dashboard
-              </Button>
-            </CardFooter>
-          </>
-        )}
+
       </Card>
     </div>
   );
