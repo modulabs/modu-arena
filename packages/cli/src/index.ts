@@ -4,7 +4,8 @@
  * Track and rank your AI coding tool usage.
  *
  * Usage:
- *   npx @suncreation/modu-arena install --api-key <key>
+ *   npx @suncreation/modu-arena register
+ *   npx @suncreation/modu-arena login
  *   npx @suncreation/modu-arena rank
  *   npx @suncreation/modu-arena status
  *   npx @suncreation/modu-arena uninstall

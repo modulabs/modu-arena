@@ -1,29 +1,70 @@
 # @suncreation/modu-arena
 
-Track and rank your AI coding tool usage across **Claude Code**, **OpenCode**, **Gemini CLI**, **Codex CLI**, and **Crush**.
+Track and rank your AI coding tool usage across **Claude Code**, **Claude Desktop**, **OpenCode**, **Gemini CLI**, **Codex CLI**, and **Crush**.
 
 ## Quick Start
+
+### New Users
+
+```bash
+npx @suncreation/modu-arena register
+```
+
+Creates your account (username + password), generates an API key, and installs tracking hooks automatically.
+
+### Existing Users
+
+```bash
+npx @suncreation/modu-arena login
+```
+
+Logs in with your username and password, generates a new API key, and reinstalls hooks.
+
+### Alternative: Manual API Key Setup
 
 ```bash
 npx @suncreation/modu-arena install --api-key <your-api-key>
 ```
 
-Get your API key from the [Modu-Arena dashboard](https://your-server.com).
-
 ## Commands
+
+### `register`
+
+Create a new account interactively.
+
+```bash
+npx @suncreation/modu-arena register
+```
+
+Prompts for username, password, and display name. Automatically installs hooks for all detected AI coding tools.
+
+### `login`
+
+Log in to an existing account interactively.
+
+```bash
+npx @suncreation/modu-arena login
+```
+
+Prompts for username and password. Regenerates your API key and reinstalls hooks.
 
 ### `install`
 
-Set up tracking hooks for all detected AI coding tools.
+Set up tracking hooks with an existing API key.
 
 ```bash
 npx @suncreation/modu-arena install --api-key modu_arena_xxxxxxxx_yyyyyyyy
 ```
 
-This will:
-- Save your API key to `~/.modu-arena.json`
-- Detect installed AI coding tools
-- Install session-end hooks for each detected tool
+### `submit`
+
+Submit current project for AI-powered evaluation.
+
+```bash
+npx @suncreation/modu-arena submit
+```
+
+In Claude Code, prefer `/modu:submit` for a better experience.
 
 ### `rank`
 
@@ -56,6 +97,7 @@ npx @suncreation/modu-arena uninstall
 | Tool | Detection | Hook Location |
 |------|-----------|---------------|
 | Claude Code | `~/.claude/` | `~/.claude/hooks/session-end.sh` |
+| Claude Desktop | `~/Library/Application Support/Claude/` | Daemon-based sync |
 | OpenCode | `~/.opencode/` | `~/.opencode/hooks/session-end.sh` |
 | Gemini CLI | `~/.gemini/` | `~/.gemini/hooks/session-end.sh` |
 | Codex CLI | `~/.codex/` | `~/.codex/hooks/session-end.sh` |
@@ -68,19 +110,13 @@ Config is stored in `~/.modu-arena.json`:
 ```json
 {
   "apiKey": "modu_arena_xxxxxxxx_yyyyyyyy",
-  "serverUrl": "https://your-server.com"
+  "serverUrl": "https://arena.vibemakers.kr"
 }
-```
-
-### Custom Server URL
-
-```bash
-MODU_ARENA_API_URL=https://your-server.com npx @suncreation/modu-arena install --api-key <key>
 ```
 
 ## How It Works
 
-1. **Install** sets up lightweight shell hooks in each tool's config directory
+1. `register` or `login` creates/authenticates your account and sets up lightweight shell hooks
 2. When a coding session ends, the hook sends token usage data to the Modu-Arena server
 3. Data includes: input/output tokens, cache tokens, model name, and timing
 4. All submissions are authenticated with HMAC-SHA256 signatures
@@ -100,4 +136,4 @@ MODU_ARENA_API_URL=https://your-server.com npx @suncreation/modu-arena install -
 
 ## License
 
-MIT
+Copyleft

@@ -7,24 +7,26 @@ import { cookies } from 'next/headers';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, source } = body as {
+    const { email, username, password, source } = body as {
       email?: string;
+      username?: string;
       password?: string;
       source?: string;
     };
 
-    if (!email || !password) {
+    const identifier = email || username;
+    if (!identifier || !password) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: 'Email/username and password are required' },
         { status: 400 }
       );
     }
 
-    const normalizedEmail = email.toLowerCase();
+    const normalizedIdentifier = identifier.toLowerCase();
     const result = await db
       .select()
       .from(users)
-      .where(or(eq(users.email, normalizedEmail), eq(users.username, normalizedEmail)))
+      .where(or(eq(users.email, normalizedIdentifier), eq(users.username, normalizedIdentifier)))
       .limit(1);
 
     const user = result[0];

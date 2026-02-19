@@ -36,7 +36,7 @@ export function requireConfig(): Config {
    const config = loadConfig();
    if (!config?.apiKey) {
      console.error(
-       'Error: Not configured. Run `npx @suncreation/modu-arena install` first.',
+       'Error: Not configured. Run `npx @suncreation/modu-arena register` or `login` first.',
      );
      process.exit(1);
    }

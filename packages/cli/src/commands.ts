@@ -172,8 +172,8 @@ export async function installCommand(apiKey?: string): Promise<void> {
   if (!apiKey) {
     console.error(
       'Error: API key required.\n' +
-        '  Get your API key from the Modu-Arena dashboard.\n' +
-        '  Usage: npx @suncreation/modu-arena install --api-key <your-api-key>\n',
+        '  Run `npx @suncreation/modu-arena register` to create an account, or\n' +
+        '  Run `npx @suncreation/modu-arena login` to sign in.\n',
     );
     process.exit(1);
   }

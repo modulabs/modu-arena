@@ -12,31 +12,33 @@ A competitive leaderboard platform for tracking AI coding tool token usage acros
 
 ---
 
-## 🚀 Quick Start: Install Modu-Arena CLI
+## Quick Start: Modu-Arena CLI
 
 Track your AI coding tool token usage with a single command.
 
-### Installation via npx (Recommended)
+### New Users — Register
 
 ```bash
-# Install and configure in one step
-npx @suncreation/modu-arena install --api-key <your-api-key>
+npx @suncreation/modu-arena register
 ```
 
 This will:
-1. Set up token usage tracking for your AI coding tools (Claude Code, Claude Desktop, OpenCode, Gemini CLI, Codex CLI, Crush)
-2. Store your API key securely
-3. Begin automatic session tracking
+1. Create your account (username + password)
+2. Generate an API key automatically
+3. Set up token usage tracking for detected AI coding tools (Claude Code, Claude Desktop, OpenCode, Gemini CLI, Codex CLI, Crush)
 
-### Alternative: Global Install
+### Existing Users — Login
 
 ```bash
-# Install globally
-npm install -g @suncreation/modu-arena
+npx @suncreation/modu-arena login
+```
 
-# Then run commands directly
-modu-arena install --api-key <your-api-key>
-modu-arena submit   # Optional: project evaluation
+Logs in with your username and password, generates a new API key, and reinstalls hooks.
+
+### Alternative: Manual API Key Setup
+
+```bash
+npx @suncreation/modu-arena install --api-key <your-api-key>
 ```
 
 ### Requirements
@@ -45,7 +47,7 @@ modu-arena submit   # Optional: project evaluation
 
 ---
 
-## 🎮 Modu-Arena CLI Commands
+## Modu-Arena CLI Commands
 
 ### Command Overview
 
@@ -53,20 +55,30 @@ modu-arena submit   # Optional: project evaluation
 npx @suncreation/modu-arena <command> [options]
 
 Commands:
-  install    Install and configure token tracking
+  register   Create a new account (interactive)
+  login      Log in to an existing account (interactive)
+  install    Set up hooks with an existing API key
   submit     Submit current project for AI evaluation
   rank       Show your current ranking
   status     Check daemon and API connection status
   uninstall  Remove token tracking configuration
 ```
 
-### install - Set Up Token Tracking
+### register - Create Account
 
 ```bash
-npx @suncreation/modu-arena install --api-key <your-api-key>
+npx @suncreation/modu-arena register
 ```
 
-Configures automatic token usage tracking for supported AI coding tools.
+Interactive account creation. Sets up username, password, and automatically installs tracking hooks.
+
+### login - Sign In
+
+```bash
+npx @suncreation/modu-arena login
+```
+
+Interactive login. Generates a new API key and reinstalls hooks.
 
 ### submit - Project Evaluation
 

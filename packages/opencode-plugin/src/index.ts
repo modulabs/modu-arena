@@ -103,7 +103,7 @@ export const ModuArenaPlugin: Plugin = async () => {
 
   if (!config) {
     process.stderr.write(
-      `[modu-arena] no config at ${CONFIG_FILE}. Run: npx @suncreation/modu-arena install --api-key <key>\n`,
+      `[modu-arena] no config at ${CONFIG_FILE}. Run: npx @suncreation/modu-arena register\n`,
     );
     return {};
   }
