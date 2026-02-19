@@ -5,7 +5,7 @@
  * thin shell wrappers (.sh on Unix, .cmd on Windows).
  */
 
-import { existsSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { API_BASE_URL, type ToolType } from './constants.js';
@@ -128,6 +128,45 @@ function hookEntryName(): string {
   return IS_WIN ? 'session-end.cmd' : 'session-end.sh';
 }
 
+// ─── Claude Code Settings Registration ─────────────────────────────────────
+
+/**
+ * Register hook in ~/.claude/settings.json so Claude Code actually triggers it.
+ * Claude Code requires explicit registration in settings.json (unlike other tools
+ * that auto-discover hooks by filename convention).
+ */
+function registerHookInSettings(configDir: string, hookPath: string): void {
+  const settingsPath = join(configDir, 'settings.json');
+  let settings: Record<string, unknown> = {};
+
+  if (existsSync(settingsPath)) {
+    try {
+      settings = JSON.parse(readFileSync(settingsPath, 'utf-8'));
+    } catch {
+      settings = {};
+    }
+  }
+
+  type HookEntry = { matcher: string; hooks: Array<{ type: string; command: string }> };
+  const hooks = (settings.hooks ?? {}) as Record<string, HookEntry[]>;
+  const stopHooks = (hooks.Stop ?? []) as HookEntry[];
+
+  const alreadyRegistered = stopHooks.some(
+    (entry) => entry.hooks?.some((h) => h.command?.includes('session-end')),
+  );
+
+  if (!alreadyRegistered) {
+    stopHooks.push({
+      matcher: '',
+      hooks: [{ type: 'command', command: hookPath }],
+    });
+  }
+
+  hooks.Stop = stopHooks;
+  settings.hooks = hooks;
+  writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+}
+
 // ─── Adapters ──────────────────────────────────────────────────────────────
 
 class ClaudeCodeAdapter implements ToolAdapter {
@@ -141,13 +180,23 @@ class ClaudeCodeAdapter implements ToolAdapter {
   detect() { return existsSync(this.configDir); }
 
   install(apiKey: string) {
-    return installHook(this.displayName, this.hooksDir, this.getHookPath(), apiKey, 'claude-code', 'CLAUDE',
+    const result = installHook(this.displayName, this.hooksDir, this.getHookPath(), apiKey, 'claude-code', 'CLAUDE',
       [
         ...baseFields('CLAUDE'),
         { key: 'cacheCreationTokens', env: 'CLAUDE_CACHE_CREATION_TOKENS', parse: 'int', fallback: '0' },
         { key: 'cacheReadTokens', env: 'CLAUDE_CACHE_READ_TOKENS', parse: 'int', fallback: '0' },
       ],
     );
+
+    if (result.success) {
+      try {
+        registerHookInSettings(this.configDir, this.getHookPath());
+      } catch (err) {
+        result.message += ` (Warning: could not register in settings.json: ${err})`;
+      }
+    }
+
+    return result;
   }
 }
 
