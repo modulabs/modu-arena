@@ -6,7 +6,7 @@
     "leaderboard": "リーダーボード",
     "settings": "設定",
     "github": "GitHub",
-    "install": "Install",
+    "install": "インストール",
     "loading": "読み込み中...",
     "error": "エラー",
     "retry": "再試行",
@@ -193,6 +193,139 @@
       "title": "ツール使用量",
       "noData": "ツール使用データがありません",
       "totalCalls": "総呼び出し"
+    }
+  },
+  "install": {
+    "hero": {
+      "badge": "インストールとプロダクトガイド",
+      "title": "Modu Arena",
+      "subtitle": "AIコーディングツールの使用量を追跡し、コミュニティと競いましょう",
+      "description": "Modu ArenaはAIコーディングツール向けのリーダーボード兼分析プラットフォームです。コーディングセッションの利用メトリクスを自動で収集し、成長の可視化やコミュニティ比較ができます。",
+      "productBy": "MODULABS（모두의연구소）によるプロダクト",
+      "openDashboard": "ダッシュボードを開く",
+      "viewLeaderboard": "リーダーボードを見る"
+    },
+    "quickStart": {
+      "title": "クイックスタート",
+      "description": "シンプルなCLI手順で数分で追跡を開始できます。",
+      "registerLabel": "新規ユーザー登録",
+      "registerCommand": "npx @suncreation/modu-arena register",
+      "loginHint": "すでにアカウントがありますか？",
+      "loginCommand": "npx @suncreation/modu-arena login",
+      "steps": {
+        "register": {
+          "title": "登録とインストール",
+          "description": "registerを1回実行すると、アカウント作成と検出済みツールへのフック導入が自動で行われます。"
+        },
+        "code": {
+          "title": "いつも通りにコーディング",
+          "description": "セットアップ後は通常通りAIコーディングツールを使うだけで、追跡がバックグラウンドで動作します。"
+        },
+        "dashboard": {
+          "title": "統計を確認",
+          "description": "ダッシュボードでトークン使用量、活動傾向、リーダーボード順位を確認できます。"
+        }
+      }
+    },
+    "supportedTools": {
+      "title": "対応ツール",
+      "description": "現在のModu Arenaは、ツール別フック連携で6種類のAIコーディングツールをサポートしています。",
+      "tools": {
+        "claudeCode": {
+          "name": "Claude Code",
+          "hookType": "セッション終了フック（stdin JSON + transcript）",
+          "description": "AnthropicのCLIコーディングエージェント"
+        },
+        "claudeDesktop": {
+          "name": "Claude Desktop",
+          "hookType": "バックグラウンドデーモン同期",
+          "description": "継続同期に対応したデスクトップアプリ"
+        },
+        "opencode": {
+          "name": "OpenCode",
+          "hookType": "セッション終了フック（env vars）",
+          "description": "オープンソースのコーディングツール"
+        },
+        "geminiCli": {
+          "name": "Gemini CLI",
+          "hookType": "セッション終了フック（stdin JSON）",
+          "description": "GoogleのCLIコーディングエージェント"
+        },
+        "codexCli": {
+          "name": "Codex CLI",
+          "hookType": "セッション終了フック（env vars）",
+          "description": "OpenAIのCLIコーディングエージェント"
+        },
+        "crush": {
+          "name": "Crush",
+          "hookType": "セッション終了フック（env vars）",
+          "description": "AIコーディングアシスタント"
+        }
+      }
+    },
+    "whatWeTrack": {
+      "title": "収集する内容",
+      "description": "分析に必要な利用メトリクスを収集し、機密性の高い内容は収集しません。",
+      "collectTitle": "収集するデータ",
+      "dontCollectTitle": "収集しないデータ",
+      "collect": {
+        "tokens": "トークン数（入力、出力、キャッシュ作成、キャッシュ読み取り）",
+        "modelName": "モデル名",
+        "sessionTiming": "セッション時間情報",
+        "toolUsageCounts": "ツール使用回数",
+        "codeMetrics": "コードメトリクス（追加/削除行数）"
+      },
+      "dontCollect": {
+        "codeContent": "コード内容",
+        "filePaths": "ファイルパス",
+        "prompts": "プロンプトや会話内容",
+        "personalData": "個人データ"
+      }
+    },
+    "howItWorks": {
+      "title": "仕組み",
+      "description": "自動フック導入、安全な送信、リアルタイム分析の流れです。",
+      "steps": {
+        "installHooks": "registerまたはloginの後、環境で検出されたツールにフックが自動でインストールされます。",
+        "sessionEnd": "コーディングセッションが終了するたびに、フックが匿名化されたメトリクスをModu Arena APIへ送信します。",
+        "dashboardSync": "データはダッシュボードに表示され、コミュニティのリーダーボード集計にも反映されます。"
+      },
+      "security": "すべてのリクエストは整合性と真正性のためにHMAC-SHA256署名で保護されています。"
+    },
+    "importantNotes": {
+      "title": "重要な注意事項",
+      "description": "データを正しく解釈するための運用上のポイントです。",
+      "items": {
+        "lastActive": "「最終アクティブ」はアップロード時刻ではなくセッション終了時刻に基づきます。過去セッションを同期した場合（例: Claude Desktopデーモン）、実際にツールを使った日付が表示されます。",
+        "apiKey": "APIキーは再生成しない限り失効しない恒久キーです。",
+        "nodeVersion": "Node.js 20以上が必要です。",
+        "privacyMode": "公開リーダーボードに表示したくない場合はプライバシーモードを利用できます。"
+      }
+    },
+    "apiKey": {
+      "title": "あなたのAPIキー",
+      "description": "CLIで使用するAPIキーを生成します。既にキーがある場合、新しいキーを生成すると以前のキーは無効になります。",
+      "generate": "APIキーを生成",
+      "generating": "生成中...",
+      "warning": "新しいキーを生成すると既存のキーは無効になります。キーは一度だけ表示されます。",
+      "showOnce": "このキーを今すぐ保存してください。再表示されません。",
+      "usageLabel": "手動インストール時に使用：",
+      "errorNotLoggedIn": "APIキーを生成するにはサインインしてください。",
+      "errorGeneric": "APIキーの生成に失敗しました。再度お試しください。"
+    },
+    "commands": {
+      "title": "CLIコマンドリファレンス",
+      "description": "セットアップ、追跡、アカウント確認に使う主要コマンドです。",
+      "list": {
+        "register": "アカウント作成（対話形式）",
+        "login": "既存アカウントにサインイン",
+        "install": "APIキーでフックを設定",
+        "submit": "AI評価のためにプロジェクトを送信",
+        "rank": "現在のランキングを確認",
+        "status": "接続状態を確認",
+        "uninstall": "追跡フックを削除"
+      },
+      "tip": "実行形式: npx @suncreation/modu-arena <command>"
     }
   },
   "footer": {

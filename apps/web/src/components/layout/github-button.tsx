@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Star, Download } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
 
 const REPO = 'modulabs/modu-arena';
-const INSTALL_URL = `https://github.com/${REPO}/blob/master/INSTALL.md`;
 
 function formatStarCount(count: number): string {
   if (count >= 1000) {
@@ -37,12 +37,7 @@ export function GitHubButton() {
   return (
     <div className="flex items-center gap-1">
       <Button variant="outline" size="sm" asChild className="gap-1.5">
-        <a
-          href={INSTALL_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={t('install')}
-        >
+        <Link href="/install" aria-label={t('install')}>
           <Download className="h-4 w-4" />
           <span className="hidden sm:inline">{t('install')}</span>
           {starCount !== null && (
@@ -53,7 +48,7 @@ export function GitHubButton() {
               </span>
             </span>
           )}
-        </a>
+        </Link>
       </Button>
     </div>
   );

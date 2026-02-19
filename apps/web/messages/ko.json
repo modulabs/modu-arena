@@ -6,7 +6,7 @@
     "leaderboard": "리더보드",
     "settings": "설정",
     "github": "GitHub",
-    "install": "Install",
+    "install": "설치",
     "loading": "로딩 중...",
     "error": "오류",
     "retry": "다시 시도",
@@ -193,6 +193,139 @@
       "title": "도구 사용량",
       "noData": "도구 사용 데이터가 없습니다",
       "totalCalls": "총 호출"
+    }
+  },
+  "install": {
+    "hero": {
+      "badge": "설치 및 제품 가이드",
+      "title": "Modu Arena",
+      "subtitle": "AI 코딩 도구 사용량을 추적하고 커뮤니티와 경쟁하세요",
+      "description": "Modu Arena는 AI 코딩 도구를 위한 리더보드 및 분석 플랫폼입니다. 코딩 세션의 사용 지표를 자동으로 수집해 성장 추이와 커뮤니티 대비 위치를 확인할 수 있습니다.",
+      "productBy": "MODULABS (모두의연구소) 제품",
+      "openDashboard": "대시보드 열기",
+      "viewLeaderboard": "리더보드 보기"
+    },
+    "quickStart": {
+      "title": "빠른 시작",
+      "description": "간단한 CLI 흐름으로 몇 분 안에 추적을 시작할 수 있습니다.",
+      "registerLabel": "신규 사용자 등록",
+      "registerCommand": "npx @suncreation/modu-arena register",
+      "loginHint": "이미 계정이 있나요?",
+      "loginCommand": "npx @suncreation/modu-arena login",
+      "steps": {
+        "register": {
+          "title": "등록 및 설치",
+          "description": "register를 한 번 실행하면 계정 생성과 함께 감지된 도구에 훅이 자동 설치됩니다."
+        },
+        "code": {
+          "title": "평소처럼 코딩",
+          "description": "설치 후에는 기존처럼 AI 코딩 도구를 사용하면 추적이 백그라운드에서 동작합니다."
+        },
+        "dashboard": {
+          "title": "통계 확인",
+          "description": "대시보드에서 토큰 사용량, 활동 추이, 리더보드 순위를 확인하세요."
+        }
+      }
+    },
+    "supportedTools": {
+      "title": "지원 도구",
+      "description": "현재 Modu Arena는 도구별 훅 통합으로 6개의 AI 코딩 도구를 지원합니다.",
+      "tools": {
+        "claudeCode": {
+          "name": "Claude Code",
+          "hookType": "세션 종료 훅 (stdin JSON + transcript)",
+          "description": "Anthropic의 CLI 코딩 에이전트"
+        },
+        "claudeDesktop": {
+          "name": "Claude Desktop",
+          "hookType": "백그라운드 데몬 동기화",
+          "description": "지속 동기화를 지원하는 데스크톱 앱"
+        },
+        "opencode": {
+          "name": "OpenCode",
+          "hookType": "세션 종료 훅 (env vars)",
+          "description": "오픈소스 코딩 도구"
+        },
+        "geminiCli": {
+          "name": "Gemini CLI",
+          "hookType": "세션 종료 훅 (stdin JSON)",
+          "description": "Google의 CLI 코딩 에이전트"
+        },
+        "codexCli": {
+          "name": "Codex CLI",
+          "hookType": "세션 종료 훅 (env vars)",
+          "description": "OpenAI의 CLI 코딩 에이전트"
+        },
+        "crush": {
+          "name": "Crush",
+          "hookType": "세션 종료 훅 (env vars)",
+          "description": "AI 코딩 어시스턴트"
+        }
+      }
+    },
+    "whatWeTrack": {
+      "title": "수집 항목",
+      "description": "분석에 필요한 사용 지표는 수집하고 민감한 내용은 수집하지 않습니다.",
+      "collectTitle": "수집하는 항목",
+      "dontCollectTitle": "수집하지 않는 항목",
+      "collect": {
+        "tokens": "토큰 수치 (입력, 출력, 캐시 생성, 캐시 읽기)",
+        "modelName": "모델 이름",
+        "sessionTiming": "세션 시간 정보",
+        "toolUsageCounts": "도구 사용 횟수",
+        "codeMetrics": "코드 메트릭 (추가/삭제 라인 수)"
+      },
+      "dontCollect": {
+        "codeContent": "코드 내용",
+        "filePaths": "파일 경로",
+        "prompts": "프롬프트 또는 대화 내용",
+        "personalData": "개인정보"
+      }
+    },
+    "howItWorks": {
+      "title": "동작 방식",
+      "description": "자동 훅 설치, 안전한 전송, 실시간 분석 흐름입니다.",
+      "steps": {
+        "installHooks": "register 또는 login 이후, 환경에서 감지된 도구에 훅이 자동으로 설치됩니다.",
+        "sessionEnd": "코딩 세션이 끝날 때마다 훅이 익명화된 지표를 Modu Arena API로 전송합니다.",
+        "dashboardSync": "데이터는 대시보드에 표시되고 커뮤니티 리더보드 계산에도 반영됩니다."
+      },
+      "security": "모든 요청은 무결성과 인증을 위해 HMAC-SHA256 서명으로 보호됩니다."
+    },
+    "importantNotes": {
+      "title": "중요 안내",
+      "description": "지표를 정확히 해석하기 위해 알아두면 좋은 운영 정보입니다.",
+      "items": {
+        "lastActive": "'마지막 활동' 날짜는 업로드 시점이 아니라 세션 종료 시각 기준입니다. 과거 세션을 동기화하는 경우(예: Claude Desktop 데몬) 실제 사용한 날짜로 표시됩니다.",
+        "apiKey": "API 키는 재생성하지 않는 한 만료되지 않는 영구 키입니다.",
+        "nodeVersion": "Node.js 20+가 필요합니다.",
+        "privacyMode": "리더보드 노출을 원하지 않으면 개인정보 보호 모드를 사용할 수 있습니다."
+      }
+    },
+    "apiKey": {
+      "title": "내 API 키",
+      "description": "CLI에 사용할 API 키를 생성합니다. 이미 키가 있는 경우, 새 키를 생성하면 기존 키는 무효화됩니다.",
+      "generate": "API 키 생성",
+      "generating": "생성 중...",
+      "warning": "새 키를 생성하면 기존 키는 무효화됩니다. 키는 한 번만 표시됩니다.",
+      "showOnce": "이 키를 지금 저장하세요. 다시 표시되지 않습니다.",
+      "usageLabel": "수동 설치 시 사용:",
+      "errorNotLoggedIn": "API 키를 생성하려면 로그인하세요.",
+      "errorGeneric": "API 키 생성에 실패했습니다. 다시 시도해 주세요."
+    },
+    "commands": {
+      "title": "CLI 명령어 참고",
+      "description": "설치, 추적, 계정 확인에 사용하는 핵심 명령어입니다.",
+      "list": {
+        "register": "계정 생성 (대화형)",
+        "login": "기존 계정 로그인",
+        "install": "API 키로 훅 설정",
+        "submit": "AI 평가를 위해 프로젝트 제출",
+        "rank": "현재 순위 확인",
+        "status": "연결 상태 확인",
+        "uninstall": "추적 훅 제거"
+      },
+      "tip": "명령어 실행 형식: npx @suncreation/modu-arena <command>"
     }
   },
   "footer": {

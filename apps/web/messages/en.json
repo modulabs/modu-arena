@@ -195,6 +195,139 @@
       "totalCalls": "Total calls"
     }
   },
+  "install": {
+    "hero": {
+      "badge": "Install and Product Guide",
+      "title": "Modu Arena",
+      "subtitle": "Track your AI coding tool usage and compete with the community",
+      "description": "Modu Arena is a leaderboard and analytics platform for AI coding tools. It automatically captures usage metrics from your coding sessions so you can measure progress, compare trends, and benchmark with the community.",
+      "productBy": "A product by MODULABS (모두의연구소)",
+      "openDashboard": "Open Dashboard",
+      "viewLeaderboard": "View Leaderboard"
+    },
+    "quickStart": {
+      "title": "Quick Start",
+      "description": "Start tracking in minutes with a simple CLI flow.",
+      "registerLabel": "New user registration",
+      "registerCommand": "npx @suncreation/modu-arena register",
+      "loginHint": "Already have an account?",
+      "loginCommand": "npx @suncreation/modu-arena login",
+      "steps": {
+        "register": {
+          "title": "Register and install",
+          "description": "Run register once to create your account and install hooks automatically for detected tools."
+        },
+        "code": {
+          "title": "Code as usual",
+          "description": "Keep using your AI coding tools normally. Tracking runs in the background after setup."
+        },
+        "dashboard": {
+          "title": "Check your stats",
+          "description": "Open your dashboard to review token usage, activity trends, and your leaderboard position."
+        }
+      }
+    },
+    "supportedTools": {
+      "title": "Supported Tools",
+      "description": "Modu Arena currently supports six AI coding tools with tool-specific hook integrations.",
+      "tools": {
+        "claudeCode": {
+          "name": "Claude Code",
+          "hookType": "Session-end hook (stdin JSON + transcript)",
+          "description": "Anthropic's CLI coding agent"
+        },
+        "claudeDesktop": {
+          "name": "Claude Desktop",
+          "hookType": "Background daemon sync",
+          "description": "Desktop app with continuous sync"
+        },
+        "opencode": {
+          "name": "OpenCode",
+          "hookType": "Session-end hook (env vars)",
+          "description": "Open-source coding tool"
+        },
+        "geminiCli": {
+          "name": "Gemini CLI",
+          "hookType": "Session-end hook (stdin JSON)",
+          "description": "Google's CLI coding agent"
+        },
+        "codexCli": {
+          "name": "Codex CLI",
+          "hookType": "Session-end hook (env vars)",
+          "description": "OpenAI's CLI coding agent"
+        },
+        "crush": {
+          "name": "Crush",
+          "hookType": "Session-end hook (env vars)",
+          "description": "AI coding assistant"
+        }
+      }
+    },
+    "whatWeTrack": {
+      "title": "What We Track",
+      "description": "We collect usage metrics for analytics while avoiding sensitive content.",
+      "collectTitle": "What we collect",
+      "dontCollectTitle": "What we DON'T collect",
+      "collect": {
+        "tokens": "Token counts (input, output, cache creation, cache read)",
+        "modelName": "Model name",
+        "sessionTiming": "Session timing",
+        "toolUsageCounts": "Tool usage counts",
+        "codeMetrics": "Code metrics (lines added/deleted)"
+      },
+      "dontCollect": {
+        "codeContent": "Code content",
+        "filePaths": "File paths",
+        "prompts": "Prompts or conversations",
+        "personalData": "Personal data"
+      }
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "description": "Automatic hooks, secure submission, and real-time analytics.",
+      "steps": {
+        "installHooks": "After register or login, Modu Arena installs hooks automatically for tools detected in your environment.",
+        "sessionEnd": "Whenever a coding session ends, the hook sends anonymized metrics to the Modu Arena API.",
+        "dashboardSync": "Your data appears on your dashboard and is reflected in community leaderboard calculations."
+      },
+      "security": "All requests are signed with HMAC-SHA256 for integrity and authenticity."
+    },
+    "importantNotes": {
+      "title": "Important Notes",
+      "description": "Operational details that help you interpret your data correctly.",
+      "items": {
+        "lastActive": "'Last Active' is based on session end time, not upload time. If you sync historical sessions (for example via Claude Desktop daemon), the date reflects when you actually used the tool.",
+        "apiKey": "API keys are permanent and do not expire unless you regenerate them.",
+        "nodeVersion": "Node.js 20+ is required.",
+        "privacyMode": "Privacy mode is available if you want to hide your profile from the public leaderboard."
+      }
+    },
+    "apiKey": {
+      "title": "Your API Key",
+      "description": "Generate an API key to use with the CLI. If you already have one, generating a new key will invalidate the previous key.",
+      "generate": "Generate API Key",
+      "generating": "Generating...",
+      "warning": "Generating a new key will invalidate any existing key. The key is shown only once.",
+      "showOnce": "Save this key now. It will not be shown again.",
+      "usageLabel": "Use with manual install:",
+      "errorNotLoggedIn": "Please sign in to generate an API key.",
+      "errorGeneric": "Failed to generate API key. Please try again."
+    },
+    "commands": {
+      "title": "CLI Commands Reference",
+      "description": "Core commands for setup, tracking, and account checks.",
+      "list": {
+        "register": "Create account (interactive)",
+        "login": "Sign in to existing account",
+        "install": "Set up hooks with API key",
+        "submit": "Submit project for AI evaluation",
+        "rank": "Check your current ranking",
+        "status": "Check connection status",
+        "uninstall": "Remove tracking hooks"
+      },
+      "tip": "Run commands with npx @suncreation/modu-arena <command>."
+    }
+  },
   "footer": {
     "builtWith": "Built with Next.js 16 and Neon"
   }

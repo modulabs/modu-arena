@@ -6,7 +6,7 @@
     "leaderboard": "排行榜",
     "settings": "设置",
     "github": "GitHub",
-    "install": "Install",
+    "install": "安装",
     "loading": "加载中...",
     "error": "错误",
     "retry": "重试",
@@ -193,6 +193,139 @@
       "title": "工具使用",
       "noData": "没有工具使用数据",
       "totalCalls": "总调用"
+    }
+  },
+  "install": {
+    "hero": {
+      "badge": "安装与产品指南",
+      "title": "Modu Arena",
+      "subtitle": "追踪你的 AI 编码工具使用情况，并与社区同台竞争",
+      "description": "Modu Arena 是面向 AI 编码工具的排行榜与分析平台。它会自动采集编码会话中的使用指标，帮助你观察趋势、衡量效率并与社区对比。",
+      "productBy": "由 MODULABS（모두의연구소）打造",
+      "openDashboard": "打开仪表盘",
+      "viewLeaderboard": "查看排行榜"
+    },
+    "quickStart": {
+      "title": "快速开始",
+      "description": "通过简单的 CLI 流程，几分钟即可开始追踪。",
+      "registerLabel": "新用户注册",
+      "registerCommand": "npx @suncreation/modu-arena register",
+      "loginHint": "已有账号？",
+      "loginCommand": "npx @suncreation/modu-arena login",
+      "steps": {
+        "register": {
+          "title": "注册并安装",
+          "description": "执行一次 register，即可创建账号并为已检测到的工具自动安装 hooks。"
+        },
+        "code": {
+          "title": "像平时一样编码",
+          "description": "完成设置后照常使用 AI 编码工具，追踪会在后台自动运行。"
+        },
+        "dashboard": {
+          "title": "查看统计数据",
+          "description": "在仪表盘中查看令牌使用量、活动趋势以及你的排行榜位置。"
+        }
+      }
+    },
+    "supportedTools": {
+      "title": "支持的工具",
+      "description": "Modu Arena 目前通过针对不同工具的 hook 集成支持 6 种 AI 编码工具。",
+      "tools": {
+        "claudeCode": {
+          "name": "Claude Code",
+          "hookType": "会话结束 hook（stdin JSON + transcript）",
+          "description": "Anthropic 的 CLI 编码代理"
+        },
+        "claudeDesktop": {
+          "name": "Claude Desktop",
+          "hookType": "后台守护进程同步",
+          "description": "支持持续同步的桌面应用"
+        },
+        "opencode": {
+          "name": "OpenCode",
+          "hookType": "会话结束 hook（env vars）",
+          "description": "开源编码工具"
+        },
+        "geminiCli": {
+          "name": "Gemini CLI",
+          "hookType": "会话结束 hook（stdin JSON）",
+          "description": "Google 的 CLI 编码代理"
+        },
+        "codexCli": {
+          "name": "Codex CLI",
+          "hookType": "会话结束 hook（env vars）",
+          "description": "OpenAI 的 CLI 编码代理"
+        },
+        "crush": {
+          "name": "Crush",
+          "hookType": "会话结束 hook（env vars）",
+          "description": "AI 编码助手"
+        }
+      }
+    },
+    "whatWeTrack": {
+      "title": "我们追踪什么",
+      "description": "我们收集用于分析的使用指标，但不会采集敏感内容。",
+      "collectTitle": "我们会收集",
+      "dontCollectTitle": "我们不会收集",
+      "collect": {
+        "tokens": "令牌统计（输入、输出、缓存创建、缓存读取）",
+        "modelName": "模型名称",
+        "sessionTiming": "会话时间信息",
+        "toolUsageCounts": "工具使用次数",
+        "codeMetrics": "代码指标（新增/删除行数）"
+      },
+      "dontCollect": {
+        "codeContent": "代码内容",
+        "filePaths": "文件路径",
+        "prompts": "提示词或对话内容",
+        "personalData": "个人数据"
+      }
+    },
+    "howItWorks": {
+      "title": "工作原理",
+      "description": "自动安装 hooks、安全上报、实时分析。",
+      "steps": {
+        "installHooks": "执行 register 或 login 后，Modu Arena 会为环境中检测到的工具自动安装 hooks。",
+        "sessionEnd": "每次编码会话结束时，hook 会将匿名化指标发送到 Modu Arena API。",
+        "dashboardSync": "数据会显示在你的仪表盘中，并参与社区排行榜计算。"
+      },
+      "security": "所有请求都使用 HMAC-SHA256 签名，保障完整性与真实性。"
+    },
+    "importantNotes": {
+      "title": "重要说明",
+      "description": "以下运行细节有助于你正确理解数据。",
+      "items": {
+        "lastActive": "“最后活跃时间”基于会话结束时间，而不是数据上传时间。如果你同步历史会话（例如 Claude Desktop 守护进程），显示的是你实际使用工具的日期。",
+        "apiKey": "API 密钥是永久有效的，除非你主动重新生成。",
+        "nodeVersion": "需要 Node.js 20+。",
+        "privacyMode": "如果不希望出现在排行榜中，可开启隐私模式。"
+      }
+    },
+    "apiKey": {
+      "title": "你的 API 密钥",
+      "description": "生成用于 CLI 的 API 密钥。如果你已有密钥，生成新密钥会使旧密钥失效。",
+      "generate": "生成 API 密钥",
+      "generating": "生成中...",
+      "warning": "生成新密钥后旧密钥将立即失效。密钥仅显示一次。",
+      "showOnce": "请立即保存此密钥，之后将无法再次查看。",
+      "usageLabel": "手动安装时使用：",
+      "errorNotLoggedIn": "请先登录以生成 API 密钥。",
+      "errorGeneric": "API 密钥生成失败，请重试。"
+    },
+    "commands": {
+      "title": "CLI 命令参考",
+      "description": "用于安装、追踪与账户检查的核心命令。",
+      "list": {
+        "register": "创建账号（交互式）",
+        "login": "登录已有账号",
+        "install": "使用 API 密钥配置 hooks",
+        "submit": "提交项目进行 AI 评估",
+        "rank": "查看当前排名",
+        "status": "检查连接状态",
+        "uninstall": "移除追踪 hooks"
+      },
+      "tip": "执行格式：npx @suncreation/modu-arena <command>"
     }
   },
   "footer": {

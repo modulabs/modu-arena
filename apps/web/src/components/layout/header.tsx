@@ -26,6 +26,12 @@ export async function Header() {
           >
             {t('leaderboard')}
           </Link>
+          <Link
+            href="/install"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {t('install')}
+          </Link>
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
