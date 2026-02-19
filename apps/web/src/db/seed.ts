@@ -9,7 +9,7 @@
 
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import { scryptSync, randomBytes, randomUUID } from 'node:crypto';
+import { scryptSync, randomBytes, randomUUID, createCipheriv } from 'node:crypto';
 
 import {
   toolTypes,
@@ -41,12 +41,23 @@ const db = drizzle(client, {});
 // NEW: Modu platform API key prefix
 const API_KEY_PREFIX = 'modu_arena_';
 
-function generateApiKey(): { key: string; hash: string; prefix: string } {
+function generateApiKey(): { key: string; hash: string; prefix: string; encrypted: string | null } {
    const prefix = randomBytes(4).toString('hex'); // 8 chars
    const secret = randomBytes(16).toString('hex'); // 32 chars
    const key = `${API_KEY_PREFIX}${prefix}_${secret}`;
    const hash = scryptSync(key, 'modu-arena-api-key-salt', 64).toString('hex');
-   return { key, hash, prefix: `${API_KEY_PREFIX}${prefix}` };
+   let encrypted: string | null = null;
+   const encKey = process.env.API_KEY_ENCRYPTION_KEY;
+   if (encKey && encKey.length === 64) {
+     try {
+       const iv = randomBytes(12);
+       const cipher = createCipheriv('aes-256-gcm', Buffer.from(encKey, 'hex'), iv);
+       const enc = Buffer.concat([cipher.update(key, 'utf8'), cipher.final()]);
+       const authTag = cipher.getAuthTag();
+       encrypted = `v1:${iv.toString('hex')}:${authTag.toString('hex')}:${enc.toString('hex')}`;
+     } catch { /* env var invalid or missing */ }
+   }
+   return { key, hash, prefix: `${API_KEY_PREFIX}${prefix}`, encrypted };
  }
 
 function randomInt(min: number, max: number): number {
@@ -183,6 +194,7 @@ async function seed() {
       email: u.email,
       apiKeyHash: apiKey.hash,
       apiKeyPrefix: apiKey.prefix,
+      apiKeyEncrypted: apiKey.encrypted,
       userSalt: randomUUID(),
       privacyMode: false,
       successfulProjectsCount: 0,

@@ -145,13 +145,14 @@ export async function POST(request: Request) {
     }
 
     const oldPrefix = user.apiKeyPrefix ?? 'none';
-    const { key, hash, prefix } = generateApiKey(user.id);
+    const { key, hash, prefix, encrypted } = generateApiKey(user.id);
 
     await db
       .update(users)
       .set({
         apiKeyHash: hash,
         apiKeyPrefix: prefix,
+        apiKeyEncrypted: encrypted,
         updatedAt: new Date(),
       })
       .where(eq(users.id, user.id));

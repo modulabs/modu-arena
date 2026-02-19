@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     }
 
     const passwordHash = hashPassword(password);
-    const { key: apiKey, hash: apiKeyHash, prefix: apiKeyPrefix } = generateApiKey(username);
+    const { key: apiKey, hash: apiKeyHash, prefix: apiKeyPrefix, encrypted: apiKeyEncrypted } = generateApiKey(username);
 
     const [newUser] = await db
       .insert(users)
@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
         displayName: displayName || username,
         apiKeyHash,
         apiKeyPrefix,
+        apiKeyEncrypted,
       })
       .returning({
         id: users.id,

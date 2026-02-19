@@ -50,8 +50,9 @@ export const users = pgTable(
     githubAvatarUrl: text('github_avatar_url'),
     displayName: varchar('display_name', { length: 255 }),
     email: varchar('email', { length: 255 }),
-    apiKeyHash: varchar('api_key_hash', { length: 128 }).notNull(), // scrypt hash
-    apiKeyPrefix: varchar('api_key_prefix', { length: 32 }).notNull(), // 'modu_arena_xxxxxxxx'
+    apiKeyHash: varchar('api_key_hash', { length: 128 }).notNull(),
+    apiKeyPrefix: varchar('api_key_prefix', { length: 32 }).notNull(),
+    apiKeyEncrypted: text('api_key_encrypted'),
     userSalt: varchar('user_salt', { length: 64 })
       .notNull()
       .$defaultFn(() => crypto.randomUUID()),

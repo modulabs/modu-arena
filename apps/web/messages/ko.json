@@ -205,21 +205,26 @@
       "openDashboard": "대시보드 열기",
       "viewLeaderboard": "리더보드 보기"
     },
+    "autoSetup": {
+      "title": "로그인하면 자동으로 추적이 시작됩니다",
+      "description": "register 또는 login을 한 번 실행하면, 감지된 도구에 훅이 자동 설치되고 추적 설정이 완료됩니다.",
+      "manualHint": "일반 사용에서는 API 키를 직접 설정할 필요가 없습니다. 아래 API 키 생성은 고급/수동 설정용입니다."
+    },
     "quickStart": {
       "title": "빠른 시작",
-      "description": "간단한 CLI 흐름으로 몇 분 안에 추적을 시작할 수 있습니다.",
+      "description": "register 또는 login만 실행하면 몇 분 안에 추적이 자동으로 시작됩니다.",
       "registerLabel": "신규 사용자 등록",
       "registerCommand": "npx @suncreation/modu-arena register",
-      "loginHint": "이미 계정이 있나요?",
+      "loginHint": "이미 계정이 있다면 로그인만 하세요.",
       "loginCommand": "npx @suncreation/modu-arena login",
       "steps": {
         "register": {
-          "title": "등록 및 설치",
-          "description": "register를 한 번 실행하면 계정 생성과 함께 감지된 도구에 훅이 자동 설치됩니다."
+          "title": "가입하고 자동 설정",
+          "description": "register를 한 번 실행하면 계정 생성과 함께 감지된 도구에 훅이 자동으로 설치됩니다."
         },
         "code": {
           "title": "평소처럼 코딩",
-          "description": "설치 후에는 기존처럼 AI 코딩 도구를 사용하면 추적이 백그라운드에서 동작합니다."
+          "description": "설정이 끝나면 평소처럼 AI 코딩 도구를 사용하세요. 추적은 백그라운드에서 자동으로 동작합니다."
         },
         "dashboard": {
           "title": "통계 확인",
@@ -229,7 +234,7 @@
     },
     "supportedTools": {
       "title": "지원 도구",
-      "description": "현재 Modu Arena는 도구별 훅 통합으로 6개의 AI 코딩 도구를 지원합니다.",
+      "description": "현재 Modu Arena는 도구별 훅 연동을 통해 6개의 AI 코딩 도구를 지원합니다.",
       "tools": {
         "claudeCode": {
           "name": "Claude Code",
@@ -265,7 +270,7 @@
     },
     "whatWeTrack": {
       "title": "수집 항목",
-      "description": "분석에 필요한 사용 지표는 수집하고 민감한 내용은 수집하지 않습니다.",
+      "description": "분석에 필요한 사용 지표만 수집하며, 민감한 내용은 수집하지 않습니다.",
       "collectTitle": "수집하는 항목",
       "dontCollectTitle": "수집하지 않는 항목",
       "collect": {
@@ -284,9 +289,9 @@
     },
     "howItWorks": {
       "title": "동작 방식",
-      "description": "자동 훅 설치, 안전한 전송, 실시간 분석 흐름입니다.",
+      "description": "자동 훅 설치부터 안전한 전송, 실시간 분석까지 한 번에 처리됩니다.",
       "steps": {
-        "installHooks": "register 또는 login 이후, 환경에서 감지된 도구에 훅이 자동으로 설치됩니다.",
+        "installHooks": "register 또는 login을 완료하면, 환경에서 감지된 도구에 훅이 자동으로 설치됩니다.",
         "sessionEnd": "코딩 세션이 끝날 때마다 훅이 익명화된 지표를 Modu Arena API로 전송합니다.",
         "dashboardSync": "데이터는 대시보드에 표시되고 커뮤니티 리더보드 계산에도 반영됩니다."
       },
@@ -294,32 +299,34 @@
     },
     "importantNotes": {
       "title": "중요 안내",
-      "description": "지표를 정확히 해석하기 위해 알아두면 좋은 운영 정보입니다.",
+      "description": "지표를 정확히 해석할 때 도움이 되는 운영 정보를 정리했습니다.",
       "items": {
         "lastActive": "'마지막 활동' 날짜는 업로드 시점이 아니라 세션 종료 시각 기준입니다. 과거 세션을 동기화하는 경우(예: Claude Desktop 데몬) 실제 사용한 날짜로 표시됩니다.",
         "apiKey": "API 키는 재생성하지 않는 한 만료되지 않는 영구 키입니다.",
         "nodeVersion": "Node.js 20+가 필요합니다.",
-        "privacyMode": "리더보드 노출을 원하지 않으면 개인정보 보호 모드를 사용할 수 있습니다."
+        "privacyMode": "공개 리더보드에 노출하고 싶지 않다면 프라이버시 모드를 사용할 수 있습니다."
       }
     },
     "apiKey": {
-      "title": "내 API 키",
-      "description": "CLI에 사용할 API 키를 생성합니다. 이미 키가 있는 경우, 새 키를 생성하면 기존 키는 무효화됩니다.",
+      "title": "고급/수동 설정: API 키",
+      "description": "일반적인 추적에는 필요하지 않습니다. register/login 이후 자동 설정을 사용하고, install --api-key가 필요한 경우에만 생성하세요.",
       "generate": "API 키 생성",
       "generating": "생성 중...",
       "warning": "새 키를 생성하면 기존 키는 무효화됩니다. 키는 한 번만 표시됩니다.",
       "showOnce": "이 키를 지금 저장하세요. 다시 표시되지 않습니다.",
-      "usageLabel": "수동 설치 시 사용:",
+      "usageLabel": "수동 설정 명령어:",
+      "regenerate": "재생성",
+      "existsButEncrypted": "API 키가 존재하지만 조회할 수 없습니다. 새로 생성해야 확인할 수 있습니다.",
       "errorNotLoggedIn": "API 키를 생성하려면 로그인하세요.",
       "errorGeneric": "API 키 생성에 실패했습니다. 다시 시도해 주세요."
     },
     "commands": {
       "title": "CLI 명령어 참고",
-      "description": "설치, 추적, 계정 확인에 사용하는 핵심 명령어입니다.",
+      "description": "설정, 추적, 계정 확인에 사용하는 핵심 명령어입니다.",
       "list": {
         "register": "계정 생성 (대화형)",
         "login": "기존 계정 로그인",
-        "install": "API 키로 훅 설정",
+        "install": "기존 API 키로 수동 훅 설정",
         "submit": "AI 평가를 위해 프로젝트 제출",
         "rank": "현재 순위 확인",
         "status": "연결 상태 확인",

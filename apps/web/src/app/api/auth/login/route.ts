@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, users } from '@/db';
 import { eq, or } from 'drizzle-orm';
-import { verifyPassword, createSessionToken, generateApiKey } from '@/lib/auth';
+import { verifyPassword, createSessionToken, generateApiKey, decryptApiKey } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
 export async function POST(request: NextRequest) {
@@ -55,10 +55,18 @@ export async function POST(request: NextRequest) {
       expires: expiresAt,
     });
 
-    // CLI login: reuse existing API key if present, only generate on first login
     if (source === 'cli') {
       if (user.apiKeyHash && user.apiKeyPrefix) {
-        // Key already exists — do NOT regenerate (avoids invalidating other devices)
+        // Key already exists — decrypt and return it (avoids invalidating other devices)
+        let existingKey = '';
+        if (user.apiKeyEncrypted) {
+          try {
+            existingKey = decryptApiKey(user.apiKeyEncrypted, user.id);
+          } catch {
+            // Encryption key changed or corrupt — leave empty, user can regenerate
+          }
+        }
+
         return NextResponse.json({
           user: {
             id: user.id,
@@ -66,16 +74,18 @@ export async function POST(request: NextRequest) {
             displayName: user.displayName,
             apiKeyPrefix: user.apiKeyPrefix,
           },
+          apiKey: existingKey || undefined,
           apiKeyExists: true,
-          message: 'API key already exists. Use your existing key or regenerate via dashboard.',
+          message: existingKey
+            ? 'Existing API key retrieved.'
+            : 'API key exists but cannot be retrieved. Regenerate via dashboard if needed.',
         });
       }
 
-      // First-time CLI login — generate new key
-      const { key: apiKey, hash: apiKeyHash, prefix: apiKeyPrefix } = generateApiKey(user.id);
+      const { key: apiKey, hash: apiKeyHash, prefix: apiKeyPrefix, encrypted: apiKeyEncrypted } = generateApiKey(user.id);
       await db
         .update(users)
-        .set({ apiKeyHash, apiKeyPrefix, updatedAt: new Date() })
+        .set({ apiKeyHash, apiKeyPrefix, apiKeyEncrypted, updatedAt: new Date() })
         .where(eq(users.id, user.id));
 
       return NextResponse.json({

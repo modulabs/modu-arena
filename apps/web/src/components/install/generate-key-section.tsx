@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,12 +9,30 @@ import { KeyRound, Copy, Check, RefreshCw, Eye, EyeOff } from 'lucide-react';
 export function ApiKeySection() {
   const t = useTranslations('install.apiKey');
   const [apiKey, setApiKey] = useState<string | null>(null);
+  const [hasKey, setHasKey] = useState(false);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
 
-  const generateKey = async () => {
+  useEffect(() => {
+    fetch('/api/me/api-key')
+      .then((res) => {
+        if (!res.ok) throw new Error('fetch failed');
+        return res.json();
+      })
+      .then((data) => {
+        const key = data.data?.apiKey ?? null;
+        setApiKey(key);
+        setHasKey(data.data?.hasKey ?? false);
+        if (key) setVisible(false);
+      })
+      .catch(() => {})
+      .finally(() => setFetching(false));
+  }, []);
+
+  const regenerateKey = async () => {
     setLoading(true);
     setError(null);
     setCopied(false);
@@ -31,6 +49,7 @@ export function ApiKeySection() {
       }
       const data = await res.json();
       setApiKey(data.data?.apiKey ?? data.apiKey ?? null);
+      setHasKey(true);
       setVisible(true);
     } catch {
       setError(t('errorGeneric'));
@@ -46,7 +65,6 @@ export function ApiKeySection() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // fallback
       const textarea = document.createElement('textarea');
       textarea.value = apiKey;
       document.body.appendChild(textarea);
@@ -62,6 +80,16 @@ export function ApiKeySection() {
     ? `${apiKey.slice(0, 20)}${'*'.repeat(Math.max(0, apiKey.length - 24))}${apiKey.slice(-4)}`
     : '';
 
+  if (fetching) {
+    return (
+      <Card className="border-primary/30 bg-primary/5">
+        <CardContent className="flex items-center justify-center py-8">
+          <RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="border-primary/30 bg-primary/5">
       <CardHeader>
@@ -74,19 +102,7 @@ export function ApiKeySection() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!apiKey ? (
-          <div className="space-y-3">
-            <Button onClick={generateKey} disabled={loading} size="sm">
-              {loading ? (
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <KeyRound className="mr-2 h-4 w-4" />
-              )}
-              {loading ? t('generating') : t('generate')}
-            </Button>
-            <p className="text-xs text-muted-foreground">{t('warning')}</p>
-          </div>
-        ) : (
+        {apiKey ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <code className="flex-1 rounded-md border bg-background px-3 py-2 font-mono text-sm break-all">
@@ -113,13 +129,50 @@ export function ApiKeySection() {
                 )}
               </Button>
             </div>
-            <p className="text-xs font-medium text-destructive">{t('showOnce')}</p>
             <div className="rounded-md border bg-background p-3">
               <p className="mb-2 text-xs font-medium text-muted-foreground">{t('usageLabel')}</p>
               <pre className="bg-muted rounded-md p-2 font-mono text-xs">
                 {`npx @suncreation/modu-arena install --api-key ${visible ? apiKey : '<your-api-key>'}`}
               </pre>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={regenerateKey}
+              disabled={loading}
+            >
+              {loading ? (
+                <RefreshCw className="mr-2 h-3 w-3 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-3 w-3" />
+              )}
+              {t('regenerate')}
+            </Button>
+          </div>
+        ) : hasKey ? (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">{t('existsButEncrypted')}</p>
+            <Button onClick={regenerateKey} disabled={loading} size="sm">
+              {loading ? (
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              {t('regenerate')}
+            </Button>
+            <p className="text-xs text-muted-foreground">{t('warning')}</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <Button onClick={regenerateKey} disabled={loading} size="sm">
+              {loading ? (
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <KeyRound className="mr-2 h-4 w-4" />
+              )}
+              {loading ? t('generating') : t('generate')}
+            </Button>
+            <p className="text-xs text-muted-foreground">{t('warning')}</p>
           </div>
         )}
         {error && (

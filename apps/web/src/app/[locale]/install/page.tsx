@@ -8,6 +8,7 @@ import {
   Code2,
   Command,
   Download,
+  Info,
   KeyRound,
   Lock,
   Monitor,
@@ -19,6 +20,7 @@ import {
   Users,
   Wrench,
   XCircle,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -101,6 +103,24 @@ export default async function InstallPage() {
             <Button variant="outline" asChild>
               <Link href="/">{t('hero.viewLeaderboard')}</Link>
             </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="mb-8 rounded-xl border border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-800 dark:bg-emerald-950/20">
+        <div className="flex items-start gap-3">
+          <Zap className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+          <div>
+            <h2 className="text-lg font-semibold text-emerald-900 dark:text-emerald-100">
+              {t('autoSetup.title')}
+            </h2>
+            <p className="mt-1 text-sm text-emerald-800 dark:text-emerald-200">
+              {t('autoSetup.description')}
+            </p>
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+              <Info className="h-3.5 w-3.5" />
+              {t('autoSetup.manualHint')}
+            </p>
           </div>
         </div>
       </section>

@@ -205,12 +205,17 @@
       "openDashboard": "Open Dashboard",
       "viewLeaderboard": "View Leaderboard"
     },
+    "autoSetup": {
+      "title": "Just log in - tracking starts automatically",
+      "description": "Run register or login once and Modu Arena installs hooks and sets up tracking for detected tools automatically.",
+      "manualHint": "No manual API key setup is required for normal use. API key generation below is for advanced/manual setup only."
+    },
     "quickStart": {
       "title": "Quick Start",
-      "description": "Start tracking in minutes with a simple CLI flow.",
+      "description": "Run register or login once, then tracking continues automatically.",
       "registerLabel": "New user registration",
       "registerCommand": "npx @suncreation/modu-arena register",
-      "loginHint": "Already have an account?",
+      "loginHint": "Already have an account? Just log in.",
       "loginCommand": "npx @suncreation/modu-arena login",
       "steps": {
         "register": {
@@ -303,13 +308,15 @@
       }
     },
     "apiKey": {
-      "title": "Your API Key",
-      "description": "Generate an API key to use with the CLI. If you already have one, generating a new key will invalidate the previous key.",
+      "title": "Advanced / Manual Setup: API Key",
+      "description": "You do not need this for normal tracking after register/login. Generate an API key only if you want manual setup with install --api-key.",
       "generate": "Generate API Key",
       "generating": "Generating...",
       "warning": "Generating a new key will invalidate any existing key. The key is shown only once.",
       "showOnce": "Save this key now. It will not be shown again.",
-      "usageLabel": "Use with manual install:",
+      "usageLabel": "Manual setup command:",
+      "regenerate": "Regenerate",
+      "existsButEncrypted": "Your API key exists but cannot be retrieved. Generate a new one to see it.",
       "errorNotLoggedIn": "Please sign in to generate an API key.",
       "errorGeneric": "Failed to generate API key. Please try again."
     },
@@ -319,7 +326,7 @@
       "list": {
         "register": "Create account (interactive)",
         "login": "Sign in to existing account",
-        "install": "Set up hooks with API key",
+        "install": "Manual hook setup with an existing API key",
         "submit": "Submit project for AI evaluation",
         "rank": "Check your current ranking",
         "status": "Check connection status",

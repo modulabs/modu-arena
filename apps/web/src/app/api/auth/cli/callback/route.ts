@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { safeAuth } from '@/lib/safe-auth';
 import { db, users } from '@/db';
 import { eq } from 'drizzle-orm';
-import { generateApiKey } from '@/lib/auth';
+import { generateApiKey, decryptApiKey } from '@/lib/auth';
 import { logApiKeyGenerated } from '@/lib/audit';
 import { CLI_AUTH_COOKIE } from '../route';
 
@@ -52,15 +52,18 @@ export async function GET(request: NextRequest) {
 
     if (user.apiKeyHash && user.apiKeyPrefix) {
       apiKeyRaw = '';
+      if (user.apiKeyEncrypted) {
+        try { apiKeyRaw = decryptApiKey(user.apiKeyEncrypted, user.id); } catch { /* key rotation fallback */ }
+      }
       apiKeyPrefix = user.apiKeyPrefix;
     } else {
-      const { key, hash, prefix } = generateApiKey(user.id);
+      const { key, hash, prefix, encrypted } = generateApiKey(user.id);
       apiKeyRaw = key;
       apiKeyPrefix = prefix;
 
       await db
         .update(users)
-        .set({ apiKeyHash: hash, apiKeyPrefix: prefix, updatedAt: new Date() })
+        .set({ apiKeyHash: hash, apiKeyPrefix: prefix, apiKeyEncrypted: encrypted, updatedAt: new Date() })
         .where(eq(users.id, user.id));
 
       await logApiKeyGenerated(user.id, prefix, request);

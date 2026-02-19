@@ -205,9 +205,14 @@
       "openDashboard": "ダッシュボードを開く",
       "viewLeaderboard": "リーダーボードを見る"
     },
+    "autoSetup": {
+      "title": "ログインするだけで自動的に追跡が始まります",
+      "description": "register または login を一度実行すると、検出されたツールにフックが自動でインストールされ、追跡設定が完了します。",
+      "manualHint": "通常の利用では API キーを手動で設定する必要はありません。下記の API キー生成は上級者向け・手動設定専用です。"
+    },
     "quickStart": {
       "title": "クイックスタート",
-      "description": "シンプルなCLI手順で数分で追跡を開始できます。",
+      "description": "register または login を一度実行すれば、追跡が自動的に開始されます。",
       "registerLabel": "新規ユーザー登録",
       "registerCommand": "npx @suncreation/modu-arena register",
       "loginHint": "すでにアカウントがありますか？",
@@ -310,6 +315,8 @@
       "warning": "新しいキーを生成すると既存のキーは無効になります。キーは一度だけ表示されます。",
       "showOnce": "このキーを今すぐ保存してください。再表示されません。",
       "usageLabel": "手動インストール時に使用：",
+      "regenerate": "再生成",
+      "existsButEncrypted": "APIキーは存在しますが取得できません。新しいキーを生成してください。",
       "errorNotLoggedIn": "APIキーを生成するにはサインインしてください。",
       "errorGeneric": "APIキーの生成に失敗しました。再度お試しください。"
     },

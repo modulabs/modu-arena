@@ -48,12 +48,13 @@ export async function POST(request: Request) {
     const invalidHash = createHash('sha256').update(randomBytes(32)).digest('hex');
     const revokedPrefix = `revoked_${Date.now()}`;
 
-    // Update user with invalidated API key
+    // Update user with invalidated API key (clear encrypted too)
     await db
       .update(users)
       .set({
         apiKeyHash: invalidHash,
         apiKeyPrefix: revokedPrefix,
+        apiKeyEncrypted: null,
         updatedAt: new Date(),
       })
       .where(eq(users.id, user.id));

@@ -1,4 +1,4 @@
-import { createHash, createHmac, randomBytes, timingSafeEqual as cryptoTimingSafeEqual, scryptSync } from "node:crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual as cryptoTimingSafeEqual, scryptSync, createCipheriv, createDecipheriv } from "node:crypto";
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 import { db, users, type User } from "@/db";
 import { eq } from "drizzle-orm";
@@ -51,14 +51,80 @@ const API_KEY_PREFIX = "modu_arena_";
 const _PREFIX_LENGTH = 8;
 const _SECRET_LENGTH = 32;
 
+const AES_ALGORITHM = "aes-256-gcm";
+const AES_IV_LENGTH = 12;
+const AES_AUTH_TAG_LENGTH = 16;
+
+function getEncryptionKey(): Buffer {
+  const keyHex = process.env.API_KEY_ENCRYPTION_KEY;
+  if (!keyHex || keyHex.length !== 64) {
+    throw new Error("API_KEY_ENCRYPTION_KEY must be a 64-character hex string (32 bytes)");
+  }
+  return Buffer.from(keyHex, "hex");
+}
+
+/**
+ * Encrypt an API key using AES-256-GCM with AAD (userId) binding.
+ * Format: "v1:iv_hex:authTag_hex:ciphertext_hex"
+ * The "v1" prefix enables future key rotation.
+ */
+export function encryptApiKey(plaintext: string, userId: string): string {
+  const key = getEncryptionKey();
+  const iv = randomBytes(AES_IV_LENGTH);
+  const cipher = createCipheriv(AES_ALGORITHM, key, iv, { authTagLength: AES_AUTH_TAG_LENGTH });
+  cipher.setAAD(Buffer.from(userId, "utf8"));
+  const encrypted = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  return `v1:${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted.toString("hex")}`;
+}
+
+/**
+ * Decrypt an API key encrypted with encryptApiKey.
+ * Supports versioned format ("v1:iv:tag:data") and legacy format ("iv:tag:data").
+ */
+export function decryptApiKey(ciphertext: string, userId: string): string {
+  const key = getEncryptionKey();
+  const parts = ciphertext.split(":");
+
+  let ivHex: string;
+  let authTagHex: string;
+  let encryptedHex: string;
+
+  if (parts[0] === "v1" && parts.length === 4) {
+    // Versioned format: v1:iv:authTag:encrypted
+    [, ivHex, authTagHex, encryptedHex] = parts;
+  } else if (parts.length === 3) {
+    // Legacy format (no version): iv:authTag:encrypted
+    [ivHex, authTagHex, encryptedHex] = parts;
+  } else {
+    throw new Error("Invalid encrypted API key format");
+  }
+
+  if (!ivHex || !authTagHex || !encryptedHex) {
+    throw new Error("Invalid encrypted API key format");
+  }
+
+  const iv = Buffer.from(ivHex, "hex");
+  const authTag = Buffer.from(authTagHex, "hex");
+  const encrypted = Buffer.from(encryptedHex, "hex");
+  const decipher = createDecipheriv(AES_ALGORITHM, key, iv, { authTagLength: AES_AUTH_TAG_LENGTH });
+  if (parts[0] === "v1") {
+    decipher.setAAD(Buffer.from(userId, "utf8"));
+  }
+  decipher.setAuthTag(authTag);
+  const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+  return decrypted.toString("utf8");
+}
+
 /**
  * Generate a new API key for a user
- * Returns the full key (shown once) and the hash/prefix for storage
+ * Returns the full key (shown once) and the hash/prefix/encrypted for storage
  */
 export function generateApiKey(_userId: string): {
   key: string;
   hash: string;
   prefix: string;
+  encrypted: string;
 } {
   const prefix = randomBytes(4).toString("hex"); // 8 chars
   const secret = randomBytes(16).toString("hex"); // 32 chars
@@ -67,10 +133,14 @@ export function generateApiKey(_userId: string): {
    // Hash the full key for storage using scrypt (stronger than SHA-256)
    const hash = scryptSync(fullKey, "modu-arena-api-key-salt", 64).toString("hex");
 
+  // Encrypt the full key so it can be retrieved later
+  const encrypted = encryptApiKey(fullKey, _userId);
+
   return {
     key: fullKey,
     hash,
     prefix: `${API_KEY_PREFIX}${prefix}`,
+    encrypted,
   };
 }
 

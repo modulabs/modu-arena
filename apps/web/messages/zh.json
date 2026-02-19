@@ -205,9 +205,14 @@
       "openDashboard": "打开仪表盘",
       "viewLeaderboard": "查看排行榜"
     },
+    "autoSetup": {
+      "title": "登录即可自动开始追踪",
+      "description": "只需运行一次 register 或 login，Modu Arena 会自动为检测到的工具安装 hooks 并完成追踪配置。",
+      "manualHint": "常规使用无需手动设置 API 密钥。以下 API 密钥生成仅用于高级/手动配置。"
+    },
     "quickStart": {
       "title": "快速开始",
-      "description": "通过简单的 CLI 流程，几分钟即可开始追踪。",
+      "description": "只需运行一次 register 或 login，追踪会自动开始。",
       "registerLabel": "新用户注册",
       "registerCommand": "npx @suncreation/modu-arena register",
       "loginHint": "已有账号？",
@@ -310,6 +315,8 @@
       "warning": "生成新密钥后旧密钥将立即失效。密钥仅显示一次。",
       "showOnce": "请立即保存此密钥，之后将无法再次查看。",
       "usageLabel": "手动安装时使用：",
+      "regenerate": "重新生成",
+      "existsButEncrypted": "您的 API 密钥已存在但无法检索。请生成新密钥以查看。",
       "errorNotLoggedIn": "请先登录以生成 API 密钥。",
       "errorGeneric": "API 密钥生成失败，请重试。"
     },
