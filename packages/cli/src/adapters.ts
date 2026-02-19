@@ -28,6 +28,7 @@ export interface InstallResult {
   success: boolean;
   message: string;
   hookPath?: string;
+  warning?: string;
 }
 
 interface EnvField {
@@ -135,36 +136,61 @@ function hookEntryName(): string {
  * Claude Code requires explicit registration in settings.json (unlike other tools
  * that auto-discover hooks by filename convention).
  */
+function quoteHookCommand(hookPath: string): string {
+  return `"${hookPath.replace(/"/g, '\\"')}"`;
+}
+
+function normalizeCommandPath(command: string): string {
+  const unquoted = command.trim().replace(/^"|"$/g, '');
+  return unquoted.replace(/\\/g, '/');
+}
+
 function registerHookInSettings(configDir: string, hookPath: string): void {
   const settingsPath = join(configDir, 'settings.json');
   let settings: Record<string, unknown> = {};
 
+  if (!existsSync(configDir)) {
+    mkdirSync(configDir, { recursive: true });
+  }
+
   if (existsSync(settingsPath)) {
     try {
       settings = JSON.parse(readFileSync(settingsPath, 'utf-8'));
-    } catch {
-      settings = {};
+    } catch (err) {
+      throw new Error(`Invalid JSON in ${settingsPath}: ${String(err)}`);
     }
   }
 
   type HookEntry = { matcher: string; hooks: Array<{ type: string; command: string }> };
-  const hooks = (settings.hooks ?? {}) as Record<string, HookEntry[]>;
+  const hooks = (
+    settings.hooks && typeof settings.hooks === 'object' && !Array.isArray(settings.hooks)
+      ? settings.hooks
+      : {}
+  ) as Record<string, HookEntry[]>;
   const stopHooks = (hooks.Stop ?? []) as HookEntry[];
+  const expectedCommand = quoteHookCommand(hookPath);
+  const normalizedExpectedCommand = normalizeCommandPath(expectedCommand);
 
   const alreadyRegistered = stopHooks.some(
-    (entry) => entry.hooks?.some((h) => h.command?.includes('session-end')),
+    (entry) =>
+      entry.hooks?.some(
+        (h) =>
+          h.type === 'command' &&
+          typeof h.command === 'string' &&
+          normalizeCommandPath(h.command) === normalizedExpectedCommand,
+      ),
   );
 
   if (!alreadyRegistered) {
     stopHooks.push({
       matcher: '',
-      hooks: [{ type: 'command', command: hookPath }],
+      hooks: [{ type: 'command', command: expectedCommand }],
     });
   }
 
   hooks.Stop = stopHooks;
   settings.hooks = hooks;
-  writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+  writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
 }
 
 // ─── Adapters ──────────────────────────────────────────────────────────────
@@ -192,7 +218,7 @@ class ClaudeCodeAdapter implements ToolAdapter {
       try {
         registerHookInSettings(this.configDir, this.getHookPath());
       } catch (err) {
-        result.message += ` (Warning: could not register in settings.json: ${err})`;
+        result.warning = `Could not register in settings.json: ${String(err)}`;
       }
     }
 

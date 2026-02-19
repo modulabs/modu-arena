@@ -204,6 +204,9 @@ export async function installCommand(apiKey?: string): Promise<void> {
       results.push({ tool: adapter.displayName, result });
       if (result.success) {
         console.log(`    → Hook installed: ${result.hookPath}`);
+        if (result.warning) {
+          console.log(`    ⚠ ${result.warning}`);
+        }
       } else {
         console.log(`    ✗ ${result.message}`);
       }
