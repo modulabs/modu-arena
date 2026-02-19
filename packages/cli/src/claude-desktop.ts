@@ -366,10 +366,8 @@ function collectClaudeDesktopSessions(): SessionAggregate[] {
 
 export async function syncAllTools(apiKey: string): Promise<{ synced: number; skipped: number; errors: string[] }> {
   const state = loadDaemonState();
-  const sinceMs = state.lastSync ? new Date(state.lastSync).getTime() : Date.now() - 5 * 60 * 1000;
   const allSessions: SessionAggregate[] = [
     ...collectClaudeDesktopSessions(),
-    ...collectOpenCodeSessions(sinceMs),
   ];
 
   const result = await submitSessions(allSessions, apiKey, state);

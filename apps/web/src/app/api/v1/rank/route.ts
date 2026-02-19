@@ -34,6 +34,7 @@ interface DailyUsage {
   date: string;
   inputTokens: number;
   outputTokens: number;
+  cacheTokens: number;
   sessions: number;
 }
 
@@ -121,6 +122,7 @@ export async function GET(request: NextRequest) {
         date: String(r.date),
         inputTokens: Number(r.inputTokens),
         outputTokens: Number(r.outputTokens),
+        cacheTokens: Number(r.cacheTokens ?? 0),
         sessions: Number(r.sessions),
       }));
 

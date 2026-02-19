@@ -29,8 +29,8 @@ export interface RankResponse {
       totalTokens: number;
       totalSessions: number;
       toolBreakdown: Array<{ tool: string; tokens: number }>;
-      last7Days: Array<{ date: string; inputTokens: number; outputTokens: number; sessions: number }>;
-      last30Days: Array<{ date: string; inputTokens: number; outputTokens: number; sessions: number }>;
+      last7Days: Array<{ date: string; inputTokens: number; outputTokens: number; cacheTokens: number; sessions: number }>;
+      last30Days: Array<{ date: string; inputTokens: number; outputTokens: number; cacheTokens: number; sessions: number }>;
     };
     overview: {
       successfulProjectsCount: number;

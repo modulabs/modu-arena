@@ -145,7 +145,7 @@ async function aggregateUsageData(
       inputTokens,
       outputTokens,
       cacheTokens,
-      totalTokens: inputTokens + outputTokens,
+      totalTokens: inputTokens + outputTokens + cacheTokens,
       sessionCount: Number(row.sessionCount),
     };
   });

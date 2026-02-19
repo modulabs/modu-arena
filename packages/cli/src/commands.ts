@@ -278,11 +278,11 @@ export async function rankCommand(): Promise<void> {
 
   // Period stats (aggregate from daily arrays)
   const sum7 = usage.last7Days.reduce(
-    (acc, d) => ({ tokens: acc.tokens + d.inputTokens + d.outputTokens, sessions: acc.sessions + d.sessions }),
+    (acc, d) => ({ tokens: acc.tokens + d.inputTokens + d.outputTokens + (d.cacheTokens ?? 0), sessions: acc.sessions + d.sessions }),
     { tokens: 0, sessions: 0 },
   );
   const sum30 = usage.last30Days.reduce(
-    (acc, d) => ({ tokens: acc.tokens + d.inputTokens + d.outputTokens, sessions: acc.sessions + d.sessions }),
+    (acc, d) => ({ tokens: acc.tokens + d.inputTokens + d.outputTokens + (d.cacheTokens ?? 0), sessions: acc.sessions + d.sessions }),
     { tokens: 0, sessions: 0 },
   );
   console.log(
