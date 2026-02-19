@@ -381,7 +381,7 @@ export async function POST(request: NextRequest) {
           byTool: sql`${dailyUserStats.byTool} || jsonb_build_object(
             ${sessionData.toolType}::text,
             jsonb_build_object(
-              'tokens', COALESCE((${dailyUserStats.byTool} -> ${sessionData.toolType}::text ->> 'tokens')::int, 0) + ${
+              'tokens', COALESCE((${dailyUserStats.byTool} -> ${sessionData.toolType}::text ->> 'tokens')::bigint, 0) + ${
                 sessionData.inputTokens +
                 sessionData.outputTokens +
                 (sessionData.cacheCreationTokens ?? 0) +
