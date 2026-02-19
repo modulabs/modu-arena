@@ -146,8 +146,10 @@ export async function getRank(
 export interface AuthResponse {
   success: boolean;
   apiKey?: string;
-  user?: { id: string; username: string; displayName?: string };
+  apiKeyExists?: boolean;
+  user?: { id: string; username: string; displayName?: string; apiKeyPrefix?: string };
   error?: string;
+  message?: string;
 }
 
 export async function registerUser(

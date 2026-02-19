@@ -123,6 +123,128 @@ function readStdin() {
     });
 }
 
+function generateGeminiHookJs(apiKey: string): string {
+  return `#!/usr/bin/env node
+"use strict";
+var crypto = require("crypto");
+var fs = require("fs");
+var path = require("path");
+
+var API_KEY = ${JSON.stringify(apiKey)};
+var SERVER  = ${JSON.stringify(API_BASE_URL)};
+
+function readStdin() {
+    return new Promise(function (resolve) {
+        var chunks = [];
+        process.stdin.setEncoding("utf8");
+        process.stdin.on("data", function (d) { chunks.push(d); });
+        process.stdin.on("end", function () {
+            var raw = chunks.join("");
+            try { resolve(JSON.parse(raw)); }
+            catch (_) { resolve({}); }
+        });
+        setTimeout(function () { resolve({}); }, 5000);
+    });
+}
+
+function parseTranscript(transcriptPath) {
+    var result = {
+        sessionId: "",
+        startedAt: "",
+        endedAt: "",
+        modelName: "unknown",
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheReadTokens: 0
+    };
+
+    if (!transcriptPath) return result;
+
+    if (transcriptPath.indexOf("~") === 0) {
+        transcriptPath = path.join(
+            process.env.HOME || process.env.USERPROFILE || "",
+            transcriptPath.slice(1)
+        );
+    }
+
+    var content;
+    try { content = fs.readFileSync(transcriptPath, "utf8"); }
+    catch (_) { return result; }
+
+    var transcript;
+    try { transcript = JSON.parse(content); }
+    catch (_) { return result; }
+
+    result.sessionId = transcript.sessionId || "";
+    result.startedAt = transcript.startTime || "";
+    result.endedAt = transcript.lastUpdated || "";
+
+    var messages = Array.isArray(transcript.messages) ? transcript.messages : [];
+    for (var i = 0; i < messages.length; i++) {
+        var msg = messages[i];
+        if (!msg || msg.type !== "gemini" || !msg.tokens) continue;
+
+        if (result.modelName === "unknown" && msg.model) {
+            result.modelName = msg.model;
+        }
+
+        result.inputTokens += (msg.tokens.input || 0);
+        result.outputTokens += (msg.tokens.output || 0);
+        result.cacheReadTokens += (msg.tokens.cached || 0);
+    }
+
+    return result;
+}
+
+readStdin().then(function (hookInput) {
+    var transcriptPath = hookInput.transcript_path || "";
+    var stats = parseTranscript(transcriptPath);
+    var sessionId = hookInput.session_id || stats.sessionId || "";
+
+    if (!sessionId) {
+        process.stderr.write("[modu-arena] no session id from stdin/transcript, skipping\\n");
+        process.exit(0);
+    }
+
+    var body = JSON.stringify({
+        toolType: "gemini",
+        sessionId: sessionId,
+        startedAt: stats.startedAt || "",
+        endedAt: stats.endedAt || new Date().toISOString(),
+        inputTokens: stats.inputTokens,
+        outputTokens: stats.outputTokens,
+        modelName: stats.modelName,
+        cacheCreationTokens: 0,
+        cacheReadTokens: stats.cacheReadTokens
+    });
+
+    var ts  = Math.floor(Date.now() / 1000).toString();
+    var sig = crypto.createHmac("sha256", API_KEY).update(ts + ":" + body).digest("hex");
+
+    return fetch(SERVER + "/api/v1/sessions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY,
+            "X-Timestamp": ts,
+            "X-Signature": sig
+        },
+        body: body
+    }).then(function (r) {
+        if (r.ok) {
+            process.stderr.write("[modu-arena] session reported OK\\n");
+        } else {
+            r.text().then(function (t) {
+                process.stderr.write("[modu-arena] " + r.status + " " + t + "\\n");
+            });
+        }
+    });
+}).catch(function (e) {
+    process.stderr.write("[modu-arena] hook error: " + e.message + "\\n");
+});
+`;
+}
+
 // --- 2. Parse transcript JSONL for token & model stats ---
 function parseTranscript(transcriptPath) {
     var result = {
@@ -392,6 +514,40 @@ class ClaudeCodeAdapter implements ToolAdapter {
   }
 }
 
+class GeminiAdapter implements ToolAdapter {
+  slug = 'gemini' as const;
+  displayName = 'Gemini CLI';
+
+  private get configDir() { return join(homedir(), '.gemini'); }
+  private get hooksDir() { return join(this.configDir, 'hooks'); }
+
+  getHookPath() { return join(this.hooksDir, hookEntryName()); }
+  detect() { return existsSync(this.configDir); }
+
+  install(apiKey: string): InstallResult {
+    try {
+      if (!existsSync(this.hooksDir)) mkdirSync(this.hooksDir, { recursive: true });
+
+      writeFileSync(join(this.hooksDir, HOOK_JS), generateGeminiHookJs(apiKey), { mode: 0o755 });
+
+      const entryPath = this.getHookPath();
+      if (IS_WIN) {
+        writeFileSync(entryPath, cmdWrapper());
+      } else {
+        writeFileSync(entryPath, shellWrapper(), { mode: 0o755 });
+      }
+
+      return {
+        success: true,
+        message: `${this.displayName} hook installed at ${entryPath}`,
+        hookPath: entryPath,
+      };
+    } catch (err) {
+      return { success: false, message: `Failed to install ${this.displayName} hook: ${err}` };
+    }
+  }
+}
+
 class OpenCodeAdapter implements ToolAdapter {
   slug = 'opencode' as const;
   displayName = 'OpenCode';
@@ -438,7 +594,7 @@ export function getAllAdapters(): ToolAdapter[] {
   return [
     new ClaudeCodeAdapter(),
     new OpenCodeAdapter(),
-    new SimpleAdapter('gemini', 'Gemini CLI', '.gemini', 'GEMINI'),
+    new GeminiAdapter(),
     new SimpleAdapter('codex', 'Codex CLI', '.codex', 'CODEX'),
     new SimpleAdapter('crush', 'Crush', '.crush', 'CRUSH'),
   ];

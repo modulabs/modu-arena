@@ -75,17 +75,28 @@ async function processCliAuth(
       );
     }
 
-    const { key, hash, prefix } = generateApiKey(user.id);
+    let apiKeyRaw: string;
+    let apiKeyPrefix: string;
 
-    await db
-      .update(users)
-      .set({ apiKeyHash: hash, apiKeyPrefix: prefix, updatedAt: new Date() })
-      .where(eq(users.id, user.id));
+    if (user.apiKeyHash && user.apiKeyPrefix) {
+      apiKeyRaw = '';
+      apiKeyPrefix = user.apiKeyPrefix;
+    } else {
+      const { key, hash, prefix } = generateApiKey(user.id);
+      apiKeyRaw = key;
+      apiKeyPrefix = prefix;
 
-    await logApiKeyGenerated(user.id, prefix, request);
+      await db
+        .update(users)
+        .set({ apiKeyHash: hash, apiKeyPrefix: prefix, updatedAt: new Date() })
+        .where(eq(users.id, user.id));
+
+      await logApiKeyGenerated(user.id, prefix, request);
+    }
 
     const cliCallbackUrl = new URL(redirectUri);
-    cliCallbackUrl.searchParams.set('api_key', key);
+    cliCallbackUrl.searchParams.set('api_key', apiKeyRaw);
+    cliCallbackUrl.searchParams.set('api_key_prefix', apiKeyPrefix);
     cliCallbackUrl.searchParams.set('state', state);
     cliCallbackUrl.searchParams.set('username', user.username);
 

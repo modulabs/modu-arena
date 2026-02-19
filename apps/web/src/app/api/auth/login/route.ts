@@ -55,8 +55,23 @@ export async function POST(request: NextRequest) {
       expires: expiresAt,
     });
 
-    // CLI login: regenerate API key and return it (raw key only shown once)
+    // CLI login: reuse existing API key if present, only generate on first login
     if (source === 'cli') {
+      if (user.apiKeyHash && user.apiKeyPrefix) {
+        // Key already exists — do NOT regenerate (avoids invalidating other devices)
+        return NextResponse.json({
+          user: {
+            id: user.id,
+            username: user.username,
+            displayName: user.displayName,
+            apiKeyPrefix: user.apiKeyPrefix,
+          },
+          apiKeyExists: true,
+          message: 'API key already exists. Use your existing key or regenerate via dashboard.',
+        });
+      }
+
+      // First-time CLI login — generate new key
       const { key: apiKey, hash: apiKeyHash, prefix: apiKeyPrefix } = generateApiKey(user.id);
       await db
         .update(users)
