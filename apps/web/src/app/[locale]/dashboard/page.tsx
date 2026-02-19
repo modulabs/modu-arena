@@ -274,7 +274,7 @@ async function getUserProfile(displayUsername: string, userId: string): Promise<
     const outputTokens = Number(tokenData?.outputTokens ?? 0);
     const cacheCreationTokens = Number(tokenData?.cacheCreationTokens ?? 0);
     const cacheReadTokens = Number(tokenData?.cacheReadTokens ?? 0);
-    const totalTokens = inputTokens + outputTokens;
+    const totalTokens = inputTokens + outputTokens + cacheCreationTokens + cacheReadTokens;
 
     // Calculate estimated cost (using Claude Sonnet 4 pricing as default)
     const estimatedCost =
@@ -326,6 +326,7 @@ async function getUserProfile(displayUsername: string, userId: string): Promise<
         date: dailyUserStats.statDate,
         inputTokens: dailyUserStats.inputTokens,
         outputTokens: dailyUserStats.outputTokens,
+        totalTokens: dailyUserStats.totalTokens,
         sessions: dailyUserStats.sessionCount,
         byTool: dailyUserStats.byTool,
       })
@@ -335,7 +336,7 @@ async function getUserProfile(displayUsername: string, userId: string): Promise<
 
     const dailyActivity: DailyActivity[] = dailyActivityResult.map((d) => ({
       date: d.date,
-      tokens: Number(d.inputTokens ?? 0) + Number(d.outputTokens ?? 0),
+      tokens: Number(d.totalTokens ?? 0),
       sessions: Number(d.sessions ?? 0),
       inputTokens: Number(d.inputTokens ?? 0),
       outputTokens: Number(d.outputTokens ?? 0),
@@ -439,7 +440,7 @@ async function getUserProfile(displayUsername: string, userId: string): Promise<
     const hourlyTokenResult = await db
       .select({
         hour: sql<number>`EXTRACT(HOUR FROM ${tokenUsage.recordedAt})`,
-        tokens: sql<number>`COALESCE(SUM(${tokenUsage.inputTokens} + ${tokenUsage.outputTokens}), 0)`,
+        tokens: sql<number>`COALESCE(SUM(${tokenUsage.inputTokens} + ${tokenUsage.outputTokens} + COALESCE(${tokenUsage.cacheCreationTokens}, 0) + COALESCE(${tokenUsage.cacheReadTokens}, 0)), 0)`,
       })
       .from(tokenUsage)
       .where(eq(tokenUsage.userId, user.id))
@@ -484,7 +485,7 @@ async function getUserProfile(displayUsername: string, userId: string): Promise<
     const dayOfWeekTokenResult = await db
       .select({
         dayOfWeek: sql<number>`EXTRACT(DOW FROM ${tokenUsage.recordedAt})`,
-        tokens: sql<number>`COALESCE(SUM(${tokenUsage.inputTokens} + ${tokenUsage.outputTokens}), 0)`,
+        tokens: sql<number>`COALESCE(SUM(${tokenUsage.inputTokens} + ${tokenUsage.outputTokens} + COALESCE(${tokenUsage.cacheCreationTokens}, 0) + COALESCE(${tokenUsage.cacheReadTokens}, 0)), 0)`,
       })
       .from(tokenUsage)
       .where(eq(tokenUsage.userId, user.id))
@@ -644,7 +645,7 @@ async function getUserProfile(displayUsername: string, userId: string): Promise<
         avatarUrl: user.githubAvatarUrl,
         joinedAt: user.createdAt?.toISOString() ?? new Date().toISOString(),
         stats: {
-          totalTokens: Number(stats?.totalInputTokens ?? 0) + Number(stats?.totalOutputTokens ?? 0),
+          totalTokens: Number(stats?.totalInputTokens ?? 0) + Number(stats?.totalOutputTokens ?? 0) + Number(stats?.totalCacheTokens ?? 0),
           totalSessions: Number(stats?.totalSessions ?? 0),
           currentRank: null,
           compositeScore: null,
