@@ -5,7 +5,7 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { Trophy, Calendar, Zap, Activity, User, Github, Settings } from 'lucide-react';
 import { Link } from '@/i18n/routing';
-import { db, users, dailyUserStats, sessions, tokenUsage } from '@/db';
+import { db, users, dailyUserStats, sessions, tokenUsage, userStats } from '@/db';
 import { eq, desc, sql, and, gte } from 'drizzle-orm';
 
 
@@ -172,7 +172,13 @@ async function getUserInfo(): Promise<ApiResponse<CurrentUserInfo>> {
       return { success: false };
     }
 
-    const currentRank = null; // Rankings removed — monitoring mode
+    const rankResult = await db.execute<{ rank_position: number }>(sql`
+      SELECT rank_position::int FROM (
+        SELECT user_id, ROW_NUMBER() OVER (ORDER BY total_all_tokens DESC) as rank_position
+        FROM user_stats WHERE total_all_tokens > 0
+      ) ranked WHERE user_id = ${userId}
+    `);
+    const currentRank = rankResult[0]?.rank_position ?? null;
 
     return {
       success: true,
@@ -243,7 +249,13 @@ async function getUserProfile(displayUsername: string, userId: string): Promise<
       };
     }
 
-    // Rankings removed — monitoring mode
+    const profileRankResult = await db.execute<{ rank_position: number }>(sql`
+      SELECT rank_position::int FROM (
+        SELECT user_id, ROW_NUMBER() OVER (ORDER BY total_all_tokens DESC) as rank_position
+        FROM user_stats WHERE total_all_tokens > 0
+      ) ranked WHERE user_id = ${user.id}
+    `);
+    const profileRank = profileRankResult[0]?.rank_position ?? null;
 
     // Get aggregated stats with token breakdown
     const statsResult = await db
@@ -647,7 +659,7 @@ async function getUserProfile(displayUsername: string, userId: string): Promise<
         stats: {
           totalTokens: Number(stats?.totalInputTokens ?? 0) + Number(stats?.totalOutputTokens ?? 0) + Number(stats?.totalCacheTokens ?? 0),
           totalSessions: Number(stats?.totalSessions ?? 0),
-          currentRank: null,
+          currentRank: profileRank,
           compositeScore: null,
         },
         tokenBreakdown,

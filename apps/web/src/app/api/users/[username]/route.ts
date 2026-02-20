@@ -205,8 +205,13 @@ export async function GET(
       return successResponse(privateProfile);
     }
 
-     // Rankings removed — monitoring mode only
-     const ranking = null;
+    const rankResult = await db.execute<{ rank_position: number }>(sql`
+      SELECT rank_position::int FROM (
+        SELECT user_id, ROW_NUMBER() OVER (ORDER BY total_all_tokens DESC) as rank_position
+        FROM user_stats WHERE total_all_tokens > 0
+      ) ranked WHERE user_id = ${user.id}
+    `);
+    const ranking = rankResult[0]?.rank_position ?? null;
 
     // Get aggregated stats with token breakdown
     const statsResult = await db
@@ -611,7 +616,7 @@ export async function GET(
       stats: {
         totalTokens: Number(stats?.totalInputTokens ?? 0) + Number(stats?.totalOutputTokens ?? 0) + Number(stats?.totalCacheTokens ?? 0),
         totalSessions: Number(stats?.totalSessions ?? 0),
-        currentRank: null,
+        currentRank: ranking,
         compositeScore: null,
       },
       tokenBreakdown,
