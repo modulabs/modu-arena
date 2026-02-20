@@ -37,6 +37,7 @@ interface SessionTokens {
 }
 
 const sessionAccumulator = new Map<string, SessionTokens>();
+const sessionModelNames = new Map<string, string>();
 const submittedSessions = new Set<string>();
 
 function sign(apiKey: string, timestamp: string, body: string): string {
@@ -121,6 +122,9 @@ export const ModuArenaPlugin: Plugin = async () => {
         } | undefined;
 
         if (msg?.role === "assistant" && msg.sessionID && msg.modelID) {
+          // Always store model name independently — fixes race condition
+          // where message.updated fires before message.part.updated creates the session entry
+          sessionModelNames.set(msg.sessionID, msg.modelID);
           const existing = sessionAccumulator.get(msg.sessionID);
           if (existing) {
             existing.modelName = msg.modelID;
@@ -156,7 +160,7 @@ export const ModuArenaPlugin: Plugin = async () => {
               cacheReadTokens: part.tokens.cache.read,
               cacheWriteTokens: part.tokens.cache.write,
               cost: part.cost ?? 0,
-              modelName: "unknown",
+              modelName: sessionModelNames.get(sid) || "unknown",
               firstSeenAt: now,
               lastSeenAt: now,
               stepCount: 1,
@@ -170,8 +174,13 @@ export const ModuArenaPlugin: Plugin = async () => {
         const tokens = sessionAccumulator.get(sid);
 
         if (tokens && !submittedSessions.has(sid) && tokens.inputTokens > 0) {
+          if (tokens.modelName === "unknown") {
+            const cached = sessionModelNames.get(sid);
+            if (cached) tokens.modelName = cached;
+          }
           submittedSessions.add(sid);
           sessionAccumulator.delete(sid);
+          sessionModelNames.delete(sid);
           await submitSession(sid, tokens, config);
         }
       }
