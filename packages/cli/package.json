@@ -1,6 +1,6 @@
 {
   "name": "@suncreation/modu-arena",
-  "version": "0.5.9",
+  "version": "0.5.11",
   "type": "module",
   "description": "Track and rank your AI coding tool usage across Claude Code, Claude Desktop, OpenCode, Gemini CLI, Codex CLI, and Crush",
   "bin": {

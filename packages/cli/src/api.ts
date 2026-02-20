@@ -146,7 +146,6 @@ export async function getRank(
 export interface AuthResponse {
   success: boolean;
   apiKey?: string;
-  apiKeyExists?: boolean;
   user?: { id: string; username: string; displayName?: string; apiKeyPrefix?: string };
   error?: string;
   message?: string;

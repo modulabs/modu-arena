@@ -185,27 +185,6 @@ export async function loginCommand(): Promise<void> {
     process.exit(1);
   }
 
-  if (result.apiKeyExists) {
-    const activeKey = result.apiKey || loadConfig()?.apiKey;
-    if (activeKey) {
-      if (result.apiKey) {
-        saveConfig({ apiKey: result.apiKey, serverUrl: existing?.serverUrl });
-      }
-      console.log('\n  ✓ Login successful!');
-      console.log(`  ✓ Using existing API key (not regenerated)`);
-      console.log(`\n  Username: ${result.user?.username}`);
-      console.log(`  API Key:  ${activeKey.slice(0, 20)}...${activeKey.slice(-4)}`);
-      console.log('\n  Your existing API key is still valid on all devices.\n');
-      console.log('  Reinstalling hooks...\n');
-      await installCommand(activeKey);
-      return;
-    }
-    console.error('\n  Error: API key exists on server but could not be retrieved.');
-    console.error('  Use: npx @suncreation/modu-arena install --api-key <your-key>');
-    console.error('  Or regenerate via dashboard.\n');
-    process.exit(1);
-  }
-
   if (!result.apiKey) {
     console.error('\n  Error: No API key returned from server.\n');
     process.exit(1);

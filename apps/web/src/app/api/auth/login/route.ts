@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, users, apiKeys } from '@/db';
-import { and, eq, or } from 'drizzle-orm';
+import { db, users } from '@/db';
+import { eq, or } from 'drizzle-orm';
 import {
   verifyPassword,
   createSessionToken,
   generateApiKey,
-  decryptApiKey,
   storeNewApiKeyForUser,
 } from '@/lib/auth';
 import { cookies } from 'next/headers';
@@ -62,38 +61,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (source === 'cli') {
-      const existingKeys = await db
-        .select()
-        .from(apiKeys)
-        .where(and(eq(apiKeys.userId, user.id), eq(apiKeys.isActive, true)));
-
-      let existingKey = '';
-      let matchedPrefix = '';
-      for (const keyRecord of existingKeys) {
-        if (keyRecord.keyEncrypted) {
-          try {
-            existingKey = decryptApiKey(keyRecord.keyEncrypted, user.id);
-            matchedPrefix = keyRecord.keyPrefix;
-            break;
-          } catch (decryptErr) {
-            console.warn(`[Login] Failed to decrypt key ${keyRecord.keyPrefix} for user ${user.id}:`, decryptErr);
-          }
-        }
-      }
-
-      if (existingKey) {
-        return NextResponse.json({
-          user: {
-            id: user.id,
-            username: user.username,
-            displayName: user.displayName,
-            apiKeyPrefix: matchedPrefix || user.apiKeyPrefix,
-          },
-          apiKey: existingKey,
-          apiKeyExists: true,
-        });
-      }
-
       const { key: apiKey, hash: apiKeyHash, prefix: apiKeyPrefix, encrypted: apiKeyEncrypted } = generateApiKey(user.id);
       await storeNewApiKeyForUser(user.id, {
         hash: apiKeyHash,
