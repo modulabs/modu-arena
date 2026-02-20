@@ -11,6 +11,8 @@
  *   npx @suncreation/modu-arena uninstall
  */
 
+declare const PKG_VERSION: string;
+
 import {
   installCommand,
   loginCommand,
@@ -69,7 +71,7 @@ async function main(): Promise<void> {
   }
 
   if (command === '--version' || command === '-v') {
-    console.log('0.1.0');
+    console.log(PKG_VERSION);
     process.exit(0);
   }
 
