@@ -48,7 +48,7 @@ function baseFields(prefix: string): EnvField[] {
     { key: 'startedAt', env: `${prefix}_SESSION_STARTED_AT`, parse: 'string', fallback: '' },
     { key: 'inputTokens', env: `${prefix}_INPUT_TOKENS`, parse: 'int', fallback: '0' },
     { key: 'outputTokens', env: `${prefix}_OUTPUT_TOKENS`, parse: 'int', fallback: '0' },
-    { key: 'modelName', env: `${prefix}_MODEL`, parse: 'string', fallback: 'unknown' },
+    { key: 'modelName', env: `${prefix}_MODEL`, parse: 'string', fallback: '' },
   ];
 }
 
@@ -210,7 +210,7 @@ readStdin().then(function (hookInput) {
         endedAt: stats.endedAt || new Date().toISOString(),
         inputTokens: stats.inputTokens,
         outputTokens: stats.outputTokens,
-        modelName: stats.modelName,
+        modelName: stats.modelName === "unknown" ? "" : stats.modelName,
         cacheCreationTokens: stats.cacheCreationTokens,
         cacheReadTokens: stats.cacheReadTokens
     });

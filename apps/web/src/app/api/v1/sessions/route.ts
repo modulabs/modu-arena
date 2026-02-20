@@ -20,6 +20,17 @@ import { del, delMany, delPattern } from '@/lib/cache';
 import { userKeys, leaderboardPattern } from '@/cache/keys';
 
 /**
+ * Normalize model name — convert invalid values to null
+ * "unknown", empty string, whitespace-only → null (stored as NULL in DB)
+ */
+function normalizeModelName(name: string | undefined | null): string | null {
+  if (!name) return null;
+  const trimmed = name.trim();
+  if (!trimmed || trimmed.toLowerCase() === 'unknown') return null;
+  return trimmed;
+}
+
+/**
  * Security Constants
  *
  * NOTE: These are SESSION-level limits, not per-message limits.
@@ -314,7 +325,7 @@ export async function POST(request: NextRequest) {
         startedAt,
         endedAt: submittedEndedAt,
         durationSeconds,
-        modelName: sessionData.modelName,
+        modelName: normalizeModelName(sessionData.modelName),
         turnCount: sessionData.turnCount,
         toolUsage: sessionData.toolUsage,
         codeMetrics: sessionData.codeMetrics,

@@ -64,7 +64,7 @@ async function submitSession(
     outputTokens: tokens.outputTokens,
     cacheCreationTokens: tokens.cacheWriteTokens,
     cacheReadTokens: tokens.cacheReadTokens,
-    modelName: tokens.modelName || "unknown",
+    modelName: tokens.modelName === "unknown" ? "" : (tokens.modelName || ""),
     turnCount: tokens.stepCount,
   });
 
@@ -114,35 +114,45 @@ export const ModuArenaPlugin: Plugin = async () => {
   return {
     event: async ({ event }) => {
       if (event.type === "message.updated") {
-        const msg = (event.properties as { info?: { role?: string; sessionID?: string; modelID?: string; providerID?: string } }).info as {
+        const props = event.properties as Record<string, unknown>;
+        const info = props.info as {
           role?: string;
           sessionID?: string;
           modelID?: string;
           providerID?: string;
         } | undefined;
 
-        if (msg?.role === "assistant" && msg.sessionID && msg.modelID) {
-          // Always store model name independently — fixes race condition
-          // where message.updated fires before message.part.updated creates the session entry
-          sessionModelNames.set(msg.sessionID, msg.modelID);
-          const existing = sessionAccumulator.get(msg.sessionID);
-          if (existing) {
-            existing.modelName = msg.modelID;
+        if (info?.sessionID && info.modelID) {
+          sessionModelNames.set(info.sessionID, info.modelID);
+          const existing = sessionAccumulator.get(info.sessionID);
+          if (existing && (!existing.modelName || existing.modelName === "unknown")) {
+            existing.modelName = info.modelID;
           }
         }
       }
 
       if (event.type === "message.part.updated") {
-        const part = event.properties.part as {
+        const props = event.properties as Record<string, unknown>;
+        const part = props.part as {
           type: string;
           sessionID?: string;
+          modelID?: string;
           tokens?: { input: number; output: number; reasoning: number; cache: { read: number; write: number } };
           cost?: number;
         };
 
+        if (part.sessionID && part.modelID) {
+          sessionModelNames.set(part.sessionID, part.modelID);
+          const existing = sessionAccumulator.get(part.sessionID);
+          if (existing && (!existing.modelName || existing.modelName === "unknown")) {
+            existing.modelName = part.modelID;
+          }
+        }
+
         if (part.type === "step-finish" && part.sessionID && part.tokens) {
           const sid = part.sessionID;
           const now = Date.now();
+          const cachedModel = sessionModelNames.get(sid) || "";
           const existing = sessionAccumulator.get(sid);
 
           if (existing) {
@@ -153,6 +163,9 @@ export const ModuArenaPlugin: Plugin = async () => {
             existing.cost += part.cost ?? 0;
             existing.lastSeenAt = now;
             existing.stepCount += 1;
+            if (cachedModel && (!existing.modelName || existing.modelName === "unknown")) {
+              existing.modelName = cachedModel;
+            }
           } else {
             sessionAccumulator.set(sid, {
               inputTokens: part.tokens.input,
@@ -160,7 +173,7 @@ export const ModuArenaPlugin: Plugin = async () => {
               cacheReadTokens: part.tokens.cache.read,
               cacheWriteTokens: part.tokens.cache.write,
               cost: part.cost ?? 0,
-              modelName: sessionModelNames.get(sid) || "unknown",
+              modelName: cachedModel,
               firstSeenAt: now,
               lastSeenAt: now,
               stepCount: 1,
@@ -174,11 +187,22 @@ export const ModuArenaPlugin: Plugin = async () => {
         const tokens = sessionAccumulator.get(sid);
 
         if (tokens && !submittedSessions.has(sid) && tokens.inputTokens > 0) {
-          if (tokens.modelName === "unknown") {
+          submittedSessions.add(sid);
+
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          if (!tokens.modelName || tokens.modelName === "unknown") {
             const cached = sessionModelNames.get(sid);
             if (cached) tokens.modelName = cached;
           }
-          submittedSessions.add(sid);
+
+          if (!tokens.modelName || tokens.modelName === "unknown") {
+            process.stderr.write(
+              `[modu-arena] model unavailable for ${sid}\n`,
+            );
+            tokens.modelName = "";
+          }
+
           sessionAccumulator.delete(sid);
           sessionModelNames.delete(sid);
           await submitSession(sid, tokens, config);

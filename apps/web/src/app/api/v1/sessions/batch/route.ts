@@ -19,6 +19,17 @@ import {
 import { checkRateLimit } from '@/lib/rate-limiter';
 
 /**
+ * Normalize model name — convert invalid values to null
+ * "unknown", empty string, whitespace-only → null (stored as NULL in DB)
+ */
+function normalizeModelName(name: string | undefined | null): string | null {
+  if (!name) return null;
+  const trimmed = name.trim();
+  if (!trimmed || trimmed.toLowerCase() === 'unknown') return null;
+  return trimmed;
+}
+
+/**
  * Batch API Constants
  */
 const MAX_BATCH_SIZE = 100;
@@ -226,7 +237,7 @@ export async function POST(request: NextRequest) {
       startedAt: s.data.startedAt ? new Date(s.data.startedAt) : new Date(),
       endedAt: new Date(s.data.endedAt),
       durationSeconds: s.data.durationSeconds ?? 0,
-      modelName: s.data.modelName,
+      modelName: normalizeModelName(s.data.modelName),
       turnCount: s.data.turnCount,
       toolUsage: s.data.toolUsage,
       codeMetrics: s.data.codeMetrics,
