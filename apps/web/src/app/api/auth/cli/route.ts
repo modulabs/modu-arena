@@ -90,7 +90,9 @@ async function processCliAuth(
           apiKeyRaw = decryptApiKey(keyRecord.keyEncrypted, user.id);
           apiKeyPrefix = keyRecord.keyPrefix;
           break;
-        } catch {}
+        } catch (decryptErr) {
+          console.warn(`[CLI Auth] Failed to decrypt key ${keyRecord.keyPrefix} for user ${user.id}:`, decryptErr);
+        }
       }
     }
 
@@ -105,7 +107,9 @@ async function processCliAuth(
         encrypted,
       });
 
-      await logApiKeyGenerated(user.id, prefix, request);
+      logApiKeyGenerated(user.id, prefix, request).catch((err) =>
+        console.warn('[CLI Auth] Failed to log key generation audit:', err)
+      );
     }
 
     const cliCallbackUrl = new URL(redirectUri);

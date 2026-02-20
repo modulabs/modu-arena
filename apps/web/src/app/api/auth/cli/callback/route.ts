@@ -62,7 +62,9 @@ export async function GET(request: NextRequest) {
           apiKeyRaw = decryptApiKey(keyRecord.keyEncrypted, user.id);
           apiKeyPrefix = keyRecord.keyPrefix;
           break;
-        } catch {}
+        } catch (decryptErr) {
+          console.warn(`[CLI Auth Callback] Failed to decrypt key ${keyRecord.keyPrefix} for user ${user.id}:`, decryptErr);
+        }
       }
     }
 
@@ -77,7 +79,9 @@ export async function GET(request: NextRequest) {
         encrypted,
       });
 
-      await logApiKeyGenerated(user.id, prefix, request);
+      logApiKeyGenerated(user.id, prefix, request).catch((err) =>
+        console.warn('[CLI Auth Callback] Failed to log key generation audit:', err)
+      );
     }
 
     const cliCallbackUrl = new URL(stateInfo.redirectUri);

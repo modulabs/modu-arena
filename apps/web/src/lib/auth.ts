@@ -170,7 +170,39 @@ export async function validateApiKey(apiKey: string): Promise<User | null> {
     .limit(1);
 
   if (!result[0]) {
-    return null;
+    // Fallback: check legacy users.apiKeyHash for keys not yet migrated to api_keys table.
+    // This covers users who registered before the multi-key system was deployed,
+    // and whose hooks still use the old single key stored in users.apiKeyHash.
+    const legacyResult = await db
+      .select()
+      .from(users)
+      .where(eq(users.apiKeyHash, hash))
+      .limit(1);
+
+    if (!legacyResult[0]) {
+      return null;
+    }
+
+    const legacyUser = legacyResult[0];
+
+    // Auto-migrate: insert legacy key into api_keys table so future lookups hit the fast path.
+    // keyEncrypted is null because we cannot recover the encrypted form from just a hash.
+    try {
+      await db.insert(apiKeys).values({
+        userId: legacyUser.id,
+        keyHash: hash,
+        keyPrefix: legacyUser.apiKeyPrefix ?? `${API_KEY_PREFIX}legacy`,
+        keyEncrypted: null,
+        isActive: true,
+      });
+      console.log(`[Auth] Auto-migrated legacy key for user ${legacyUser.username} (${legacyUser.id})`);
+    } catch (migrationErr) {
+      // Migration failure is non-fatal — the key still validated via users table.
+      // Likely cause: duplicate keyHash if migration was already attempted.
+      console.warn(`[Auth] Legacy key migration failed for user ${legacyUser.id}:`, migrationErr);
+    }
+
+    return legacyUser;
   }
 
   db
@@ -189,40 +221,42 @@ export async function storeNewApiKeyForUser(
   userId: string,
   keyData: { hash: string; prefix: string; encrypted: string; label?: string | null }
 ): Promise<void> {
-  const [{ activeCount }] = await db
-    .select({ activeCount: count() })
-    .from(apiKeys)
-    .where(and(eq(apiKeys.userId, userId), eq(apiKeys.isActive, true)));
-
-  if (activeCount >= MAX_KEYS_PER_USER) {
-    const oldest = await db
-      .select({ id: apiKeys.id })
+  await db.transaction(async (tx) => {
+    const [{ activeCount }] = await tx
+      .select({ activeCount: count() })
       .from(apiKeys)
-      .where(and(eq(apiKeys.userId, userId), eq(apiKeys.isActive, true)))
-      .orderBy(asc(apiKeys.createdAt))
-      .limit(1);
+      .where(and(eq(apiKeys.userId, userId), eq(apiKeys.isActive, true)));
 
-    if (oldest[0]) {
-      await db
-        .update(apiKeys)
-        .set({ isActive: false })
-        .where(eq(apiKeys.id, oldest[0].id));
+    if (activeCount >= MAX_KEYS_PER_USER) {
+      const oldest = await tx
+        .select({ id: apiKeys.id })
+        .from(apiKeys)
+        .where(and(eq(apiKeys.userId, userId), eq(apiKeys.isActive, true)))
+        .orderBy(asc(apiKeys.createdAt))
+        .limit(1);
+
+      if (oldest[0]) {
+        await tx
+          .update(apiKeys)
+          .set({ isActive: false })
+          .where(eq(apiKeys.id, oldest[0].id));
+      }
     }
-  }
 
-  await db.insert(apiKeys).values({
-    userId,
-    keyHash: keyData.hash,
-    keyPrefix: keyData.prefix,
-    keyEncrypted: keyData.encrypted,
-    label: keyData.label ?? null,
-    isActive: true,
+    await tx.insert(apiKeys).values({
+      userId,
+      keyHash: keyData.hash,
+      keyPrefix: keyData.prefix,
+      keyEncrypted: keyData.encrypted,
+      label: keyData.label ?? null,
+      isActive: true,
+    });
+
+    await tx
+      .update(users)
+      .set({ apiKeyPrefix: keyData.prefix, updatedAt: new Date() })
+      .where(eq(users.id, userId));
   });
-
-  await db
-    .update(users)
-    .set({ apiKeyPrefix: keyData.prefix, updatedAt: new Date() })
-    .where(eq(users.id, userId));
 }
 
 /**

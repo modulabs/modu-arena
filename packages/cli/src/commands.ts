@@ -299,7 +299,7 @@ export async function installCommand(apiKey?: string): Promise<void> {
 
   const daemonResult = installDaemon();
   if (daemonResult.success) {
-    console.log(`✓ Sync daemon installed. ${daemonResult.message}`);
+    console.log(`✓ ${daemonResult.message}`);
   } else {
     console.log(`⚠ Daemon install skipped: ${daemonResult.message}`);
   }

@@ -33,7 +33,14 @@ function getCliPath(): string {
 
 export function installDaemon(): { success: boolean; message: string } {
   if (IS_WIN) {
-    return installWindowsDaemon();
+    // Clean up legacy scheduled task that causes visible console window flashing.
+    if (isDaemonInstalled()) {
+      const cleanup = uninstallWindowsDaemon();
+      return { success: true, message: cleanup.success
+        ? 'Removed legacy sync daemon (caused window flashing). Use "modu-arena daemon-sync" to sync manually.'
+        : `Legacy daemon found but removal failed: ${cleanup.message}` };
+    }
+    return { success: false, message: 'Daemon auto-sync is not supported on Windows. Use "modu-arena daemon-sync" to sync manually.' };
   }
   return installMacosDaemon();
 }
@@ -113,20 +120,6 @@ function uninstallMacosDaemon(): { success: boolean; message: string } {
     return { success: true, message: 'Daemon uninstalled.' };
   } catch (e) {
     return { success: false, message: `Failed to uninstall daemon: ${e}` };
-  }
-}
-
-function installWindowsDaemon(): { success: boolean; message: string } {
-  const nodePath = getNodePath();
-  const cliPath = getCliPath();
-  const intervalMinutes = Math.floor(DAEMON_SYNC_INTERVAL_SEC / 60);
-  
-  try {
-    const cmd = `schtasks /Create /TN "${DAEMON_NAME}" /TR "\\"${nodePath}\\" \\"${cliPath}\\" daemon-sync" /SC MINUTE /MO ${intervalMinutes} /F`;
-    execSync(cmd, { encoding: 'utf-8' });
-    return { success: true, message: `Daemon installed. Syncs every ${intervalMinutes} minutes.` };
-  } catch (e) {
-    return { success: false, message: `Failed to install daemon: ${e}` };
   }
 }
 

@@ -58,6 +58,7 @@ const SESSION_TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000;
 /**
  * Supported tool types
  */
+const API_KEY_PREFIX_LEN = 'modu_arena_'.length;
 const VALID_TOOL_TYPES = ['claude-code', 'claude-desktop', 'opencode', 'gemini', 'codex', 'crush'];
 
 /**
@@ -166,7 +167,8 @@ export async function POST(request: NextRequest) {
     const user = await validateApiKey(apiKey);
 
     if (!user) {
-      const prefix = apiKey.substring(0, 16);
+      const underscoreIdx = apiKey.indexOf('_', API_KEY_PREFIX_LEN);
+      const prefix = underscoreIdx > 0 ? apiKey.substring(0, underscoreIdx) : apiKey.substring(0, 24);
       await logInvalidApiKey(prefix, '/api/v1/sessions', request);
       return Errors.unauthorized('Invalid API key');
     }
@@ -252,7 +254,7 @@ export async function POST(request: NextRequest) {
         minimumInterval: MIN_SESSION_INTERVAL_MS,
       });
       return Errors.validationError(
-        'Session endedAt is too close to an existing session. Sessions must be at least 1 minute apart.'
+        'Session endedAt is too close to an existing session. Sessions must be at least 1 second apart.'
       );
     }
 
