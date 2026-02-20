@@ -50,8 +50,8 @@ export const users = pgTable(
     githubAvatarUrl: text('github_avatar_url'),
     displayName: varchar('display_name', { length: 255 }),
     email: varchar('email', { length: 255 }),
-    apiKeyHash: varchar('api_key_hash', { length: 128 }).notNull(),
-    apiKeyPrefix: varchar('api_key_prefix', { length: 32 }).notNull(),
+    apiKeyHash: varchar('api_key_hash', { length: 128 }),
+    apiKeyPrefix: varchar('api_key_prefix', { length: 32 }),
     apiKeyEncrypted: text('api_key_encrypted'),
     userSalt: varchar('user_salt', { length: 64 })
       .notNull()
@@ -63,6 +63,28 @@ export const users = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
   },
   (table) => [index('users_api_key_hash_idx').on(table.apiKeyHash)]
+);
+
+export const apiKeys = pgTable(
+  'api_keys',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    keyHash: varchar('key_hash', { length: 128 }).notNull(),
+    keyPrefix: varchar('key_prefix', { length: 32 }).notNull(),
+    keyEncrypted: text('key_encrypted'),
+    label: varchar('label', { length: 100 }),
+    isActive: boolean('is_active').default(true).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('api_keys_user_id_idx').on(table.userId),
+    index('api_keys_key_hash_idx').on(table.keyHash),
+    index('api_keys_active_idx').on(table.userId, table.isActive),
+  ]
 );
 
 // ============================================================================
@@ -310,6 +332,9 @@ export type NewToolType = typeof toolTypes.$inferInsert;
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type NewApiKey = typeof apiKeys.$inferInsert;
 
 export type Session = typeof sessions.$inferSelect;
 export type NewSession = typeof sessions.$inferInsert;

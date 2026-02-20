@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, users } from '@/db';
-import { eq, or } from 'drizzle-orm';
-import { verifyPassword, createSessionToken, generateApiKey, decryptApiKey } from '@/lib/auth';
+import { db, users, apiKeys } from '@/db';
+import { and, eq, or } from 'drizzle-orm';
+import {
+  verifyPassword,
+  createSessionToken,
+  generateApiKey,
+  decryptApiKey,
+  storeNewApiKeyForUser,
+} from '@/lib/auth';
 import { cookies } from 'next/headers';
 
 export async function POST(request: NextRequest) {
@@ -56,37 +62,40 @@ export async function POST(request: NextRequest) {
     });
 
     if (source === 'cli') {
-      if (user.apiKeyHash && user.apiKeyPrefix) {
-        // Key already exists — decrypt and return it (avoids invalidating other devices)
-        let existingKey = '';
-        if (user.apiKeyEncrypted) {
-          try {
-            existingKey = decryptApiKey(user.apiKeyEncrypted, user.id);
-          } catch {
-            // Encryption key changed or corrupt — leave empty, user can regenerate
-          }
-        }
+      const existingKeys = await db
+        .select()
+        .from(apiKeys)
+        .where(and(eq(apiKeys.userId, user.id), eq(apiKeys.isActive, true)));
 
+      let existingKey = '';
+      for (const keyRecord of existingKeys) {
+        if (keyRecord.keyEncrypted) {
+          try {
+            existingKey = decryptApiKey(keyRecord.keyEncrypted, user.id);
+            break;
+          } catch {}
+        }
+      }
+
+      if (existingKey) {
         return NextResponse.json({
           user: {
             id: user.id,
             username: user.username,
             displayName: user.displayName,
-            apiKeyPrefix: user.apiKeyPrefix,
+            apiKeyPrefix: existingKeys[0]?.keyPrefix ?? user.apiKeyPrefix,
           },
-          apiKey: existingKey || undefined,
+          apiKey: existingKey,
           apiKeyExists: true,
-          message: existingKey
-            ? 'Existing API key retrieved.'
-            : 'API key exists but cannot be retrieved. Regenerate via dashboard if needed.',
         });
       }
 
       const { key: apiKey, hash: apiKeyHash, prefix: apiKeyPrefix, encrypted: apiKeyEncrypted } = generateApiKey(user.id);
-      await db
-        .update(users)
-        .set({ apiKeyHash, apiKeyPrefix, apiKeyEncrypted, updatedAt: new Date() })
-        .where(eq(users.id, user.id));
+      await storeNewApiKeyForUser(user.id, {
+        hash: apiKeyHash,
+        prefix: apiKeyPrefix,
+        encrypted: apiKeyEncrypted,
+      });
 
       return NextResponse.json({
         user: {

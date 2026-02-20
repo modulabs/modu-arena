@@ -1,6 +1,5 @@
 import { safeAuth } from '@/lib/safe-auth';
-import { createHash, randomBytes } from 'node:crypto';
-import { db, users } from '@/db';
+import { db, users, apiKeys } from '@/db';
 import { eq } from 'drizzle-orm';
 import { successResponse, Errors } from '@/lib/api-response';
 import { logApiKeyRevoked } from '@/lib/audit';
@@ -41,20 +40,19 @@ export async function POST(request: Request) {
     }
 
     // Store old prefix for audit log
-    const oldPrefix = user.apiKeyPrefix;
+    const oldPrefix = user.apiKeyPrefix ?? 'none';
 
-    // Invalidate the key by setting hash to a random value
-    // This ensures the old key can never work again
-    const invalidHash = createHash('sha256').update(randomBytes(32)).digest('hex');
     const revokedPrefix = `revoked_${Date.now()}`;
 
-    // Update user with invalidated API key (clear encrypted too)
+    await db
+      .update(apiKeys)
+      .set({ isActive: false })
+      .where(eq(apiKeys.userId, user.id));
+
     await db
       .update(users)
       .set({
-        apiKeyHash: invalidHash,
         apiKeyPrefix: revokedPrefix,
-        apiKeyEncrypted: null,
         updatedAt: new Date(),
       })
       .where(eq(users.id, user.id));

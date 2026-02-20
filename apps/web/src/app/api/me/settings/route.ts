@@ -4,7 +4,7 @@ import { db, users } from '@/db';
 import { eq } from 'drizzle-orm';
 import { successResponse, Errors } from '@/lib/api-response';
 import { logPrivacyModeChanged, logUserSettingsUpdated, logApiKeyRegenerated } from '@/lib/audit';
-import { generateApiKey } from '@/lib/auth';
+import { generateApiKey, storeNewApiKeyForUser } from '@/lib/auth';
 
 /**
  * Settings update schema
@@ -147,15 +147,11 @@ export async function POST(request: Request) {
     const oldPrefix = user.apiKeyPrefix ?? 'none';
     const { key, hash, prefix, encrypted } = generateApiKey(user.id);
 
-    await db
-      .update(users)
-      .set({
-        apiKeyHash: hash,
-        apiKeyPrefix: prefix,
-        apiKeyEncrypted: encrypted,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, user.id));
+    await storeNewApiKeyForUser(user.id, {
+      hash,
+      prefix,
+      encrypted,
+    });
 
     await logApiKeyRegenerated(user.id, oldPrefix, prefix, request);
 

@@ -471,6 +471,58 @@ function registerHookInSettings(configDir: string, hookPath: string): void {
   writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
 }
 
+/**
+ * Register hook in ~/.gemini/settings.json so Gemini CLI actually triggers it.
+ * Gemini CLI uses 'SessionEnd' event (not 'Stop' like Claude Code).
+ * Ref: https://geminicli.com/docs/hooks/reference/
+ */
+function registerGeminiHookInSettings(configDir: string, hookPath: string): void {
+  const settingsPath = join(configDir, 'settings.json');
+  let settings: Record<string, unknown> = {};
+
+  if (!existsSync(configDir)) {
+    mkdirSync(configDir, { recursive: true });
+  }
+
+  if (existsSync(settingsPath)) {
+    try {
+      settings = JSON.parse(readFileSync(settingsPath, 'utf-8'));
+    } catch (err) {
+      throw new Error(`Invalid JSON in ${settingsPath}: ${String(err)}`);
+    }
+  }
+
+  type HookEntry = { matcher?: string; hooks: Array<{ type: string; command: string }> };
+  const hooks = (
+    settings.hooks && typeof settings.hooks === 'object' && !Array.isArray(settings.hooks)
+      ? settings.hooks
+      : {}
+  ) as Record<string, HookEntry[]>;
+  const sessionEndHooks = (hooks.SessionEnd ?? []) as HookEntry[];
+  const expectedCommand = quoteHookCommand(hookPath);
+  const normalizedExpectedCommand = normalizeCommandPath(expectedCommand);
+
+  const alreadyRegistered = sessionEndHooks.some(
+    (entry) =>
+      entry.hooks?.some(
+        (h) =>
+          h.type === 'command' &&
+          typeof h.command === 'string' &&
+          normalizeCommandPath(h.command) === normalizedExpectedCommand,
+      ),
+  );
+
+  if (!alreadyRegistered) {
+    sessionEndHooks.push({
+      hooks: [{ type: 'command', command: expectedCommand }],
+    });
+  }
+
+  hooks.SessionEnd = sessionEndHooks;
+  settings.hooks = hooks;
+  writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n', 'utf-8');
+}
+
 // ─── Adapters ──────────────────────────────────────────────────────────────
 
 class ClaudeCodeAdapter implements ToolAdapter {
@@ -540,11 +592,19 @@ class GeminiAdapter implements ToolAdapter {
         writeFileSync(entryPath, shellWrapper(), { mode: 0o755 });
       }
 
-      return {
+      const result: InstallResult = {
         success: true,
         message: `${this.displayName} hook installed at ${entryPath}`,
         hookPath: entryPath,
       };
+
+      try {
+        registerGeminiHookInSettings(this.configDir, entryPath);
+      } catch (err) {
+        result.warning = `Could not register in settings.json: ${String(err)}`;
+      }
+
+      return result;
     } catch (err) {
       return { success: false, message: `Failed to install ${this.displayName} hook: ${err}` };
     }

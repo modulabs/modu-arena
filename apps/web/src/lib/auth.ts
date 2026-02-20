@@ -1,7 +1,7 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual as cryptoTimingSafeEqual, scryptSync, createCipheriv, createDecipheriv } from "node:crypto";
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
-import { db, users, type User } from "@/db";
-import { eq } from "drizzle-orm";
+import { db, users, apiKeys, type User } from "@/db";
+import { and, asc, count, eq } from "drizzle-orm";
 
 const JWT_SECRET_KEY = new TextEncoder().encode(process.env.JWT_SECRET ?? "dev-jwt-secret-change-in-production");
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -50,6 +50,7 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
 const API_KEY_PREFIX = "modu_arena_";
 const _PREFIX_LENGTH = 8;
 const _SECRET_LENGTH = 32;
+export const MAX_KEYS_PER_USER = 5;
 
 const AES_ALGORITHM = "aes-256-gcm";
 const AES_IV_LENGTH = 12;
@@ -162,12 +163,66 @@ export async function validateApiKey(apiKey: string): Promise<User | null> {
   const hash = hashApiKey(apiKey);
 
   const result = await db
-    .select()
-    .from(users)
-    .where(eq(users.apiKeyHash, hash))
+    .select({ user: users, apiKeyRecord: apiKeys })
+    .from(apiKeys)
+    .innerJoin(users, eq(apiKeys.userId, users.id))
+    .where(and(eq(apiKeys.keyHash, hash), eq(apiKeys.isActive, true)))
     .limit(1);
 
-  return result[0] ?? null;
+  if (!result[0]) {
+    return null;
+  }
+
+  db
+    .update(apiKeys)
+    .set({ lastUsedAt: new Date() })
+    .where(eq(apiKeys.keyHash, hash))
+    .catch(() => {});
+
+  return {
+    ...result[0].user,
+    apiKeyPrefix: result[0].apiKeyRecord.keyPrefix,
+  };
+}
+
+export async function storeNewApiKeyForUser(
+  userId: string,
+  keyData: { hash: string; prefix: string; encrypted: string; label?: string | null }
+): Promise<void> {
+  const [{ activeCount }] = await db
+    .select({ activeCount: count() })
+    .from(apiKeys)
+    .where(and(eq(apiKeys.userId, userId), eq(apiKeys.isActive, true)));
+
+  if (activeCount >= MAX_KEYS_PER_USER) {
+    const oldest = await db
+      .select({ id: apiKeys.id })
+      .from(apiKeys)
+      .where(and(eq(apiKeys.userId, userId), eq(apiKeys.isActive, true)))
+      .orderBy(asc(apiKeys.createdAt))
+      .limit(1);
+
+    if (oldest[0]) {
+      await db
+        .update(apiKeys)
+        .set({ isActive: false })
+        .where(eq(apiKeys.id, oldest[0].id));
+    }
+  }
+
+  await db.insert(apiKeys).values({
+    userId,
+    keyHash: keyData.hash,
+    keyPrefix: keyData.prefix,
+    keyEncrypted: keyData.encrypted,
+    label: keyData.label ?? null,
+    isActive: true,
+  });
+
+  await db
+    .update(users)
+    .set({ apiKeyPrefix: keyData.prefix, updatedAt: new Date() })
+    .where(eq(users.id, userId));
 }
 
 /**

@@ -2,7 +2,7 @@ import { safeAuth } from '@/lib/safe-auth';
 import { db, users } from "@/db";
 import { eq } from "drizzle-orm";
 import { successResponse, Errors } from "@/lib/api-response";
-import { generateApiKey } from "@/lib/auth";
+import { generateApiKey, storeNewApiKeyForUser } from "@/lib/auth";
 import { logApiKeyRegenerated } from "@/lib/audit";
 
 /**
@@ -45,20 +45,16 @@ export async function POST(request: Request) {
     }
 
     // Store old prefix for audit log
-    const oldPrefix = user.apiKeyPrefix;
+    const oldPrefix = user.apiKeyPrefix ?? 'none';
 
     // Generate new API key
     const { key, hash, prefix, encrypted } = generateApiKey(user.id);
 
-    await db
-      .update(users)
-      .set({
-        apiKeyHash: hash,
-        apiKeyPrefix: prefix,
-        apiKeyEncrypted: encrypted,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, user.id));
+    await storeNewApiKeyForUser(user.id, {
+      hash,
+      prefix,
+      encrypted,
+    });
 
     // Log the key regeneration event
     await logApiKeyRegenerated(user.id, oldPrefix, prefix, request);

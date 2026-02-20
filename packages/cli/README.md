@@ -94,14 +94,14 @@ npx @suncreation/modu-arena uninstall
 
 ## Supported Tools
 
-| Tool | Detection | Hook Location |
-|------|-----------|---------------|
-| Claude Code | `~/.claude/` | `~/.claude/hooks/session-end.sh` |
-| Claude Desktop | `~/Library/Application Support/Claude/` | Daemon-based sync |
-| OpenCode | `~/.opencode/` | `~/.opencode/hooks/session-end.sh` |
-| Gemini CLI | `~/.gemini/` | `~/.gemini/hooks/session-end.sh` |
-| Codex CLI | `~/.codex/` | `~/.codex/hooks/session-end.sh` |
-| Crush | `~/.crush/` | `~/.crush/hooks/session-end.sh` |
+| Tool | Detection | Hook Location | Registration |
+|------|-----------|---------------|--------------|
+| Claude Code | `~/.claude/` | `~/.claude/hooks/session-end.sh` | `~/.claude/settings.json` (`hooks.Stop`) |
+| Claude Desktop | `~/Library/Application Support/Claude/` | Daemon-based sync | N/A |
+| OpenCode | `~/.opencode/` | `~/.opencode/hooks/session-end.sh` | Hook file only |
+| Gemini CLI | `~/.gemini/` | `~/.gemini/hooks/session-end.sh` | `~/.gemini/settings.json` (`hooks.SessionEnd`) |
+| Codex CLI | `~/.codex/` | `~/.codex/hooks/session-end.sh` | Hook file only |
+| Crush | `~/.crush/` | `~/.crush/hooks/session-end.sh` | Hook file only |
 
 ## Configuration
 

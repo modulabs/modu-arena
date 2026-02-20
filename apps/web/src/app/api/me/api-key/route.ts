@@ -1,6 +1,6 @@
 import { safeAuth } from '@/lib/safe-auth';
-import { db, users } from '@/db';
-import { eq } from 'drizzle-orm';
+import { db, apiKeys } from '@/db';
+import { and, desc, eq } from 'drizzle-orm';
 import { successResponse, Errors, rateLimitResponse } from '@/lib/api-response';
 import { decryptApiKey } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limiter';
@@ -18,36 +18,29 @@ export async function GET() {
       return rateLimitResponse(rateLimitResult.reset);
     }
 
-    const userResult = await db
+    const keyRecords = await db
       .select({
-        apiKeyEncrypted: users.apiKeyEncrypted,
-        apiKeyPrefix: users.apiKeyPrefix,
-        apiKeyHash: users.apiKeyHash,
+        keyPrefix: apiKeys.keyPrefix,
+        keyEncrypted: apiKeys.keyEncrypted,
       })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
+      .from(apiKeys)
+      .where(and(eq(apiKeys.userId, userId), eq(apiKeys.isActive, true)))
+      .orderBy(desc(apiKeys.createdAt));
 
-    const user = userResult[0];
-
-    if (!user) {
-      return Errors.notFound('User');
-    }
-
-    if (!user.apiKeyHash || !user.apiKeyPrefix) {
+    if (keyRecords.length === 0) {
       return successResponse({ apiKey: null, hasKey: false });
     }
 
-    if (!user.apiKeyEncrypted) {
-      return successResponse({ apiKey: null, hasKey: true, prefix: user.apiKeyPrefix });
+    for (const keyRecord of keyRecords) {
+      if (keyRecord.keyEncrypted) {
+        try {
+          const apiKey = decryptApiKey(keyRecord.keyEncrypted, userId);
+          return successResponse({ apiKey, hasKey: true, prefix: keyRecord.keyPrefix });
+        } catch {}
+      }
     }
 
-    try {
-      const apiKey = decryptApiKey(user.apiKeyEncrypted, userId);
-      return successResponse({ apiKey, hasKey: true, prefix: user.apiKeyPrefix });
-    } catch {
-      return successResponse({ apiKey: null, hasKey: true, prefix: user.apiKeyPrefix });
-    }
+    return successResponse({ apiKey: null, hasKey: true, prefix: keyRecords[0].keyPrefix });
   } catch (error) {
     console.error('[API] Get API key error:', error);
     return Errors.internalError();

@@ -795,12 +795,14 @@ The CLI includes a **launchd daemon** (macOS) that runs every **2 minutes**, col
 
 ### 9.2 Data Collection Strategy
 
-| Tool | Session-End Hook | Periodic Daemon (2 min) | Data Source |
-|------|-----------------|------------------------|-------------|
-| Claude Code | `session-end.sh` → `_modu-hook.js` | No local data store | Hook only |
-| Claude Desktop | N/A (no hook support) | JSONL log parsing | `~/Library/Application Support/Claude/*.jsonl` |
-| OpenCode | `session-end.sh` → `_modu-hook.js` | SQLite query | `~/.local/share/opencode/opencode.db` |
-| Gemini/Codex/Crush | `session-end.sh` → `_modu-hook.js` | No local data store | Hook only |
+| Tool | Session-End Hook | Periodic Daemon (2 min) | Data Source | Registration |
+|------|-----------------|------------------------|-------------|--------------|
+| Claude Code | `session-end.sh` → `_modu-hook.js` | No local data store | Hook only | `settings.json` (`hooks.Stop`) |
+| Claude Desktop | N/A (no hook support) | JSONL log parsing | `~/Library/Application Support/Claude/*.jsonl` | N/A |
+| OpenCode | `session-end.sh` → `_modu-hook.js` | SQLite query | `~/.local/share/opencode/opencode.db` | Hook file only |
+| Gemini CLI | `session-end.sh` → `_modu-hook.js` | No local data store | Hook only | `settings.json` (`hooks.SessionEnd`) |
+| Codex CLI | `session-end.sh` → `_modu-hook.js` | No local data store | Hook only | Hook file only |
+| Crush | `session-end.sh` → `_modu-hook.js` | No local data store | Hook only | Hook file only |
 
 ### 9.3 Daemon State
 

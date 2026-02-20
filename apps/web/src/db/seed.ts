@@ -14,6 +14,7 @@ import { scryptSync, randomBytes, randomUUID, createCipheriv } from 'node:crypto
 import {
   toolTypes,
   users,
+  apiKeys,
   sessions,
   tokenUsage,
   dailyUserStats,
@@ -41,7 +42,7 @@ const db = drizzle(client, {});
 // NEW: Modu platform API key prefix
 const API_KEY_PREFIX = 'modu_arena_';
 
-function generateApiKey(): { key: string; hash: string; prefix: string; encrypted: string | null } {
+function generateApiKey(userId: string): { key: string; hash: string; prefix: string; encrypted: string | null } {
    const prefix = randomBytes(4).toString('hex'); // 8 chars
    const secret = randomBytes(16).toString('hex'); // 32 chars
    const key = `${API_KEY_PREFIX}${prefix}_${secret}`;
@@ -49,12 +50,13 @@ function generateApiKey(): { key: string; hash: string; prefix: string; encrypte
    let encrypted: string | null = null;
    const encKey = process.env.API_KEY_ENCRYPTION_KEY;
    if (encKey && encKey.length === 64) {
-     try {
-       const iv = randomBytes(12);
-       const cipher = createCipheriv('aes-256-gcm', Buffer.from(encKey, 'hex'), iv);
-       const enc = Buffer.concat([cipher.update(key, 'utf8'), cipher.final()]);
-       const authTag = cipher.getAuthTag();
-       encrypted = `v1:${iv.toString('hex')}:${authTag.toString('hex')}:${enc.toString('hex')}`;
+      try {
+        const iv = randomBytes(12);
+        const cipher = createCipheriv('aes-256-gcm', Buffer.from(encKey, 'hex'), iv);
+        cipher.setAAD(Buffer.from(userId, 'utf8'));
+        const enc = Buffer.concat([cipher.update(key, 'utf8'), cipher.final()]);
+        const authTag = cipher.getAuthTag();
+        encrypted = `v1:${iv.toString('hex')}:${authTag.toString('hex')}:${enc.toString('hex')}`;
      } catch { /* env var invalid or missing */ }
    }
    return { key, hash, prefix: `${API_KEY_PREFIX}${prefix}`, encrypted };
@@ -169,6 +171,7 @@ async function seed() {
   await db.delete(projectEvaluations);
   await db.delete(tokenUsage);
   await db.delete(sessions);
+  await db.delete(apiKeys);
   await db.delete(users);
   await db.delete(toolTypes);
   console.log('   Done.\n');
@@ -181,26 +184,58 @@ async function seed() {
   // ---- Users ----
   console.log('👤 Creating users...');
   const userApiKeys: Array<{ displayName: string; key: string }> = [];
+  const seedApiKeysByUsername: Record<string, { hash: string; prefix: string; encrypted: string | null }> = {};
 
   const dummyPasswordHash = scryptSync('password123', 'modu-arena-salt', 64).toString('hex');
 
   const userValues = DUMMY_USERS.map((u, i) => {
-    const apiKey = generateApiKey();
+    const seedUserId = randomUUID();
+    const apiKey = generateApiKey(seedUserId);
     userApiKeys.push({ displayName: u.displayName, key: apiKey.key });
+    const username = u.email.split('@')[0];
+    seedApiKeysByUsername[username] = {
+      hash: apiKey.hash,
+      prefix: apiKey.prefix,
+      encrypted: apiKey.encrypted,
+    };
     return {
-      username: u.email.split('@')[0],
+      id: seedUserId,
+      username,
       passwordHash: dummyPasswordHash,
       displayName: u.displayName,
       email: u.email,
-      apiKeyHash: apiKey.hash,
       apiKeyPrefix: apiKey.prefix,
-      apiKeyEncrypted: apiKey.encrypted,
       userSalt: randomUUID(),
       privacyMode: false,
       successfulProjectsCount: 0,
     };
   });
   const createdUsers = await db.insert(users).values(userValues).returning();
+
+  await db.insert(apiKeys).values(
+    createdUsers
+      .map((user) => {
+        const keyData = seedApiKeysByUsername[user.username];
+        if (!keyData) {
+          return null;
+        }
+
+        return {
+          userId: user.id,
+          keyHash: keyData.hash,
+          keyPrefix: keyData.prefix,
+          keyEncrypted: keyData.encrypted,
+          isActive: true,
+        };
+      })
+      .filter((value): value is {
+        userId: string;
+        keyHash: string;
+        keyPrefix: string;
+        keyEncrypted: string | null;
+        isActive: true;
+      } => value !== null)
+  );
   console.log(`   Created ${createdUsers.length} users.`);
   console.log('\n   📋 API Keys (shown once):');
   for (const uk of userApiKeys) {

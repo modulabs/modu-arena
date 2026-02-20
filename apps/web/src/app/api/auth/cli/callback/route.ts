@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { safeAuth } from '@/lib/safe-auth';
-import { db, users } from '@/db';
-import { eq } from 'drizzle-orm';
-import { generateApiKey, decryptApiKey } from '@/lib/auth';
+import { db, users, apiKeys } from '@/db';
+import { and, eq } from 'drizzle-orm';
+import { generateApiKey, decryptApiKey, storeNewApiKeyForUser } from '@/lib/auth';
 import { logApiKeyGenerated } from '@/lib/audit';
 import { CLI_AUTH_COOKIE } from '../route';
 
@@ -48,23 +48,34 @@ export async function GET(request: NextRequest) {
     }
 
     let apiKeyRaw: string;
-    let apiKeyPrefix: string;
+    let apiKeyPrefix = user.apiKeyPrefix ?? '';
 
-    if (user.apiKeyHash && user.apiKeyPrefix) {
-      apiKeyRaw = '';
-      if (user.apiKeyEncrypted) {
-        try { apiKeyRaw = decryptApiKey(user.apiKeyEncrypted, user.id); } catch { /* key rotation fallback */ }
+    const existingKeys = await db
+      .select()
+      .from(apiKeys)
+      .where(and(eq(apiKeys.userId, user.id), eq(apiKeys.isActive, true)));
+
+    apiKeyRaw = '';
+    for (const keyRecord of existingKeys) {
+      if (keyRecord.keyEncrypted) {
+        try {
+          apiKeyRaw = decryptApiKey(keyRecord.keyEncrypted, user.id);
+          apiKeyPrefix = keyRecord.keyPrefix;
+          break;
+        } catch {}
       }
-      apiKeyPrefix = user.apiKeyPrefix;
-    } else {
+    }
+
+    if (!apiKeyRaw) {
       const { key, hash, prefix, encrypted } = generateApiKey(user.id);
       apiKeyRaw = key;
       apiKeyPrefix = prefix;
 
-      await db
-        .update(users)
-        .set({ apiKeyHash: hash, apiKeyPrefix: prefix, apiKeyEncrypted: encrypted, updatedAt: new Date() })
-        .where(eq(users.id, user.id));
+      await storeNewApiKeyForUser(user.id, {
+        hash,
+        prefix,
+        encrypted,
+      });
 
       await logApiKeyGenerated(user.id, prefix, request);
     }

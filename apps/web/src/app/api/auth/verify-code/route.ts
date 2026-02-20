@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, users, emailVerifications } from "@/db";
 import { eq, and, gt } from "drizzle-orm";
-import { hashPassword, createSessionToken, generateApiKey } from "@/lib/auth";
+import { hashPassword, createSessionToken, generateApiKey, storeNewApiKeyForUser } from "@/lib/auth";
 import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
@@ -95,7 +95,6 @@ export async function POST(request: NextRequest) {
         .where(eq(emailVerifications.id, verifications[0].id));
 
       const passwordHash = hashPassword(password);
-      const { key: apiKey, hash: apiKeyHash, prefix: apiKeyPrefix, encrypted: apiKeyEncrypted } = generateApiKey(username);
 
       const [newUser] = await db
         .insert(users)
@@ -104,18 +103,21 @@ export async function POST(request: NextRequest) {
           email: normalizedEmail,
           passwordHash,
           displayName: username,
-          apiKeyHash,
-          apiKeyPrefix,
-          apiKeyEncrypted,
         })
         .returning({
           id: users.id,
           username: users.username,
           displayName: users.displayName,
           email: users.email,
-          apiKeyPrefix: users.apiKeyPrefix,
           createdAt: users.createdAt,
         });
+
+      const { key: apiKey, hash: apiKeyHash, prefix: apiKeyPrefix, encrypted: apiKeyEncrypted } = generateApiKey(newUser.id);
+      await storeNewApiKeyForUser(newUser.id, {
+        hash: apiKeyHash,
+        prefix: apiKeyPrefix,
+        encrypted: apiKeyEncrypted,
+      });
 
       const { token, expiresAt } = await createSessionToken(newUser.id);
       const cookieStore = await cookies();
@@ -127,7 +129,13 @@ export async function POST(request: NextRequest) {
         expires: expiresAt,
       });
 
-      return NextResponse.json({ user: newUser, apiKey }, { status: 201 });
+      return NextResponse.json({
+        user: {
+          ...newUser,
+          apiKeyPrefix,
+        },
+        apiKey,
+      }, { status: 201 });
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });

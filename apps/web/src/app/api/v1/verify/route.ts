@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       'api_key_validated',
       user.id,
       {
-        apiKeyPrefix: user.apiKeyPrefix,
+        apiKeyPrefix: user.apiKeyPrefix ?? undefined,
         endpoint: '/api/v1/verify',
       },
       request

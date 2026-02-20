@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, users } from '@/db';
 import { eq } from 'drizzle-orm';
-import { hashPassword, generateApiKey, createSessionToken } from '@/lib/auth';
+import { hashPassword, generateApiKey, createSessionToken, storeNewApiKeyForUser } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
 export async function POST(request: NextRequest) {
@@ -48,7 +48,6 @@ export async function POST(request: NextRequest) {
     }
 
     const passwordHash = hashPassword(password);
-    const { key: apiKey, hash: apiKeyHash, prefix: apiKeyPrefix, encrypted: apiKeyEncrypted } = generateApiKey(username);
 
     const [newUser] = await db
       .insert(users)
@@ -56,17 +55,20 @@ export async function POST(request: NextRequest) {
         username,
         passwordHash,
         displayName: displayName || username,
-        apiKeyHash,
-        apiKeyPrefix,
-        apiKeyEncrypted,
       })
       .returning({
         id: users.id,
         username: users.username,
         displayName: users.displayName,
-        apiKeyPrefix: users.apiKeyPrefix,
         createdAt: users.createdAt,
       });
+
+    const { key: apiKey, hash: apiKeyHash, prefix: apiKeyPrefix, encrypted: apiKeyEncrypted } = generateApiKey(newUser.id);
+    await storeNewApiKeyForUser(newUser.id, {
+      hash: apiKeyHash,
+      prefix: apiKeyPrefix,
+      encrypted: apiKeyEncrypted,
+    });
 
     const { token, expiresAt } = await createSessionToken(newUser.id);
     const cookieStore = await cookies();
@@ -79,7 +81,10 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({
-      user: newUser,
+      user: {
+        ...newUser,
+        apiKeyPrefix,
+      },
       apiKey,
     }, { status: 201 });
   } catch (error) {
