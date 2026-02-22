@@ -316,131 +316,135 @@ export async function POST(request: NextRequest) {
     const durationSeconds = sessionData.durationSeconds ||
       Math.max(1, Math.floor((submittedEndedAt.getTime() - startedAt.getTime()) / 1000));
 
-    // Insert session
-    const sessionResult = await db
-      .insert(sessions)
-      .values({
+    // Insert session + token_usage + stats atomically in a transaction
+    const newSession = await db.transaction(async (tx) => {
+      const sessionResult = await tx
+        .insert(sessions)
+        .values({
+          userId: user.id,
+          toolTypeId: sessionData.toolType,
+          sessionHash: serverHash,
+          anonymousProjectId: sessionData.anonymousProjectId,
+          startedAt,
+          endedAt: submittedEndedAt,
+          durationSeconds,
+          modelName: normalizeModelName(sessionData.modelName),
+          turnCount: sessionData.turnCount,
+          toolUsage: sessionData.toolUsage,
+          codeMetrics: sessionData.codeMetrics,
+        })
+        .returning({ id: sessions.id });
+
+      const sess = sessionResult[0];
+
+      // Insert token usage
+      await tx.insert(tokenUsage).values({
+        sessionId: sess.id,
         userId: user.id,
         toolTypeId: sessionData.toolType,
-        sessionHash: serverHash,
-        anonymousProjectId: sessionData.anonymousProjectId,
-        startedAt,
-        endedAt: submittedEndedAt,
-        durationSeconds,
-        modelName: normalizeModelName(sessionData.modelName),
-        turnCount: sessionData.turnCount,
-        toolUsage: sessionData.toolUsage,
-        codeMetrics: sessionData.codeMetrics,
-      })
-      .returning({ id: sessions.id });
-
-    const newSession = sessionResult[0];
-
-    // Insert token usage
-    await db.insert(tokenUsage).values({
-      sessionId: newSession.id,
-      userId: user.id,
-      toolTypeId: sessionData.toolType,
-      inputTokens: sessionData.inputTokens,
-      outputTokens: sessionData.outputTokens,
-      cacheCreationTokens: sessionData.cacheCreationTokens,
-      cacheReadTokens: sessionData.cacheReadTokens,
-    });
-
-    // Update daily user stats
-    const sessionDate = new Date(sessionData.endedAt).toISOString().split('T')[0];
-
-    await db
-      .insert(dailyUserStats)
-      .values({
-        userId: user.id,
-        statDate: sessionDate,
         inputTokens: sessionData.inputTokens,
         outputTokens: sessionData.outputTokens,
-        cacheTokens:
-          (sessionData.cacheCreationTokens ?? 0) + (sessionData.cacheReadTokens ?? 0),
-        totalTokens:
-          sessionData.inputTokens +
-          sessionData.outputTokens +
-          (sessionData.cacheCreationTokens ?? 0) +
-          (sessionData.cacheReadTokens ?? 0),
-        sessionCount: 1,
-        byTool: {
-          [sessionData.toolType]: {
-            tokens:
-              sessionData.inputTokens +
-              sessionData.outputTokens +
-              (sessionData.cacheCreationTokens ?? 0) +
-              (sessionData.cacheReadTokens ?? 0),
-            sessions: 1,
-          },
-        },
-      })
-      .onConflictDoUpdate({
-        target: [dailyUserStats.userId, dailyUserStats.statDate],
-        set: {
-          inputTokens: sql`${dailyUserStats.inputTokens} + ${sessionData.inputTokens}`,
-          outputTokens: sql`${dailyUserStats.outputTokens} + ${sessionData.outputTokens}`,
-          cacheTokens: sql`${dailyUserStats.cacheTokens} + ${
-            (sessionData.cacheCreationTokens ?? 0) + (sessionData.cacheReadTokens ?? 0)
-          }`,
-          totalTokens: sql`${dailyUserStats.totalTokens} + ${
+        cacheCreationTokens: sessionData.cacheCreationTokens,
+        cacheReadTokens: sessionData.cacheReadTokens,
+      });
+
+      // Update daily user stats
+      const sessionDate = new Date(sessionData.endedAt).toISOString().split('T')[0];
+
+      await tx
+        .insert(dailyUserStats)
+        .values({
+          userId: user.id,
+          statDate: sessionDate,
+          inputTokens: sessionData.inputTokens,
+          outputTokens: sessionData.outputTokens,
+          cacheTokens:
+            (sessionData.cacheCreationTokens ?? 0) + (sessionData.cacheReadTokens ?? 0),
+          totalTokens:
             sessionData.inputTokens +
             sessionData.outputTokens +
             (sessionData.cacheCreationTokens ?? 0) +
-            (sessionData.cacheReadTokens ?? 0)
-          }`,
-          sessionCount: sql`${dailyUserStats.sessionCount} + 1`,
-          byTool: sql`${dailyUserStats.byTool} || jsonb_build_object(
-            ${sessionData.toolType}::text,
-            jsonb_build_object(
-              'tokens', COALESCE((${dailyUserStats.byTool} -> ${sessionData.toolType}::text ->> 'tokens')::bigint, 0) + ${
+            (sessionData.cacheReadTokens ?? 0),
+          sessionCount: 1,
+          byTool: {
+            [sessionData.toolType]: {
+              tokens:
                 sessionData.inputTokens +
                 sessionData.outputTokens +
                 (sessionData.cacheCreationTokens ?? 0) +
-                (sessionData.cacheReadTokens ?? 0)
-              },
-              'sessions', COALESCE((${dailyUserStats.byTool} -> ${sessionData.toolType}::text ->> 'sessions')::int, 0) + 1
-            )
-          )`,
-        },
-      });
+                (sessionData.cacheReadTokens ?? 0),
+              sessions: 1,
+            },
+          },
+        })
+        .onConflictDoUpdate({
+          target: [dailyUserStats.userId, dailyUserStats.statDate],
+          set: {
+            inputTokens: sql`${dailyUserStats.inputTokens} + ${sessionData.inputTokens}`,
+            outputTokens: sql`${dailyUserStats.outputTokens} + ${sessionData.outputTokens}`,
+            cacheTokens: sql`${dailyUserStats.cacheTokens} + ${
+              (sessionData.cacheCreationTokens ?? 0) + (sessionData.cacheReadTokens ?? 0)
+            }`,
+            totalTokens: sql`${dailyUserStats.totalTokens} + ${
+              sessionData.inputTokens +
+              sessionData.outputTokens +
+              (sessionData.cacheCreationTokens ?? 0) +
+              (sessionData.cacheReadTokens ?? 0)
+            }`,
+            sessionCount: sql`${dailyUserStats.sessionCount} + 1`,
+            byTool: sql`${dailyUserStats.byTool} || jsonb_build_object(
+              ${sessionData.toolType}::text,
+              jsonb_build_object(
+                'tokens', COALESCE((${dailyUserStats.byTool} -> ${sessionData.toolType}::text ->> 'tokens')::bigint, 0) + ${
+                  sessionData.inputTokens +
+                  sessionData.outputTokens +
+                  (sessionData.cacheCreationTokens ?? 0) +
+                  (sessionData.cacheReadTokens ?? 0)
+                },
+                'sessions', COALESCE((${dailyUserStats.byTool} -> ${sessionData.toolType}::text ->> 'sessions')::int, 0) + 1
+              )
+            )`,
+          },
+        });
 
-    // Update user_stats aggregate table
-    const totalTokensForSession =
-      sessionData.inputTokens +
-      sessionData.outputTokens +
-      (sessionData.cacheCreationTokens ?? 0) +
-      (sessionData.cacheReadTokens ?? 0);
+      // Update user_stats aggregate table
+      const totalTokensForSession =
+        sessionData.inputTokens +
+        sessionData.outputTokens +
+        (sessionData.cacheCreationTokens ?? 0) +
+        (sessionData.cacheReadTokens ?? 0);
 
-    await db
-      .insert(userStats)
-      .values({
-        userId: user.id,
-        totalInputTokens: sessionData.inputTokens,
-        totalOutputTokens: sessionData.outputTokens,
-        totalCacheTokens:
-          (sessionData.cacheCreationTokens ?? 0) + (sessionData.cacheReadTokens ?? 0),
-        totalAllTokens: totalTokensForSession,
-        totalSessions: 1,
-        tokensByTool: { [sessionData.toolType]: totalTokensForSession },
-        sessionsByTool: { [sessionData.toolType]: 1 },
-        lastActivityAt: submittedEndedAt,
-      })
-      .onConflictDoUpdate({
-        target: [userStats.userId],
-        set: {
-          totalInputTokens: sql`${userStats.totalInputTokens} + ${sessionData.inputTokens}`,
-          totalOutputTokens: sql`${userStats.totalOutputTokens} + ${sessionData.outputTokens}`,
-          totalCacheTokens: sql`${userStats.totalCacheTokens} + ${(sessionData.cacheCreationTokens ?? 0) + (sessionData.cacheReadTokens ?? 0)}`,
-          totalAllTokens: sql`${userStats.totalAllTokens} + ${totalTokensForSession}`,
-          totalSessions: sql`${userStats.totalSessions} + 1`,
-          tokensByTool: sql`${userStats.tokensByTool} || jsonb_build_object(${sessionData.toolType}::text, COALESCE((${userStats.tokensByTool} ->> ${sessionData.toolType}::text)::bigint, 0) + ${totalTokensForSession})`,
-          sessionsByTool: sql`${userStats.sessionsByTool} || jsonb_build_object(${sessionData.toolType}::text, COALESCE((${userStats.sessionsByTool} ->> ${sessionData.toolType}::text)::int, 0) + 1)`,
+      await tx
+        .insert(userStats)
+        .values({
+          userId: user.id,
+          totalInputTokens: sessionData.inputTokens,
+          totalOutputTokens: sessionData.outputTokens,
+          totalCacheTokens:
+            (sessionData.cacheCreationTokens ?? 0) + (sessionData.cacheReadTokens ?? 0),
+          totalAllTokens: totalTokensForSession,
+          totalSessions: 1,
+          tokensByTool: { [sessionData.toolType]: totalTokensForSession },
+          sessionsByTool: { [sessionData.toolType]: 1 },
           lastActivityAt: submittedEndedAt,
-          updatedAt: new Date(),
-        },
-      });
+        })
+        .onConflictDoUpdate({
+          target: [userStats.userId],
+          set: {
+            totalInputTokens: sql`${userStats.totalInputTokens} + ${sessionData.inputTokens}`,
+            totalOutputTokens: sql`${userStats.totalOutputTokens} + ${sessionData.outputTokens}`,
+            totalCacheTokens: sql`${userStats.totalCacheTokens} + ${(sessionData.cacheCreationTokens ?? 0) + (sessionData.cacheReadTokens ?? 0)}`,
+            totalAllTokens: sql`${userStats.totalAllTokens} + ${totalTokensForSession}`,
+            totalSessions: sql`${userStats.totalSessions} + 1`,
+            tokensByTool: sql`${userStats.tokensByTool} || jsonb_build_object(${sessionData.toolType}::text, COALESCE((${userStats.tokensByTool} ->> ${sessionData.toolType}::text)::bigint, 0) + ${totalTokensForSession})`,
+            sessionsByTool: sql`${userStats.sessionsByTool} || jsonb_build_object(${sessionData.toolType}::text, COALESCE((${userStats.sessionsByTool} ->> ${sessionData.toolType}::text)::int, 0) + 1)`,
+            lastActivityAt: submittedEndedAt,
+            updatedAt: new Date(),
+          },
+        });
+
+      return sess;
+    });
 
     // Log successful session creation
     await logSecurityEvent('session_created', user.id, {

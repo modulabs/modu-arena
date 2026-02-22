@@ -27,6 +27,9 @@ function prompt(question: string): Promise<string> {
 }
 
 function promptPassword(question: string): Promise<string> {
+  if (!process.stdin.isTTY) {
+    return prompt(question);
+  }
   return new Promise((resolve) => {
     process.stdout.write(question);
     const chars: string[] = [];
@@ -99,8 +102,8 @@ export async function registerCommand(): Promise<void> {
     }
 
     const verifyResult = await verifyCode(email, code, existing?.serverUrl);
-    if (verifyResult.error) {
-      console.error(`  ✗ ${verifyResult.error}`);
+    if (verifyResult.error || !verifyResult.verified) {
+      console.error(`  ✗ ${verifyResult.error || 'Verification failed. Please try again.'}`);
       if (attempt < 3) {
         console.log(`  (${3 - attempt} attempt(s) remaining)\n`);
         continue;

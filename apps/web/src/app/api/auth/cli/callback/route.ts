@@ -102,13 +102,17 @@ export async function GET(request: NextRequest) {
   }
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
 function renderSuccessPage(redirectUrl: string, username: string): NextResponse {
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="refresh" content="2;url=${redirectUrl}">
+  <meta http-equiv="refresh" content="2;url=${escapeHtml(redirectUrl)}">
   <title>Modu Arena - CLI Authorization</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -127,11 +131,11 @@ function renderSuccessPage(redirectUrl: string, username: string): NextResponse 
   <div class="container">
     <div class="icon">✅</div>
     <h1>CLI Authorized!</h1>
-    <p>Hello, <span class="username">@${username}</span>!</p>
+    <p>Hello, <span class="username">@${escapeHtml(username)}</span>!</p>
     <p>Your API key has been generated.</p>
     <div class="redirect-notice">
       Redirecting to your terminal...<br>
-      <small>If not redirected, <a href="${redirectUrl}">click here</a></small>
+      <small>If not redirected, <a href="${escapeHtml(redirectUrl)}">click here</a></small>
     </div>
   </div>
 </body>
@@ -165,7 +169,7 @@ function renderErrorPage(message: string): NextResponse {
   <div class="container">
     <div class="icon">❌</div>
     <h1>Authorization Failed</h1>
-    <p>${message}</p>
+    <p>${escapeHtml(message)}</p>
     <a href="/" class="retry">Return to Home</a>
   </div>
 </body>
