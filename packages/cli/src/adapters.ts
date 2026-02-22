@@ -367,12 +367,19 @@ readStdin().then(function (hookInput) {
 
 function shellWrapper(): string {
   return `#!/bin/bash
-exec node "$(dirname "$0")/${HOOK_JS}"
+HOOK="$(dirname "$0")/${HOOK_JS}"
+if command -v node >/dev/null 2>&1; then
+  exec node "$HOOK"
+elif command -v bun >/dev/null 2>&1; then
+  exec bun "$HOOK"
+else
+  echo "[modu-arena] Error: node or bun is required to run hooks" >&2
+fi
 `;
 }
 
 function cmdWrapper(): string {
-  return `@node "%~dp0${HOOK_JS}" 2>nul\r\n`;
+  return `@echo off\r\nwhere node >nul 2>nul && (node "%~dp0${HOOK_JS}" 2>nul & exit /b)\r\nwhere bun >nul 2>nul && (bun "%~dp0${HOOK_JS}" 2>nul & exit /b)\r\necho [modu-arena] Error: node or bun is required to run hooks 1>&2\r\n`;
 }
 
 // ─── Shared Install Logic ──────────────────────────────────────────────────
