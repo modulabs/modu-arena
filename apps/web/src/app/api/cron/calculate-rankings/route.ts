@@ -1,4 +1,4 @@
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db, getPooledDb, dailyUserStats, tokenUsage, sessions } from '@/db';
 import { sql, and, gte } from 'drizzle-orm';
 import { successResponse, Errors } from '@/lib/api-response';
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 
     console.log(`[CRON] Complete: total time ${totalTimeMs}ms`);
 
-    return successResponse({
+    const responseBody = {
       success: result.status === 'success',
       timestamp: new Date().toISOString(),
       summary: {
@@ -80,7 +80,13 @@ export async function GET(request: NextRequest): Promise<Response> {
         total_execution_time_ms: totalTimeMs,
       },
       result,
-    });
+    };
+
+    if (result.status !== 'success') {
+      return NextResponse.json(responseBody, { status: 500 });
+    }
+
+    return successResponse(responseBody);
   } catch (error) {
     console.error('[CRON] Usage aggregation error:', error);
     return Errors.internalError();

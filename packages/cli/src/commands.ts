@@ -235,7 +235,7 @@ export async function installCommand(apiKey?: string): Promise<void> {
   }
 
   // Save config
-  saveConfig({ apiKey });
+  saveConfig({ ...existing, apiKey });
   console.log('✓ API key saved to ~/.modu-arena.json\n');
 
   // Detect and install hooks for each tool
@@ -394,7 +394,7 @@ export function uninstallCommand(): void {
   for (const adapter of adapters) {
     const hookPath = adapter.getHookPath();
     if (existsSync(hookPath)) {
-      unlinkSync(hookPath);
+      try { unlinkSync(hookPath); } catch { /* already removed */ }
       console.log(`  ✓ Removed ${adapter.displayName} hook`);
     }
   }
@@ -402,7 +402,7 @@ export function uninstallCommand(): void {
    // Remove config
    const configPath = join(homedir(), '.modu-arena.json');
    if (existsSync(configPath)) {
-     unlinkSync(configPath);
+     try { unlinkSync(configPath); } catch { /* already removed */ }
      console.log('  ✓ Removed ~/.modu-arena.json');
    }
 

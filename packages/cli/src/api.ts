@@ -1,6 +1,42 @@
 import { computeHmacSignature } from './crypto.js';
 import { API_BASE_URL } from './constants.js';
 
+// ─── Network Helpers ──────────────────────────────────────────────────────
+
+const REQUEST_TIMEOUT_MS = 30_000;
+
+async function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function parseJson(res: Response): Promise<unknown> {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Non-JSON response (HTTP ${res.status}): ${text.slice(0, 200)}`);
+  }
+}
+
+function networkErrorMessage(err: unknown): string {
+  if (err instanceof Error) {
+    if (err.name === 'AbortError') return 'Request timed out. Check your network connection.';
+    if (err.message.includes('fetch failed') || err.message.includes('ECONNREFUSED')) {
+      return 'Could not connect to server. Check your network connection.';
+    }
+    return err.message;
+  }
+  return String(err);
+}
+
+// ─── Types ────────────────────────────────────────────────────────────────
+
 export interface SessionPayload {
   toolType: string;
   sessionId: string;
@@ -71,26 +107,32 @@ function makeAuthHeaders(
   return headers;
 }
 
+// ─── Session API ──────────────────────────────────────────────────────────
+
 export async function submitSession(
   session: SessionPayload,
   opts: RequestOptions,
 ): Promise<{ success: boolean; session?: unknown; error?: string }> {
-  const body = JSON.stringify(session);
-  const url = `${baseUrl(opts)}/api/v1/sessions`;
+  try {
+    const body = JSON.stringify(session);
+    const url = `${baseUrl(opts)}/api/v1/sessions`;
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: makeAuthHeaders(opts.apiKey, body),
-    body,
-  });
+    const res = await fetchWithTimeout(url, {
+      method: 'POST',
+      headers: makeAuthHeaders(opts.apiKey, body),
+      body,
+    });
 
-  const data = await res.json();
-  if (!res.ok) {
-    const err = (data as ApiError).error;
-    const errMsg = typeof err === 'string' ? err : (err?.message || `HTTP ${res.status}`);
-    return { success: false, error: errMsg };
+    const data = await parseJson(res);
+    if (!res.ok) {
+      const err = (data as ApiError).error;
+      const errMsg = typeof err === 'string' ? err : (err?.message || `HTTP ${res.status}`);
+      return { success: false, error: errMsg };
+    }
+    return data as { success: boolean; session: unknown };
+  } catch (err) {
+    return { success: false, error: networkErrorMessage(err) };
   }
-  return data as { success: boolean; session: unknown };
 }
 
 export async function submitBatch(
@@ -102,43 +144,51 @@ export async function submitBatch(
   duplicatesSkipped?: number;
   error?: string;
 }> {
-  const body = JSON.stringify({ sessions });
-  const url = `${baseUrl(opts)}/api/v1/sessions/batch`;
+  try {
+    const body = JSON.stringify({ sessions });
+    const url = `${baseUrl(opts)}/api/v1/sessions/batch`;
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: makeAuthHeaders(opts.apiKey, body),
-    body,
-  });
+    const res = await fetchWithTimeout(url, {
+      method: 'POST',
+      headers: makeAuthHeaders(opts.apiKey, body),
+      body,
+    });
 
-  const data = await res.json();
-  if (!res.ok) {
-    const err = (data as ApiError).error;
-    const errMsg = typeof err === 'string' ? err : (err?.message || `HTTP ${res.status}`);
-    return { success: false, error: errMsg };
+    const data = await parseJson(res);
+    if (!res.ok) {
+      const err = (data as ApiError).error;
+      const errMsg = typeof err === 'string' ? err : (err?.message || `HTTP ${res.status}`);
+      return { success: false, error: errMsg };
+    }
+    return data as { success: boolean; processed: number; duplicatesSkipped: number };
+  } catch (err) {
+    return { success: false, error: networkErrorMessage(err) };
   }
-  return data as { success: boolean; processed: number; duplicatesSkipped: number };
 }
 
 export async function getRank(
   opts: RequestOptions,
 ): Promise<RankResponse | { success: false; error: string }> {
-  const url = `${baseUrl(opts)}/api/v1/rank`;
+  try {
+    const url = `${baseUrl(opts)}/api/v1/rank`;
 
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'X-API-Key': opts.apiKey,
-    },
-  });
+    const res = await fetchWithTimeout(url, {
+      method: 'GET',
+      headers: {
+        'X-API-Key': opts.apiKey,
+      },
+    });
 
-  const data = await res.json();
-  if (!res.ok) {
-    const err = (data as ApiError).error;
-    const errMsg = typeof err === 'string' ? err : (err?.message || `HTTP ${res.status}`);
-    return { success: false, error: errMsg };
+    const data = await parseJson(res);
+    if (!res.ok) {
+      const err = (data as ApiError).error;
+      const errMsg = typeof err === 'string' ? err : (err?.message || `HTTP ${res.status}`);
+      return { success: false, error: errMsg };
+    }
+    return data as RankResponse;
+  } catch (err) {
+    return { success: false, error: networkErrorMessage(err) };
   }
-  return data as RankResponse;
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────
@@ -155,32 +205,40 @@ export async function registerUser(
   payload: { username: string; password: string; displayName?: string },
   serverUrl?: string,
 ): Promise<AuthResponse> {
-  const body = JSON.stringify(payload);
-  const url = `${serverUrl || API_BASE_URL}/api/auth/register`;
+  try {
+    const body = JSON.stringify(payload);
+    const url = `${serverUrl || API_BASE_URL}/api/auth/register`;
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body,
-  });
+    const res = await fetchWithTimeout(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    });
 
-  return (await res.json()) as AuthResponse;
+    return (await parseJson(res)) as AuthResponse;
+  } catch (err) {
+    return { success: false, error: networkErrorMessage(err) };
+  }
 }
 
 export async function loginUser(
   payload: { username: string; password: string },
   serverUrl?: string,
 ): Promise<AuthResponse> {
-  const body = JSON.stringify({ ...payload, source: 'cli' });
-  const url = `${serverUrl || API_BASE_URL}/api/auth/login`;
+  try {
+    const body = JSON.stringify({ ...payload, source: 'cli' });
+    const url = `${serverUrl || API_BASE_URL}/api/auth/login`;
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body,
-  });
+    const res = await fetchWithTimeout(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    });
 
-  return (await res.json()) as AuthResponse;
+    return (await parseJson(res)) as AuthResponse;
+  } catch (err) {
+    return { success: false, error: networkErrorMessage(err) };
+  }
 }
 
 // ─── Email Verification ───────────────────────────────────────────────────
@@ -189,20 +247,24 @@ export async function sendVerificationCode(
   email: string,
   serverUrl?: string,
 ): Promise<{ success?: boolean; error?: string }> {
-  const body = JSON.stringify({ email });
-  const url = `${serverUrl || API_BASE_URL}/api/auth/send-code`;
+  try {
+    const body = JSON.stringify({ email });
+    const url = `${serverUrl || API_BASE_URL}/api/auth/send-code`;
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body,
-  });
+    const res = await fetchWithTimeout(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    });
 
-  const data = (await res.json()) as { success?: boolean; error?: string };
-  if (!res.ok) {
-    return { error: typeof data.error === 'string' ? data.error : `HTTP ${res.status}` };
+    const data = (await parseJson(res)) as { success?: boolean; error?: string };
+    if (!res.ok) {
+      return { error: typeof data.error === 'string' ? data.error : `HTTP ${res.status}` };
+    }
+    return data;
+  } catch (err) {
+    return { error: networkErrorMessage(err) };
   }
-  return data;
 }
 
 export async function verifyCode(
@@ -210,40 +272,48 @@ export async function verifyCode(
   code: string,
   serverUrl?: string,
 ): Promise<{ verified?: boolean; error?: string }> {
-  const body = JSON.stringify({ email, code, action: 'verify' });
-  const url = `${serverUrl || API_BASE_URL}/api/auth/verify-code`;
+  try {
+    const body = JSON.stringify({ email, code, action: 'verify' });
+    const url = `${serverUrl || API_BASE_URL}/api/auth/verify-code`;
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body,
-  });
+    const res = await fetchWithTimeout(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    });
 
-  const data = (await res.json()) as { verified?: boolean; error?: string };
-  if (!res.ok) {
-    return { error: typeof data.error === 'string' ? data.error : `HTTP ${res.status}` };
+    const data = (await parseJson(res)) as { verified?: boolean; error?: string };
+    if (!res.ok) {
+      return { error: typeof data.error === 'string' ? data.error : `HTTP ${res.status}` };
+    }
+    return data;
+  } catch (err) {
+    return { error: networkErrorMessage(err) };
   }
-  return data;
 }
 
 export async function verifyCodeAndSignup(
   payload: { email: string; code: string; username: string; password: string },
   serverUrl?: string,
 ): Promise<AuthResponse> {
-  const body = JSON.stringify({ ...payload, action: 'signup' });
-  const url = `${serverUrl || API_BASE_URL}/api/auth/verify-code`;
+  try {
+    const body = JSON.stringify({ ...payload, action: 'signup' });
+    const url = `${serverUrl || API_BASE_URL}/api/auth/verify-code`;
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body,
-  });
+    const res = await fetchWithTimeout(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    });
 
-  const data = (await res.json()) as { user?: AuthResponse['user']; apiKey?: string; error?: string };
-  if (!res.ok) {
-    return { success: false, error: typeof data.error === 'string' ? data.error : `HTTP ${res.status}` };
+    const data = (await parseJson(res)) as { user?: AuthResponse['user']; apiKey?: string; error?: string };
+    if (!res.ok) {
+      return { success: false, error: typeof data.error === 'string' ? data.error : `HTTP ${res.status}` };
+    }
+    return { success: true, user: data.user, apiKey: data.apiKey };
+  } catch (err) {
+    return { success: false, error: networkErrorMessage(err) };
   }
-  return { success: true, user: data.user, apiKey: data.apiKey };
 }
 
 // ─── Evaluate ─────────────────────────────────────────────────────────────
@@ -279,20 +349,24 @@ export async function submitEvaluation(
   payload: EvaluatePayload,
   opts: RequestOptions,
 ): Promise<EvaluateResponse | { success: false; error: string }> {
-  const body = JSON.stringify(payload);
-  const url = `${baseUrl(opts)}/api/v1/evaluate`;
+  try {
+    const body = JSON.stringify(payload);
+    const url = `${baseUrl(opts)}/api/v1/evaluate`;
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: makeAuthHeaders(opts.apiKey, body),
-    body,
-  });
+    const res = await fetchWithTimeout(url, {
+      method: 'POST',
+      headers: makeAuthHeaders(opts.apiKey, body),
+      body,
+    });
 
-  const data = await res.json();
-  if (!res.ok) {
-    const err = (data as ApiError).error;
-    const errMsg = typeof err === 'string' ? err : (err?.message || `HTTP ${res.status}`);
-    return { success: false, error: errMsg };
+    const data = await parseJson(res);
+    if (!res.ok) {
+      const err = (data as ApiError).error;
+      const errMsg = typeof err === 'string' ? err : (err?.message || `HTTP ${res.status}`);
+      return { success: false, error: errMsg };
+    }
+    return data as EvaluateResponse;
+  } catch (err) {
+    return { success: false, error: networkErrorMessage(err) };
   }
-  return data as EvaluateResponse;
 }

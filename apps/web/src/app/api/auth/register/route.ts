@@ -34,10 +34,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+
+    const normalizedUsername = username.toLowerCase();
     const existing = await db
       .select({ id: users.id })
       .from(users)
-      .where(eq(users.username, username))
+      .where(eq(users.username, normalizedUsername))
       .limit(1);
 
     if (existing.length > 0) {
@@ -52,7 +54,7 @@ export async function POST(request: NextRequest) {
     const [newUser] = await db
       .insert(users)
       .values({
-        username,
+        username: normalizedUsername,
         passwordHash,
         displayName: displayName || username,
       })
