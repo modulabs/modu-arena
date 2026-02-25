@@ -24,21 +24,7 @@ function loadConfig(): ModuConfig | null {
   }
 }
 
-interface SessionTokens {
-  inputTokens: number;
-  outputTokens: number;
-  cacheReadTokens: number;
-  cacheWriteTokens: number;
-  cost: number;
-  modelName: string;
-  firstSeenAt: number;
-  lastSeenAt: number;
-  stepCount: number;
-}
-
-const sessionAccumulator = new Map<string, SessionTokens>();
 const sessionModelNames = new Map<string, string>();
-const submittedSessions = new Set<string>();
 
 function sign(apiKey: string, timestamp: string, body: string): string {
   return createHmac("sha256", apiKey)
@@ -46,30 +32,37 @@ function sign(apiKey: string, timestamp: string, body: string): string {
     .digest("hex");
 }
 
-async function submitSession(
-  _sessionID: string,
-  tokens: SessionTokens,
+async function submitStep(
+  sessionID: string,
+  params: {
+    inputTokens: number;
+    outputTokens: number;
+    cacheReadTokens: number;
+    cacheWriteTokens: number;
+    modelName: string;
+    cost: number;
+  },
   config: ModuConfig,
 ): Promise<void> {
   const server = config.serverUrl || DEFAULT_SERVER;
+  const nowIso = new Date().toISOString();
   const body = JSON.stringify({
     toolType: TOOL_TYPE,
-    endedAt: new Date().toISOString(),
-    startedAt: new Date(tokens.firstSeenAt).toISOString(),
-    durationSeconds: Math.max(
-      1,
-      Math.floor((tokens.lastSeenAt - tokens.firstSeenAt) / 1000),
-    ),
-    inputTokens: tokens.inputTokens,
-    outputTokens: tokens.outputTokens,
-    cacheCreationTokens: tokens.cacheWriteTokens,
-    cacheReadTokens: tokens.cacheReadTokens,
-    modelName: tokens.modelName === "unknown" ? "" : (tokens.modelName || ""),
-    turnCount: tokens.stepCount,
+    endedAt: nowIso,
+    startedAt: nowIso,
+    durationSeconds: 1,
+    inputTokens: params.inputTokens,
+    outputTokens: params.outputTokens,
+    cacheCreationTokens: params.cacheWriteTokens,
+    cacheReadTokens: params.cacheReadTokens,
+    modelName: params.modelName === "unknown" ? "" : (params.modelName || ""),
+    turnCount: 1,
   });
 
   const ts = Math.floor(Date.now() / 1000).toString();
   const sig = sign(config.apiKey, ts, body);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
 
   try {
     const res = await fetch(`${server}/api/v1/sessions`, {
@@ -81,21 +74,26 @@ async function submitSession(
         "X-Signature": sig,
       },
       body,
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
 
     if (!res.ok) {
       const text = await res.text();
       process.stderr.write(
-        `[modu-arena] submit failed ${res.status}: ${text}\n`,
+        `[modu-arena] step submit failed ${res.status} session=${sessionID}: ${text}\n`,
       );
     } else {
       process.stderr.write(
-        `[modu-arena] session submitted (in=${tokens.inputTokens} out=${tokens.outputTokens})\n`,
+        `[modu-arena] step submitted session=${sessionID} in=${params.inputTokens} out=${params.outputTokens} cost=${params.cost}\n`,
       );
     }
   } catch (err: unknown) {
+    clearTimeout(timeout);
     const msg = err instanceof Error ? err.message : String(err);
-    process.stderr.write(`[modu-arena] submit error: ${msg}\n`);
+    process.stderr.write(
+      `[modu-arena] step submit error session=${sessionID}: ${msg}\n`,
+    );
   }
 }
 
@@ -124,10 +122,6 @@ export const ModuArenaPlugin: Plugin = async () => {
 
         if (info?.sessionID && info.modelID) {
           sessionModelNames.set(info.sessionID, info.modelID);
-          const existing = sessionAccumulator.get(info.sessionID);
-          if (existing && (!existing.modelName || existing.modelName === "unknown")) {
-            existing.modelName = info.modelID;
-          }
         }
       }
 
@@ -143,69 +137,36 @@ export const ModuArenaPlugin: Plugin = async () => {
 
         if (part.sessionID && part.modelID) {
           sessionModelNames.set(part.sessionID, part.modelID);
-          const existing = sessionAccumulator.get(part.sessionID);
-          if (existing && (!existing.modelName || existing.modelName === "unknown")) {
-            existing.modelName = part.modelID;
-          }
         }
 
         if (part.type === "step-finish" && part.sessionID && part.tokens) {
           const sid = part.sessionID;
-          const now = Date.now();
-          const cachedModel = sessionModelNames.get(sid) || "";
-          const existing = sessionAccumulator.get(sid);
+          const inputTokens = part.tokens.input;
+          const outputTokens = part.tokens.output;
+          const cacheReadTokens = part.tokens.cache.read;
+          const cacheWriteTokens = part.tokens.cache.write;
+          const cost = part.cost ?? 0;
 
-          if (existing) {
-            existing.inputTokens += part.tokens.input;
-            existing.outputTokens += part.tokens.output;
-            existing.cacheReadTokens += part.tokens.cache.read;
-            existing.cacheWriteTokens += part.tokens.cache.write;
-            existing.cost += part.cost ?? 0;
-            existing.lastSeenAt = now;
-            existing.stepCount += 1;
-            if (cachedModel && (!existing.modelName || existing.modelName === "unknown")) {
-              existing.modelName = cachedModel;
-            }
-          } else {
-            sessionAccumulator.set(sid, {
-              inputTokens: part.tokens.input,
-              outputTokens: part.tokens.output,
-              cacheReadTokens: part.tokens.cache.read,
-              cacheWriteTokens: part.tokens.cache.write,
-              cost: part.cost ?? 0,
-              modelName: cachedModel,
-              firstSeenAt: now,
-              lastSeenAt: now,
-              stepCount: 1,
+          if (inputTokens > 0 || outputTokens > 0) {
+            const modelName = part.modelID || sessionModelNames.get(sid) || "";
+            void submitStep(
+              sid,
+              {
+                inputTokens,
+                outputTokens,
+                cacheReadTokens,
+                cacheWriteTokens,
+                modelName,
+                cost,
+              },
+              config,
+            ).catch((err: unknown) => {
+              const msg = err instanceof Error ? err.message : String(err);
+              process.stderr.write(
+                `[modu-arena] unexpected step submit rejection session=${sid}: ${msg}\n`,
+              );
             });
           }
-        }
-      }
-
-      if (event.type === "session.idle") {
-        const sid = (event.properties as { sessionID: string }).sessionID;
-        const tokens = sessionAccumulator.get(sid);
-
-        if (tokens && !submittedSessions.has(sid) && tokens.inputTokens > 0) {
-          submittedSessions.add(sid);
-
-          await new Promise((resolve) => setTimeout(resolve, 500));
-
-          if (!tokens.modelName || tokens.modelName === "unknown") {
-            const cached = sessionModelNames.get(sid);
-            if (cached) tokens.modelName = cached;
-          }
-
-          if (!tokens.modelName || tokens.modelName === "unknown") {
-            process.stderr.write(
-              `[modu-arena] model unavailable for ${sid}\n`,
-            );
-            tokens.modelName = "";
-          }
-
-          sessionAccumulator.delete(sid);
-          sessionModelNames.delete(sid);
-          await submitSession(sid, tokens, config);
         }
       }
     },

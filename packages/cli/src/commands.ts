@@ -399,6 +399,29 @@ export function uninstallCommand(): void {
     }
   }
 
+  try {
+    const opencodeConfigDir = join(
+      process.env.XDG_CONFIG_HOME || join(homedir(), '.config'),
+      'opencode',
+    );
+    const opencodeConfigPath = join(opencodeConfigDir, 'opencode.json');
+    if (existsSync(opencodeConfigPath)) {
+      const raw = readFileSync(opencodeConfigPath, 'utf-8');
+      const config = JSON.parse(raw) as Record<string, unknown>;
+      if (Array.isArray(config.plugin)) {
+        const plugins = config.plugin as string[];
+        const before = plugins.length;
+        config.plugin = plugins.filter(
+          (p: string) => p !== 'opencode-modu-arena' && !p.startsWith('opencode-modu-arena@'),
+        );
+        if ((config.plugin as string[]).length < before) {
+          writeFileSync(opencodeConfigPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
+          console.log('  ✓ Removed OpenCode plugin registration');
+        }
+      }
+    }
+  } catch {}
+
    // Remove config
    const configPath = join(homedir(), '.modu-arena.json');
    if (existsSync(configPath)) {

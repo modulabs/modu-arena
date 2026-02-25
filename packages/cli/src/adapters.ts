@@ -5,7 +5,7 @@
  * thin shell wrappers (.sh on Unix, .cmd on Windows).
  */
 
-import { existsSync, writeFileSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, writeFileSync, mkdirSync, readFileSync, unlinkSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { API_BASE_URL, type ToolType } from './constants.js';
@@ -630,10 +630,61 @@ class OpenCodeAdapter implements ToolAdapter {
   getHookPath() { return join(this.hooksDir, hookEntryName()); }
   detect() { return existsSync(this.configDir); }
 
-  install(apiKey: string) {
-    return installHook(this.displayName, this.hooksDir, this.getHookPath(), apiKey, 'opencode', 'OPENCODE',
-      baseFields('OPENCODE'),
+  install(_apiKey: string): InstallResult {
+    try {
+      const registered = this.registerPlugin();
+      this.cleanupLegacyHooks();
+
+      return {
+        success: true,
+        message: `${this.displayName} plugin registered`,
+        hookPath: join(this.configDir, 'opencode.json'),
+        warning: registered ? undefined : 'Plugin was already registered',
+      };
+    } catch (err) {
+      return { success: false, message: `Failed to register ${this.displayName} plugin: ${err}` };
+    }
+  }
+
+  private registerPlugin(): boolean {
+    const configPath = join(this.configDir, 'opencode.json');
+    let config: Record<string, unknown> = {};
+
+    if (existsSync(configPath)) {
+      try {
+        config = JSON.parse(readFileSync(configPath, 'utf-8'));
+      } catch {
+        config = {};
+      }
+    }
+
+    const plugins = Array.isArray(config.plugin) ? config.plugin as string[] : [];
+    const PLUGIN_NAME = 'opencode-modu-arena';
+
+    const alreadyRegistered = plugins.some((p: string) =>
+      p === PLUGIN_NAME || p.startsWith(PLUGIN_NAME + '@')
     );
+
+    if (alreadyRegistered) return false;
+
+    plugins.push(PLUGIN_NAME);
+    config.plugin = plugins;
+
+    writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
+    return true;
+  }
+
+  private cleanupLegacyHooks(): void {
+    const legacyFiles = [
+      join(this.hooksDir, '_modu-hook.js'),
+      join(this.hooksDir, 'session-end.sh'),
+      join(this.hooksDir, 'session-end.cmd'),
+    ];
+    for (const f of legacyFiles) {
+      if (existsSync(f)) {
+        try { unlinkSync(f); } catch {}
+      }
+    }
   }
 }
 

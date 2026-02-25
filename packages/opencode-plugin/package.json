@@ -1,6 +1,6 @@
 {
   "name": "opencode-modu-arena",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "OpenCode plugin for Modu-Arena — tracks token usage and sends session data to the leaderboard",
   "main": "./dist/index.js",
@@ -15,7 +15,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@opencode-ai/plugin": "^0.15.30"
+    "@opencode-ai/plugin": "^1.2.11"
   },
   "devDependencies": {
     "@opencode-ai/sdk": "*",
