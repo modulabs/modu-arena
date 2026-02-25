@@ -45,7 +45,7 @@ const MAX_INPUT_TOKENS = 500_000_000;
 const MAX_OUTPUT_TOKENS = 100_000_000;
 const MAX_CACHE_TOKENS = 1_000_000_000;
 // Minimum time between sessions (1 second) - allows batch submissions from CLI daemons
-const MIN_SESSION_INTERVAL_MS = 1000;
+// Removed: MIN_SESSION_INTERVAL_MS — per-step plugins (e.g. OpenCode) submit rapidly
 // Anomaly detection threshold (10x average)
 const ANOMALY_THRESHOLD_MULTIPLIER = 10;
 
@@ -233,30 +233,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Session frequency validation - minimum time between sessions
+    // Session frequency check removed — per-step plugins submit rapidly
     const submittedEndedAt = new Date(sessionData.endedAt);
-    const lastSession = await db
-      .select({ endedAt: sessions.endedAt })
-      .from(sessions)
-      .where(eq(sessions.userId, user.id))
-      .orderBy(desc(sessions.endedAt))
-      .limit(1);
-
-    if (
-      lastSession.length > 0 &&
-      Math.abs(submittedEndedAt.getTime() - lastSession[0].endedAt.getTime()) < MIN_SESSION_INTERVAL_MS
-    ) {
-      await logSecurityEvent('suspicious_activity', user.id, {
-        reason: 'Session endedAt too close to existing session',
-        lastSessionEndedAt: lastSession[0].endedAt.toISOString(),
-        submittedEndedAt: submittedEndedAt.toISOString(),
-        timeDifference: Math.abs(submittedEndedAt.getTime() - lastSession[0].endedAt.getTime()),
-        minimumInterval: MIN_SESSION_INTERVAL_MS,
-      });
-      return Errors.validationError(
-        'Session endedAt is too close to an existing session. Sessions must be at least 1 second apart.'
-      );
-    }
 
     // Anomaly detection - flag suspicious token counts
     const submittedTokens = sessionData.inputTokens + sessionData.outputTokens;

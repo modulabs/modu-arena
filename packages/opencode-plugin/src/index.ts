@@ -79,21 +79,11 @@ async function submitStep(
     clearTimeout(timeout);
 
     if (!res.ok) {
-      const text = await res.text();
-      process.stderr.write(
-        `[modu-arena] step submit failed ${res.status} session=${sessionID}: ${text}\n`,
-      );
-    } else {
-      process.stderr.write(
-        `[modu-arena] step submitted session=${sessionID} in=${params.inputTokens} out=${params.outputTokens} cost=${params.cost}\n`,
-      );
+      await res.text();
     }
-  } catch (err: unknown) {
+    // silent on success
+  } catch {
     clearTimeout(timeout);
-    const msg = err instanceof Error ? err.message : String(err);
-    process.stderr.write(
-      `[modu-arena] step submit error session=${sessionID}: ${msg}\n`,
-    );
   }
 }
 
@@ -101,13 +91,10 @@ export const ModuArenaPlugin: Plugin = async () => {
   const config = loadConfig();
 
   if (!config) {
-    process.stderr.write(
-      `[modu-arena] no config at ${CONFIG_FILE}. Run: npx @suncreation/modu-arena register\n`,
-    );
     return {};
   }
 
-  process.stderr.write("[modu-arena] plugin loaded, tracking tokens\n");
+
 
   return {
     event: async ({ event }) => {
@@ -160,12 +147,7 @@ export const ModuArenaPlugin: Plugin = async () => {
                 cost,
               },
               config,
-            ).catch((err: unknown) => {
-              const msg = err instanceof Error ? err.message : String(err);
-              process.stderr.write(
-                `[modu-arena] unexpected step submit rejection session=${sid}: ${msg}\n`,
-              );
-            });
+            ).catch(() => {});
           }
         }
       }

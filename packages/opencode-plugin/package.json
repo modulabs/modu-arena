@@ -1,6 +1,6 @@
 {
   "name": "opencode-modu-arena",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "description": "OpenCode plugin for Modu-Arena — tracks token usage and sends session data to the leaderboard",
   "main": "./dist/index.js",
